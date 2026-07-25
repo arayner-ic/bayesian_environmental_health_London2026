@@ -412,23 +412,8 @@ plot(pred2.temp, "slices",
 
 -   Spatial effect modification or spatial interaction.
 
-## Example 1: Heatwaves in Europe
 
-![](Figures/Bllester.png){fig-align="center"}
-
-## The model
-
-We can write: $$
-O_i \sim \text{Poisson}(\lambda_i E_i) \\
-\log \lambda_i = \alpha + \color{red}{(\beta_1 + \delta_i)X_{1i}} + \beta_2 X_{2i} + \dots + \beta_k X_{ki} + \theta_i + \phi_i \\
-\theta_i \sim \text{Normal}(0,\sigma_{\theta}^2)\\
-\phi \sim \text{ICAR}(W, \sigma^2_{\phi}) \\
-\color{red}{\delta \sim \text{ICAR}(W, \sigma^2_{\delta})}
-$$ And a step further:
-
-$$\delta_i = \gamma_0 + \sum \gamma_i Z_i + w_i$$
-
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 ::::: columns
 ::: {.column width="50%"}
@@ -446,7 +431,7 @@ $$\delta_i = \gamma_0 + \sum \gamma_i Z_i + w_i$$
 :::
 :::::
 
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 ::::: columns
 ::: {.column width="60%"}
@@ -466,11 +451,11 @@ $$\delta_i = \gamma_0 + \sum \gamma_i Z_i + w_i$$
 :::
 :::::
 
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 ![](Figures/analysis.png){fig-align="center"}
 
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 $$
 Y{ijk} \sim \text{Poisson}(\mu_{ijk})\\
@@ -482,15 +467,15 @@ $$
 
 -   How should we select the priors?
 
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 ![](Figures/Fig2_copd.png)
 
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 ![](Figures/Fig3_adjusted.jpg)
 
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 ::: {style="font-size: 70%;"}
 | Effect modifier              | Percentage increase | Pr   |
@@ -507,15 +492,27 @@ $$
 | Predominantly urban          | -1.57 (-4.16, 0.96) | 0.12 |
 :::
 
-## Example 2: Temperature and COPD
+## Example 1: Temperature and COPD
 
 ![](Figures/lrexampler.png){fig-align="center"}
+
+
 
 ## Modelling the spatially varying non-linear effects of heat exposure
 
 Main issues: (1) data sparsity, (2) spatial correlation
 
 ![](Figures/EDA_tempMap_fig.png){fig-align="center"}
+
+## The model
+We can write: $$
+O_i \sim \text{Poisson}(\lambda_i E_i) \\
+\log \lambda_i = \alpha + \color{red}{\sum_j(\beta_{1j} + \delta_{ij})X_{1i}} + \beta_2 X_{2i} + \dots + \beta_k X_{ki} + \theta_i + \phi_i \\
+\theta_i \sim \text{Normal}(0,\sigma_{\theta}^2)\\
+\phi \sim \text{ICAR}(W, \sigma^2_{\phi}) \\
+\color{red}{\delta_j \sim \text{ICAR}(W, \sigma^2_{\delta_j})}
+$$ And a step further:
+$\text{heat-risk}_i = \gamma_0 + \sum \gamma_i Z_i + w_i$
 
 ## Beyond linear models: Case study
 
@@ -524,6 +521,24 @@ Main issues: (1) data sparsity, (2) spatial correlation
 ## Beyond linear models: Effect modifiers
 
 ![](Figures/p_SEM_com.png){fig-align="center"}
+
+## Spacetime-varying coefficients: Heatwaves in Greece
+$$
+O_i \sim \text{Poisson}(\lambda_i E_i) \\
+\log \lambda_{it} = \alpha + \color{red}{(\beta_{1} + \delta_{i} + u_t)X_{1it}} + \\\beta_2 X_{2it} + \dots + \beta_k X_{kit} + \theta_i + \phi_i + v_t \\
+\theta_i \sim \text{Normal}(0,\sigma_{\theta}^2)\\
+\phi, \delta \sim \text{ICAR}(W, \sigma^2_{*}) \\
+\color{red}{u, v \sim \text{RW2}(\sigma^2_{*})}
+$$ 
+
+## Overall results
+![](Figures/Fig2.png){fig-align="center"}
+
+## Results in space
+![](Figures/Fig3 - Copy.png){fig-align="center"}
+
+## Results in time
+![](Figures/Fig3.png){fig-align="center"}
 
 ## Summary
 

@@ -6,10 +6,10 @@
 <script src="hierarchical_modelling_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="hierarchical_modelling_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="hierarchical_modelling_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="hierarchical_modelling_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+<link href="hierarchical_modelling_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.37">
 
-  <meta name="author" content="Robbie M. Parks, Elizaveta Semenova">
+  <meta name="author" content="Gryfallos Konstantinoudis, Robbie M. Parks, Elizaveta Semenova">
   <title>Hierarchical modelling</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,6 +17,9 @@
   <link rel="stylesheet" href="hierarchical_modelling_files/libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="hierarchical_modelling_files/libs/revealjs/dist/reveal.css">
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -95,7 +98,7 @@
     code span.vs { color: #20794d; } /* VerbatimString */
     code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="hierarchical_modelling_files/libs/revealjs/dist/theme/quarto-227af3a145c1d7f81fd1cd640f5fdb4e.css">
+  <link rel="stylesheet" href="hierarchical_modelling_files/libs/revealjs/dist/theme/quarto-a9c8bb9b1e4d83a4aac19a41acc88a24.css">
   <link href="hierarchical_modelling_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="hierarchical_modelling_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="hierarchical_modelling_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -201,13 +204,13 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-Robbie M. Parks, Elizaveta Semenova 
+Gryfallos Konstantinoudis, Robbie M. Parks, Elizaveta Semenova 
 </div>
 <div class="quarto-title-author-email">
-<a href="mailto:robbie.parks@columbia.edu">robbie.parks@columbia.edu</a>
+<a href="mailto:g.konstantinoudis@imperial.ac.uk">g.konstantinoudis@imperial.ac.uk</a>
 </div>
         <p class="quarto-title-affiliation">
-            Environmental Health Sciences, Columbia University
+            Imperial College London
           </p>
     </div>
 </div>
@@ -271,13 +274,13 @@ $ week                    &lt;dbl&gt; 18, 18, 18, 19, 19, 19, 19, 19, 19, 19, 20
 <h2>Models characterized by several parameters</h2>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>   NOME_PROVINCIA        SIGLA            date                deaths      
- Length   :96300   Length   :96300   Min.   :2013-05-04   Min.   :  0.00  
- N.unique :  107   N.unique :  107   1st Qu.:2014-07-17   1st Qu.:  7.00  
- N.blank  :    0   N.blank  :    0   Median :2016-01-16   Median : 11.00  
- Min.nchar:    4   Min.nchar:    2   Mean   :2016-01-16   Mean   : 14.93  
- Max.nchar:   21   Max.nchar:    2   3rd Qu.:2017-07-17   3rd Qu.: 17.00  
-                                     Max.   :2018-09-30   Max.   :272.00  
+<pre><code> NOME_PROVINCIA        SIGLA                date                deaths      
+ Length:96300       Length:96300       Min.   :2013-05-04   Min.   :  0.00  
+ Class :character   Class :character   1st Qu.:2014-07-17   1st Qu.:  7.00  
+ Mode  :character   Mode  :character   Median :2016-01-16   Median : 11.00  
+                                       Mean   :2016-01-16   Mean   : 14.93  
+                                       3rd Qu.:2017-07-17   3rd Qu.: 17.00  
+                                       Max.   :2018-09-30   Max.   :272.00  
       year         expected            hol              month      
  Min.   :2013   Min.   :  2.909   Min.   :0.00000   Min.   :5.000  
  1st Qu.:2014   1st Qu.:  8.231   1st Qu.:0.00000   1st Qu.:6.000  
@@ -598,6 +601,121 @@ y_i &amp;\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 <li class="fragment">This allows us to capture individual-level variability while still accounting for regional effects.</li>
 </ul>
 </section>
+<section id="two-level-iid-hierarchical-model" class="slide level2 smaller">
+<h2>Two-level IID hierarchical model</h2>
+<ul>
+<li class="fragment">A natural extension: data measured <strong>repeatedly over time</strong> within <strong>multiple areas</strong>.</li>
+<li class="fragment">Example: daily respiratory admissions and PM<span class="math inline">\(_{2.5}\)</span> across <span class="math inline">\(J\)</span> cities, over <span class="math inline">\(T\)</span> years.</li>
+<li class="fragment">Two sources of extra-Poisson variability:
+<ul>
+<li class="fragment"><strong>City-level effects</strong> <span class="math inline">\(\theta_j\)</span>: stable differences between cities (e.g., demographics, baseline health).</li>
+<li class="fragment"><strong>Year-within-city effects</strong> <span class="math inline">\(\gamma_{jt}\)</span>: year-specific deviations within each city (e.g., flu season severity, local policy changes).</li>
+</ul></li>
+<li class="fragment">Both modelled as <strong>IID Gaussian random effects</strong>.</li>
+</ul>
+</section>
+<section id="two-level-iid-hierarchical-model-1" class="slide level2">
+<h2>Two-level IID hierarchical model</h2>
+<p><span class="math display">\[
+\begin{split}
+y_{ijt} &amp;\sim \text{Pois}(\mu_{ijt}) \quad i = 1,\ldots,N_{jt},\; j=1,\ldots,J,\; t=1,\ldots,T \\
+\log(\mu_{ijt}) &amp;= \log(E_{ijt}) + \alpha + \beta x_{ijt} + \theta_j + \gamma_{jt}
+\end{split}
+\]</span></p>
+<p>where:</p>
+<ul>
+<li class="fragment"><span class="math inline">\(x_{ijt}\)</span> is PM<span class="math inline">\(_{2.5}\)</span> concentration for observation <span class="math inline">\(i\)</span>, city <span class="math inline">\(j\)</span>, year <span class="math inline">\(t\)</span></li>
+<li class="fragment"><span class="math inline">\(\theta_j\)</span> is the <strong>city-level</strong> random effect</li>
+<li class="fragment"><span class="math inline">\(\gamma_{jt}\)</span> is the <strong>year-within-city</strong> random effect</li>
+</ul>
+</section>
+<section id="two-level-iid-hierarchical-model-2" class="slide level2">
+<h2>Two-level IID hierarchical model</h2>
+<p><strong>Priors:</strong></p>
+<p><span class="math display">\[
+\begin{split}
+\alpha &amp;\sim N(0, 5) \\
+\beta &amp;\sim N(0, 1) \\
+\theta_j &amp;\sim N(0, \sigma^2_\theta), \quad j = 1,\ldots,J \\
+\gamma_{jt} &amp;\sim N(0, \sigma^2_\gamma), \quad j = 1,\ldots,J,\; t = 1,\ldots,T \\
+\sigma_\theta &amp;\sim N^+(0, 1) \\
+\sigma_\gamma &amp;\sim N^+(0, 1)
+\end{split}
+\]</span></p>
+<ul>
+<li class="fragment"><span class="math inline">\(\sigma^2_\theta\)</span> captures <strong>between-city</strong> variability.</li>
+<li class="fragment"><span class="math inline">\(\sigma^2_\gamma\)</span> captures <strong>within-city, between-year</strong> variability.</li>
+</ul>
+</section>
+<section id="two-level-iid-hierarchical-model-3" class="slide level2 smaller">
+<h2>Two-level IID hierarchical model</h2>
+<p><strong>Directed Acyclic Graph (DAG):</strong></p>
+<div class="r-stack">
+<pre><code>Hyperpriors:     σ_θ              σ_γ
+                  ↓                ↓
+Level 2:         θ_j          γ_{jt}
+(city)            ↘              ↙
+Level 1:           log(μ_{ijt})  ←  α, β, x_{ijt}
+(obs)               ↓
+Data:              y_{ijt}</code></pre>
+</div>
+<ul>
+<li class="fragment">Each city <span class="math inline">\(j\)</span> has its own <strong>stable intercept</strong> <span class="math inline">\(\theta_j\)</span>.</li>
+<li class="fragment">Each city-year combination <span class="math inline">\((j,t)\)</span> has its own <strong>transient deviation</strong> <span class="math inline">\(\gamma_{jt}\)</span>.</li>
+<li class="fragment">Both shrink toward zero via their respective hyperpriors.</li>
+</ul>
+</section>
+<section id="two-level-iid-what-does-shrinkage-do-here" class="slide level2">
+<h2>Two-level IID: what does shrinkage do here?</h2>
+<ul>
+<li class="fragment">Cities with <strong>few observations</strong> or <strong>noisy data</strong> are shrunk toward the global mean.</li>
+<li class="fragment">Years with <strong>extreme outcomes</strong> are partially attributed to the year effect <span class="math inline">\(\gamma_{jt}\)</span>, not the pollution coefficient <span class="math inline">\(\beta\)</span>.</li>
+<li class="fragment">This <strong>protects</strong> the estimate of <span class="math inline">\(\beta\)</span> from confounding by city-level or year-level factors.</li>
+<li class="fragment">The two variance components <span class="math inline">\(\sigma^2_\theta\)</span> and <span class="math inline">\(\sigma^2_\gamma\)</span> are themselves estimated from the data — <strong>adaptive regularisation</strong>.</li>
+</ul>
+</section>
+<section id="two-level-iid-variance-decomposition" class="slide level2 smaller">
+<h2>Two-level IID: variance decomposition</h2>
+<p>The total variability in log-risk can be decomposed as:</p>
+<p><span class="math display">\[
+\text{Var}(\log \mu_{ijt}) \approx \sigma^2_\theta + \sigma^2_\gamma
+\]</span></p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Symbol</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Between-city variance</td>
+<td><span class="math inline">\(\sigma^2_\theta\)</span></td>
+<td>How much cities differ on average</td>
+</tr>
+<tr class="even">
+<td>Within-city, between-year variance</td>
+<td><span class="math inline">\(\sigma^2_\gamma\)</span></td>
+<td>How much a city fluctuates year to year</td>
+</tr>
+<tr class="odd">
+<td>Intraclass correlation (city)</td>
+<td><span class="math inline">\(\dfrac{\sigma^2_\theta}{\sigma^2_\theta + \sigma^2_\gamma}\)</span></td>
+<td>Proportion of variability due to city membership</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li class="fragment">A <strong>high ICC</strong> suggests city-level factors dominate.</li>
+<li class="fragment">A <strong>low ICC</strong> suggests year-to-year fluctuations are more important.</li>
+</ul>
+</section>
 <section id="model-selection" class="slide level2">
 <h2>Model selection</h2>
 <ul>
@@ -868,42 +986,80 @@ k - \text{number of parameters}\]</span></li>
       });
     </script>
     
+
     <script>
+
       // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+
       // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+
       // slide changes (different for each slide format).
+
       (function () {
+
         // dispatch for htmlwidgets
+
         function fireSlideEnter() {
+
           const event = window.document.createEvent("Event");
+
           event.initEvent("slideenter", true, true);
+
           window.document.dispatchEvent(event);
+
         }
+
+    
 
         function fireSlideChanged(previousSlide, currentSlide) {
+
           fireSlideEnter();
 
+    
+
           // dispatch for shiny
+
           if (window.jQuery) {
+
             if (previousSlide) {
+
               window.jQuery(previousSlide).trigger("hidden");
+
             }
+
             if (currentSlide) {
+
               window.jQuery(currentSlide).trigger("shown");
+
             }
+
           }
+
         }
+
+    
 
         // hookup for slidy
+
         if (window.w3c_slidy) {
+
           window.w3c_slidy.add_observer(function (slide_num) {
+
             // slide_num starts at position 1
+
             fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+
           });
+
         }
 
+    
+
       })();
+
     </script>
+
+    
 
     <script id="quarto-html-after-body" type="application/javascript">
       window.document.addEventListener("DOMContentLoaded", function (event) {

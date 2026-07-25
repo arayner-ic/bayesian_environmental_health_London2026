@@ -2,10 +2,10 @@
 title: "Hierarchical modelling"
 subtitle: "Bayesian multilevel models"
 author:
- - name: "Robbie M. Parks, Elizaveta Semenova"
-   email: "robbie.parks@columbia.edu"
-institute: "Environmental Health Sciences, Columbia University"
-date: 2026-08-05
+ - name: "Gryfallos Konstantinoudis, Robbie M. Parks, Elizaveta Semenova"
+   email: "g.konstantinoudis@imperial.ac.uk"
+institute: "Imperial College London"
+date: 2026-08-5
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
@@ -354,6 +354,96 @@ $$
 -   This allows us to capture individual-level variability while still
     accounting for regional effects.
       
+## Two-level IID hierarchical model {.smaller}
+
+- A natural extension: data measured **repeatedly over time** within **multiple areas**.
+- Example: daily respiratory admissions and PM$_{2.5}$ across $J$ cities, over $T$ years.
+- Two sources of extra-Poisson variability:
+  - **City-level effects** $\theta_j$: stable differences between cities (e.g., demographics, baseline health).
+  - **Year-within-city effects** $\gamma_{jt}$: year-specific deviations within each city (e.g., flu season severity, local policy changes).
+- Both modelled as **IID Gaussian random effects**.
+
+## Two-level IID hierarchical model
+
+$$
+\begin{split}
+y_{ijt} &\sim \text{Pois}(\mu_{ijt}) \quad i = 1,\ldots,N_{jt},\; j=1,\ldots,J,\; t=1,\ldots,T \\
+\log(\mu_{ijt}) &= \log(E_{ijt}) + \alpha + \beta x_{ijt} + \theta_j + \gamma_{jt}
+\end{split}
+$$
+
+where:
+
+- $x_{ijt}$ is PM$_{2.5}$ concentration for observation $i$, city $j$, year $t$
+- $\theta_j$ is the **city-level** random effect
+- $\gamma_{jt}$ is the **year-within-city** random effect
+
+## Two-level IID hierarchical model
+
+**Priors:**
+
+$$
+\begin{split}
+\alpha &\sim N(0, 5) \\
+\beta &\sim N(0, 1) \\
+\theta_j &\sim N(0, \sigma^2_\theta), \quad j = 1,\ldots,J \\
+\gamma_{jt} &\sim N(0, \sigma^2_\gamma), \quad j = 1,\ldots,J,\; t = 1,\ldots,T \\
+\sigma_\theta &\sim N^+(0, 1) \\
+\sigma_\gamma &\sim N^+(0, 1)
+\end{split}
+$$
+
+- $\sigma^2_\theta$ captures **between-city** variability.
+- $\sigma^2_\gamma$ captures **within-city, between-year** variability.
+
+## Two-level IID hierarchical model {.smaller}
+
+**Directed Acyclic Graph (DAG):**
+
+::: {.r-stack}
+
+```
+Hyperpriors:     σ_θ              σ_γ
+                  ↓                ↓
+Level 2:         θ_j          γ_{jt}
+(city)            ↘              ↙
+Level 1:           log(μ_{ijt})  ←  α, β, x_{ijt}
+(obs)               ↓
+Data:              y_{ijt}
+```
+
+:::
+
+- Each city $j$ has its own **stable intercept** $\theta_j$.
+- Each city-year combination $(j,t)$ has its own **transient deviation** $\gamma_{jt}$.
+- Both shrink toward zero via their respective hyperpriors.
+
+
+## Two-level IID: what does shrinkage do here?
+
+- Cities with **few observations** or **noisy data** are shrunk toward the global mean.
+- Years with **extreme outcomes** are partially attributed to the year effect $\gamma_{jt}$, not the pollution coefficient $\beta$.
+- This **protects** the estimate of $\beta$ from confounding by city-level or year-level factors.
+- The two variance components $\sigma^2_\theta$ and $\sigma^2_\gamma$ are themselves estimated from the data — **adaptive regularisation**.
+
+## Two-level IID: variance decomposition {.smaller}
+
+The total variability in log-risk can be decomposed as:
+
+$$
+\text{Var}(\log \mu_{ijt}) \approx \sigma^2_\theta + \sigma^2_\gamma
+$$
+
+| Component | Symbol | Interpretation |
+|---|---|---|
+| Between-city variance | $\sigma^2_\theta$ | How much cities differ on average |
+| Within-city, between-year variance | $\sigma^2_\gamma$ | How much a city fluctuates year to year |
+| Intraclass correlation (city) | $\dfrac{\sigma^2_\theta}{\sigma^2_\theta + \sigma^2_\gamma}$ | Proportion of variability due to city membership |
+
+- A **high ICC** suggests city-level factors dominate.
+- A **low ICC** suggests year-to-year fluctuations are more important.
+
+
 ## Model selection
 
 -   Model selection is the process of choosing between different models
