@@ -6,8 +6,8 @@
 <script src="priors_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="priors_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="priors_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="priors_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.37">
+<link href="priors_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.27">
 
   <meta name="author" content="Garyfallos Konstantinoudis">
   <title>Priors</title>
@@ -17,9 +17,6 @@
   <link rel="stylesheet" href="priors_files/libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="priors_files/libs/revealjs/dist/reveal.css">
   <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -32,7 +29,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="priors_files/libs/revealjs/dist/theme/quarto-a9c8bb9b1e4d83a4aac19a41acc88a24.css">
+  <link rel="stylesheet" href="priors_files/libs/revealjs/dist/theme/quarto-227af3a145c1d7f81fd1cd640f5fdb4e.css">
   <link href="priors_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="priors_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="priors_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -148,7 +145,7 @@ Garyfallos Konstantinoudis
     </div>
 </div>
 
-  <p class="date">Aug 14, 2025</p>
+  <p class="date">Aug 5, 2026</p>
 </section>
 <section id="outline" class="slide level2">
 <h2>Outline</h2>
@@ -880,80 +877,42 @@ b_i \sim N(0,\sigma_b^2)
       });
     </script>
     
-
     <script>
-
       // htmlwidgets need to know to resize themselves when slides are shown/hidden.
-
       // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
-
       // slide changes (different for each slide format).
-
       (function () {
-
         // dispatch for htmlwidgets
-
         function fireSlideEnter() {
-
           const event = window.document.createEvent("Event");
-
           event.initEvent("slideenter", true, true);
-
           window.document.dispatchEvent(event);
-
         }
-
-    
 
         function fireSlideChanged(previousSlide, currentSlide) {
-
           fireSlideEnter();
 
-    
-
           // dispatch for shiny
-
           if (window.jQuery) {
-
             if (previousSlide) {
-
               window.jQuery(previousSlide).trigger("hidden");
-
             }
-
             if (currentSlide) {
-
               window.jQuery(currentSlide).trigger("shown");
-
             }
-
           }
-
         }
-
-    
 
         // hookup for slidy
-
         if (window.w3c_slidy) {
-
           window.w3c_slidy.add_observer(function (slide_num) {
-
             // slide_num starts at position 1
-
             fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
-
           });
-
         }
 
-    
-
       })();
-
     </script>
-
-    
 
     <script id="quarto-html-after-body" type="application/javascript">
       window.document.addEventListener("DOMContentLoaded", function (event) {
