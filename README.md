@@ -50,8 +50,8 @@ Below is the set of labs to follow throughout the two days:
 | 1:45 - 2:00 | Break |
 | 2:00 - 2:45 | [Software options](lectures/software_options/software_options.qmd) (Lecture) |
 | 2:45 - 3:00 | Break |
-| 3:00 - 3:45 | [R-INLA](/lectures/inla/inla.qmd) (Lecture) |
-| 3:45 - 4:30 | [R-INLA](/labs/inla/inla.qmd) (Lab) |
+| 3:00 - 3:45 | [INLA and R-INLA](/lectures/inla/inla.qmd) (Lecture) |
+| 3:45 - 4:30 | [INLA and R-INLA](/labs/inla/inla.qmd) (Lab) |
 | 4:30 - 5:00 | Questions, survey on projects, and wrap-up |
 
 ### Day 3 (August 7th 2026)
@@ -84,15 +84,13 @@ Run `pre-commit install` to install the hooks. You now won't be able to commit u
 
 ### Using `Quarto` for presentations
 
-Quarto is pretty cool. I won't bore you, but have a look at the [docs](https://quarto.org/docs/guide/). Here, we're using it for [presentations](https://quarto.org/docs/presentations/revealjs/). It's designed by the folks at `RStudio`, so you `R` folk will be happy. Make a `.qmd` file and run `quarto render *.qmd` to generate the `html`, which you can open in browser. We can get fancy and import our own `css` to have a consistent theme for out presentations.
+Quarto is pretty cool. We won't bore you, but have a look at the [docs](https://quarto.org/docs/guide/). Here, we're using it for [presentations](https://quarto.org/docs/presentations/revealjs/). It's designed by the folks at `RStudio`, so you `R` folk will be happy. Make a `.qmd` file and run `quarto render *.qmd` to generate the `html`, which you can open in browser. We can get fancy and import our own `css` to have a consistent theme for out presentations.
 
 ## Other material
 https://gkonstantinoudis.github.io/teaching/ \
 https://github.com/sparklabnyc/resources/wiki
 
 ## To dos 
-Akis - Priors\
-Robbie - INLA\
 Robbie - Scaling
 
 Day 1: Robbie until 1:30, Akis after\

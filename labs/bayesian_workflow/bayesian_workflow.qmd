@@ -1,0 +1,711 @@
+---
+title: "Bayesian workflow and influence of priors"
+subtitle: "SHARP Bayesian Modeling for Environmental Health Workshop"
+author: "Robbie M. Parks"
+date: "August 05 2026"
+format: html
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(nimble)
+library(bayesplot)
+library(posterior)
+library(patchwork)
+
+theme_set(theme_minimal(base_size = 13))
+color_scheme_set("blue")
+
+set.seed(123)
+options(mc.cores = 2)
+```
+
+# Goal of this computing lab session
+
+In this lab, you will work through a **full Bayesian workflow** using `NIMBLE`, starting from simulated data so that every step is fully transparent.
+
+By the end, you should be able to:
+
+- simulate data from a known data-generating process;
+- write Bayesian models in `NIMBLE`;
+- perform **prior predictive checks**;
+- diagnose **bad priors**;
+- fit a model with MCMC;
+- assess convergence using trace plots, \(\hat{R}\), and effective sample size;
+- perform **posterior predictive checks**;
+- identify when a model is misspecified; and
+- improve the model and compare results across specifications.
+
+# Define research question
+
+Suppose we are interested in the relationship between a continuous environmental exposure and a continuous health outcome.
+
+How do we build, check, diagnose, and refine a Bayesian model so that it can recover the underlying signal in the data?
+
+# 0: Preparation
+
+We will simulate data where the *true* relationship is slightly nonlinear. This is useful because it lets us see what happens when we fit both a poor model and a better model.
+
+## Simulate data
+
+```{r}
+n <- 200
+
+x_raw <- runif(n, -3, 3)
+y_true_mean <- 2 + 1.2 * x_raw - 0.8 * x_raw^2
+y <- rnorm(n, mean = y_true_mean, sd = 1)
+
+dat <- tibble(
+  x = x_raw,
+  y = y,
+  mu_true = y_true_mean
+)
+
+head(dat)
+```
+
+## Visualize the data
+
+```{r}
+ggplot(dat, aes(x = x, y = y)) +
+  geom_point(alpha = 0.65) +
+  geom_line(aes(y = mu_true), linewidth = 1) +
+  labs(
+    x = "Exposure",
+    y = "Outcome"
+  )
+```
+
+**Class question:** Looking at the plot, would a simple straight-line model be enough here?
+
+# 1: A first model that is probably too simple
+
+We will begin with a **linear Normal model** even though the true relationship is nonlinear.
+
+$$
+\begin{aligned}
+y_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta x_i
+\end{aligned}
+$$
+
+This is a useful starting point because the Bayesian workflow is not just about fitting a model once. It is about fitting, checking, diagnosing, and improving.
+
+# 2: Prior predictive checks
+
+A prior predictive check asks: *If our priors were true, what sort of data would the model imply before seeing the observed data?*
+
+We will look at three cases:
+
+1. a **bad overly wide prior**;
+2. a **bad overly restrictive prior**; and
+3. a more **reasonable weakly informative prior**.
+
+## Create a grid of exposure values
+
+```{r}
+x_grid <- seq(min(dat$x), max(dat$x), length.out = 100)
+```
+
+## 2a. Bad prior: wildly too wide
+
+```{r}
+n_sims <- 200
+
+prior_bad_wide <- map_dfr(1:n_sims, function(s) {
+  alpha <- rnorm(1, 0, 2)
+  beta  <- rnorm(1, 0, 10)
+  sigma <- runif(1, 0, 5)
+
+  tibble(
+    sim = s,
+    x = x_grid,
+    y_rep = rnorm(length(x_grid), alpha + beta * x_grid, sigma)
+  )
+})
+```
+
+```{r}
+ggplot(prior_bad_wide, aes(x = x, y = y_rep, group = sim)) +
+  geom_point(alpha = 0.08) +
+  # coord_cartesian(ylim = range(dat$y) + c(-10, 10)) +
+  labs(
+    title = "Prior predictive check: overly wide priors",
+    subtitle = "These priors imply many impossible or wildly implausible datasets",
+    x = "Exposure",
+    y = "Simulated outcome"
+  )
+```
+
+**Class question:** What looks unrealistic about these simulated datasets?
+
+## 2b. Bad prior: too restrictive
+
+```{r}
+prior_bad_tight <- map_dfr(1:n_sims, function(s) {
+  alpha <- rnorm(1, 0, 0.05)
+  beta  <- rnorm(1, 0, 0.05)
+  sigma <- runif(1, 0.05, 0.2)
+
+  tibble(
+    sim = s,
+    x = x_grid,
+    y_rep = rnorm(length(x_grid), alpha + beta * x_grid, sigma)
+  )
+})
+```
+
+```{r}
+ggplot(prior_bad_tight, aes(x = x, y = y_rep, group = sim)) +
+  coord_cartesian(ylim = range(dat$y) + c(-10, 10)) +
+  geom_line(alpha = 0.08) +
+  labs(
+    # title = "Prior predictive check: overly restrictive priors",
+    # subtitle = "These priors barely allow variation and effectively rule out meaningful effects",
+    x = "Exposure",
+    y = "Simulated outcome"
+  )
+```
+
+**Class question:** Why is a very tight prior also a problem, even if the lines look neat?
+
+## 2c. More reasonable prior
+
+To make the model easier to fit, we will center the exposure.
+
+```{r}
+dat <- dat %>%
+  mutate(x_c = x - mean(x))
+```
+
+```{r}
+prior_reasonable <- map_dfr(1:n_sims, function(s) {
+  alpha <- rnorm(1, 0, 5)
+  beta  <- rnorm(1, 0, 2)
+  sigma <- runif(1, 0.2, 5)
+
+  tibble(
+    sim = s,
+    x_c = seq(min(dat$x_c), max(dat$x_c), length.out = 100),
+    y_rep = rnorm(
+      100,
+      alpha + beta * seq(min(dat$x_c), max(dat$x_c), length.out = 100),
+      sigma
+    )
+  )
+})
+```
+
+```{r}
+ggplot(prior_reasonable, aes(x = x_c, y = y_rep, group = sim)) +
+  geom_line(alpha = 0.08) +
+  labs(
+    title = "Prior predictive check: more reasonable priors",
+    subtitle = "These priors allow a wide range of plausible datasets without becoming absurd",
+    x = "Centered exposure",
+    y = "Simulated outcome"
+  )
+```
+
+# 3: Write the first Bayesian model in NIMBLE
+
+We now fit the linear model using reasonable priors.
+
+```{r}
+code_linear <- nimbleCode({
+  alpha ~ dnorm(0, sd = 5)
+  beta ~ dnorm(0, sd = 2)
+  sigma ~ dunif(0, 10)
+
+  for (i in 1:n) {
+    mu[i] <- alpha + beta * x[i]
+    y[i] ~ dnorm(mu[i], sd = sigma)
+  }
+})
+```
+
+## Prepare data, constants, and initial values
+
+```{r}
+constants_linear <- list(n = nrow(dat))
+data_linear <- list(y = dat$y, x = dat$x_c)
+inits_linear <- list(alpha = 0, beta = 0, sigma = 1)
+```
+
+## Build model and inspect MCMC configuration
+
+```{r}
+model_linear <- nimbleModel(
+  code_linear,
+  constants = constants_linear,
+  data = data_linear,
+  inits = inits_linear
+)
+
+conf_linear <- configureMCMC(model_linear)
+conf_linear$printSamplers()
+```
+
+# 4: First MCMC run: intentionally too short
+
+We will deliberately run a short MCMC first to mimic a common classroom situation where a model has been fit, but diagnostics have not really been checked yet.
+
+```{r}
+samples_linear_short <- nimbleMCMC(
+  code = code_linear,
+  constants = constants_linear,
+  data = data_linear,
+  inits = inits_linear,
+  niter = 300,
+  nburnin = 250,
+  nchains = 2,
+  setSeed = c(1,2),
+  samplesAsCodaMCMC = TRUE
+)
+```
+
+## Posterior summaries
+
+```{r}
+summarise_draws(
+  samples_linear_short,
+  default_summary_measures()
+)
+```
+
+## Convergence diagnostics
+
+```{r}
+summarise_draws(
+  samples_linear_short,
+  default_convergence_measures()
+)
+```
+
+## Trace plots
+
+```{r}
+mcmc_trace(samples_linear_short)
+```
+
+**Class question:** Do these chains look fully stable and well mixed?
+
+# 5: Better MCMC run
+
+Now we run the same model more carefully.
+
+```{r}
+samples_linear <- nimbleMCMC(
+  code = code_linear,
+  constants = constants_linear,
+  data = data_linear,
+  inits = inits_linear,
+  niter = 12000,
+  nburnin = 2000,
+  thin = 5,
+  nchains = 3,
+  setSeed = c(1:3),
+  samplesAsCodaMCMC = TRUE
+)
+```
+
+## Posterior summaries
+
+```{r}
+summarise_draws(
+  samples_linear,
+  default_summary_measures()
+)
+```
+
+## Convergence diagnostics
+
+```{r}
+summarise_draws(
+  samples_linear,
+  default_convergence_measures()
+)
+```
+
+## Trace plots
+
+```{r}
+mcmc_trace(samples_linear)
+```
+
+## Posterior intervals
+
+```{r}
+mcmc_intervals(samples_linear, pars = c("alpha", "beta", "sigma"))
+```
+
+**Class question:** Which parameter would represent the shape of the fit here?
+
+# 6: Posterior predictive checks for the linear model
+
+A posterior predictive check asks: *If the fitted model were true, could it generate data that look like what we actually observed?*
+
+## Extract posterior draws
+
+```{r}
+draws_linear <- as.matrix(samples_linear)
+
+dim(draws_linear)
+```
+
+## Simulate replicated outcomes from the posterior
+
+```{r}
+n_draws_ppc <- 300
+draw_ids <- sample(1:nrow(draws_linear), n_draws_ppc)
+
+yrep_linear <- matrix(NA_real_, nrow = n_draws_ppc, ncol = nrow(dat))
+
+for (j in seq_along(draw_ids)) {
+  d <- draw_ids[j]
+  mu_j <- draws_linear[d, "alpha"] + draws_linear[d, "beta"] * dat$x_c
+  sigma_j <- draws_linear[d, "sigma"]
+  yrep_linear[j, ] <- rnorm(nrow(dat), mean = mu_j, sd = sigma_j)
+}
+```
+
+## Compare observed and replicated distributions
+
+```{r}
+ppc_dens_overlay(y = dat$y, yrep = yrep_linear[1:50, ])
+```
+
+## Compare means and standard deviations
+
+```{r}
+ppc_stat(y = dat$y, yrep = yrep_linear, stat = "mean")
+```
+
+```{r}
+ppc_stat(y = dat$y, yrep = yrep_linear, stat = "sd")
+```
+
+## Compare fitted relationship with observed data
+
+```{r}
+pp_linears <- map_dfr(1:100, function(j) {
+  d <- draw_ids[j]
+  tibble(
+    draw = j,
+    x_c = dat$x_c,
+    mu = draws_linear[d, "alpha"] + draws_linear[d, "beta"] * dat$x_c
+  )
+})
+
+ggplot(dat, aes(x = x_c, y = y)) +
+  geom_point(alpha = 0.55) +
+  geom_line(
+    data = pp_linears,
+    aes(y = mu, group = draw),
+    alpha = 0.08,
+    color = "steelblue"
+  ) +
+  labs(
+    title = "Posterior mean functions from the linear model",
+    subtitle = "The model can only fit straight lines",
+    x = "Centered exposure",
+    y = "Outcome"
+  )
+```
+
+**Class question:** What important feature of the data is this model failing to capture?
+
+# 7: A better model: allow curvature
+
+Because the true relationship is nonlinear, we now fit a quadratic mean structure.
+
+$$
+\begin{aligned}
+y_i &\sim \text{Normal}(\mu_i, \sigma) \\
+\mu_i &= \alpha + \beta_1 x_i + \beta_2 x_i^2
+\end{aligned}
+$$
+
+## Add a squared term
+
+```{r}
+dat <- dat %>%
+  mutate(x2 = x_c^2)
+```
+
+## Prior predictive check for the quadratic model
+
+```{r}
+prior_quad <- map_dfr(1:n_sims, function(s) {
+  alpha <- rnorm(1, 0, 5)
+  beta1 <- rnorm(1, 0, 2)
+  beta2 <- rnorm(1, 0, 1)
+  sigma <- runif(1, 0.2, 5)
+
+  x_seq <- seq(min(dat$x_c), max(dat$x_c), length.out = 100)
+
+  tibble(
+    sim = s,
+    x_c = x_seq,
+    y_rep = rnorm(100, alpha + beta1 * x_seq + beta2 * x_seq^2, sigma)
+  )
+})
+```
+
+```{r}
+ggplot(prior_quad, aes(x = x_c, y = y_rep, group = sim)) +
+  geom_line(alpha = 0.06) +
+  labs(
+    title = "Prior predictive check for the quadratic model",
+    subtitle = "The model now allows both linear and curved relationships",
+    x = "Centered exposure",
+    y = "Simulated outcome"
+  )
+```
+
+## Write the quadratic NIMBLE model
+
+```{r}
+code_quad <- nimbleCode({
+  alpha ~ dnorm(0, sd = 5)
+  beta1 ~ dnorm(0, sd = 2)
+  beta2 ~ dnorm(0, sd = 1)
+  sigma ~ dunif(0, 10)
+
+  for (i in 1:n) {
+    mu[i] <- alpha + beta1 * x[i] + beta2 * x2[i]
+    y[i] ~ dnorm(mu[i], sd = sigma)
+  }
+})
+```
+
+## Prepare inputs
+
+```{r}
+constants_quad <- list(n = nrow(dat))
+data_quad <- list(y = dat$y, x = dat$x_c, x2 = dat$x2)
+inits_quad <- list(alpha = 0, beta1 = 0, beta2 = 0, sigma = 1)
+```
+
+## Fit the quadratic model
+
+```{r}
+samples_quad <- nimbleMCMC(
+  code = code_quad,
+  constants = constants_quad,
+  data = data_quad,
+  inits = inits_quad,
+  niter = 12000,
+  nburnin = 2000,
+  thin = 5,
+  nchains = 3,
+  setSeed = c(1:3),
+  samplesAsCodaMCMC = TRUE
+)
+```
+
+## Summaries and diagnostics
+
+```{r}
+summarise_draws(
+  samples_quad,
+  default_summary_measures()
+)
+```
+
+```{r}
+summarise_draws(
+  samples_quad,
+  default_convergence_measures()
+)
+```
+
+```{r}
+mcmc_trace(samples_quad)
+```
+
+# 8: Posterior predictive checks for the quadratic model
+
+## Extract posterior draws
+
+```{r}
+draws_quad <- as.matrix(samples_quad)
+```
+
+## Simulate replicated outcomes
+
+```{r}
+draw_ids_quad <- sample(1:nrow(draws_quad), n_draws_ppc)
+
+yrep_quad <- matrix(NA_real_, nrow = n_draws_ppc, ncol = nrow(dat))
+
+for (j in seq_along(draw_ids_quad)) {
+  d <- draw_ids_quad[j]
+  mu_j <- draws_quad[d, "alpha"] +
+    draws_quad[d, "beta1"] * dat$x_c +
+    draws_quad[d, "beta2"] * dat$x2
+  sigma_j <- draws_quad[d, "sigma"]
+  yrep_quad[j, ] <- rnorm(nrow(dat), mean = mu_j, sd = sigma_j)
+}
+```
+
+## Compare distributions
+
+```{r}
+ppc_dens_overlay(y = dat$y, yrep = yrep_quad[1:50, ])
+```
+
+## Compare summary statistics
+
+```{r}
+ppc_stat(y = dat$y, yrep = yrep_quad, stat = "mean")
+```
+
+```{r}
+ppc_stat(y = dat$y, yrep = yrep_quad, stat = "sd")
+```
+
+## Compare fitted curves with observed data
+
+```{r}
+pp_quads <- map_dfr(1:100, function(j) {
+  d <- draw_ids_quad[j]
+  tibble(
+    draw = j,
+    x_c = dat$x_c,
+    mu = draws_quad[d, "alpha"] +
+      draws_quad[d, "beta1"] * dat$x_c +
+      draws_quad[d, "beta2"] * dat$x2
+  )
+})
+
+ggplot(dat, aes(x = x_c, y = y)) +
+  geom_point(alpha = 0.55) +
+  geom_line(
+    data = pp_quads,
+    aes(y = mu, group = draw),
+    alpha = 0.08,
+    color = "darkgreen"
+  ) +
+  labs(
+    title = "Posterior mean functions from the quadratic model",
+    subtitle = "The model now captures the curvature in the data much better",
+    x = "Centered exposure",
+    y = "Outcome"
+  )
+```
+
+**Class question:** Compared with the linear model, what improved here?
+
+# 9: Compare the poor model and the improved model
+
+## Compare posterior predictive distributions side by side
+
+```{r}
+p1 <- ppc_dens_overlay(y = dat$y, yrep = yrep_linear[1:50, ]) +
+  ggtitle("Linear model")
+
+p2 <- ppc_dens_overlay(y = dat$y, yrep = yrep_quad[1:50, ]) +
+  ggtitle("Quadratic model")
+
+p1 + p2
+```
+
+## Compare fitted mean curves
+```{r}
+linear_fits <- sapply(1:200, function(j) {
+  d <- draw_ids[j]
+  draws_linear[d, "alpha"] + draws_linear[d, "beta"] * dat$x_c
+})
+
+quad_fits <- sapply(1:200, function(j) {
+  d <- draw_ids_quad[j]
+  draws_quad[d, "alpha"] +
+    draws_quad[d, "beta1"] * dat$x_c +
+    draws_quad[d, "beta2"] * dat$x2
+})
+
+linear_mean_curve <- tibble(
+  x_c = dat$x_c,
+  mu = rowMeans(linear_fits)
+) %>%
+  arrange(x_c)
+
+quad_mean_curve <- tibble(
+  x_c = dat$x_c,
+  mu = rowMeans(quad_fits)
+) %>%
+  arrange(x_c)
+
+ggplot(dat, aes(x = x_c, y = y)) +
+  geom_point(alpha = 0.45) +
+  geom_line(
+    data = linear_mean_curve,
+    aes(x = x_c, y = mu),
+    color = "steelblue",
+    linewidth = 1
+  ) +
+  geom_line(
+    data = quad_mean_curve,
+    aes(x = x_c, y = mu),
+    color = "darkgreen",
+    linewidth = 1
+  ) +
+  labs(
+    title = "Posterior mean fit comparison",
+    subtitle = "Blue = linear model, green = quadratic model",
+    x = "Centered exposure",
+    y = "Outcome"
+  )
+```
+
+# 10: Sensitivity analysis
+
+The next step in a Bayesian workflow is to ask whether our conclusions are sensitive to reasonable alternative priors.
+
+Here we keep the quadratic model but make the prior on the curvature term a little wider.
+
+```{r}
+code_quad_sens <- nimbleCode({
+  alpha ~ dnorm(0, sd = 5)
+  beta1 ~ dnorm(0, sd = 2)
+  beta2 ~ dnorm(0, sd = 2)
+  sigma ~ dunif(0, 10)
+
+  for (i in 1:n) {
+    mu[i] <- alpha + beta1 * x[i] + beta2 * x2[i]
+    y[i] ~ dnorm(mu[i], sd = sigma)
+  }
+})
+```
+
+```{r}
+samples_quad_sens <- nimbleMCMC(
+  code = code_quad_sens,
+  constants = constants_quad,
+  data = data_quad,
+  inits = inits_quad,
+  niter = 12000,
+  nburnin = 2000,
+  thin = 5,
+  nchains = 3,
+  setSeed = c(1:3),
+  samplesAsCodaMCMC = TRUE
+)
+```
+
+## Compare posterior intervals for the key parameters
+
+```{r}
+mcmc_intervals(
+  samples_quad,
+  pars = c("beta1", "beta2")
+)
+```
+
+```{r}
+mcmc_intervals(
+  samples_quad_sens,
+  pars = c("beta1", "beta2")
+)
+```
