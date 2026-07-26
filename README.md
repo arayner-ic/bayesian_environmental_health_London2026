@@ -19,7 +19,7 @@ Below is the set of labs to follow throughout the two days:
 ### Day 1 (August 5th 2026)
 
 | Time | Activity |
-|----|----|
+|------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
 | 9:00 - 9:15 | [Welcome and introduction](/lectures/welcome_and_introduction/welcome_and_introduction.qmd) |
 | 9:15 - 10:00 | [Principles of Bayesian statistics](/lectures/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lecture) |
@@ -27,7 +27,7 @@ Below is the set of labs to follow throughout the two days:
 | 10:45 - 11:00 | Break |
 | 11:00 - 11:45 | [Bayesian workflow](/lectures/bayesian_workflow/bayesian_workflow.qmd) (Lecture) |
 | 11:45 - 12:45 | Lunch |
-| 12:45 - 1:30 | [Bayesian workflow](/lab/bayesian_workflow/bayesian_workflow.qmd) (Lab)  |
+| 12:45 - 1:30 | [Bayesian workflow](/labs/bayesian_workflow/bayesian_workflow.qmd) (Lab) |
 | 1:30 - 1:45 | Break |
 | 1:45 - 2:30 | [Hierarchical modeling](/lectures/hierarchical_modelling/hierarchical_modelling.qmd) (Lecture) |
 | 2:30 - 3:15 | [Hierarchical modelling](/labs/hierarchical_modelling/hierarchical_modelling.qmd) (Hands-on Lab) |
@@ -39,7 +39,7 @@ Below is the set of labs to follow throughout the two days:
 ### Day 2 (August 6th 2026)
 
 | Time | Activity |
-|----|----|
+|------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
 | 9:00 - 9:45 | [Non-linear regression](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
 | 9:45 - 10:30 | [Non-linear regression](/labs/non_linear_regression/non_linear_regression.qmd) (Hands-on Lab) |
@@ -57,12 +57,12 @@ Below is the set of labs to follow throughout the two days:
 ### Day 3 (August 7th 2026)
 
 | Time | Activity |
-|----|----|
+|------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
 | 9:00 - 10:00 | [Advanced models](lectures/advanced_models/advanced_models.qmd) (Lecture) |
 | 10:00 - 10:15 | Break |
 | 10:15 - 11:15 | [Advanced models](/labs/advanced_models/advanced_models.qmd) (Hands-on Lab) |
-| 11:15 - 11:45 | Attribution (Lecture)|
+| 11:15 - 11:45 | Attribution (Lecture) |
 | 11:45 - 12:45 | Lunch |
 | 12:45 - 1:30 | [Scaling models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
 | 1:30 - 2:15 | [Scaling models](/labs/scaling_models/scaling_models.qmd) (Lab) |
@@ -87,10 +87,12 @@ Run `pre-commit install` to install the hooks. You now won't be able to commit u
 Quarto is pretty cool. We won't bore you, but have a look at the [docs](https://quarto.org/docs/guide/). Here, we're using it for [presentations](https://quarto.org/docs/presentations/revealjs/). It's designed by the folks at `RStudio`, so you `R` folk will be happy. Make a `.qmd` file and run `quarto render *.qmd` to generate the `html`, which you can open in browser. We can get fancy and import our own `css` to have a consistent theme for out presentations.
 
 ## Other material
-https://gkonstantinoudis.github.io/teaching/ \
-https://github.com/sparklabnyc/resources/wiki
 
-## To dos 
+<https://gkonstantinoudis.github.io/teaching/>\
+<https://github.com/sparklabnyc/resources/wiki>
+
+## To dos
+
 Robbie - Scaling
 
 Day 1: Robbie until 1:30, Akis after\
