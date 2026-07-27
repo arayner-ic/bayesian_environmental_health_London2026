@@ -14,7 +14,7 @@ title-slide-attributes:
 format:
   revealjs:
     slide-number: true
-    incremental: false
+    incremental: true
     chalkboard:
       buttons: false
       preview-links: auto
@@ -45,6 +45,12 @@ set.seed(2)
 
 ## Outline
 
+- The purpose of priors
+- Different kinds of priors and their applications
+  - Conjugate priors
+  - Jeffreys priors
+  - Informative priors
+- Hyperpriors and variance priors
 
 ## A motivating question
 
@@ -180,16 +186,17 @@ An **informative prior** incorporates substantive prior knowledge about a parame
 Sources may include:
 
 - previous studies
-- meta-analysis
+- meta analyses
 - expert elicitation
 - biological or physical constraints
+
+## Informative priors
 
 Example:
 
 $$
 \beta \sim N(0.01,0.005^2)
 $$
-
 This may reflect earlier evidence suggesting a small positive association.
 
 
@@ -322,6 +329,8 @@ For summer mortality, a simple scientific question is:
 
 > At what temperature does risk begin to increase, and how steep is the increase above that point?
 
+## Example: summer temperature and mortality
+
 A Bayesian threshold model allows us to estimate both:
 
 - the **threshold temperature**
@@ -349,6 +358,8 @@ The prior matters because:
 - the threshold may be only weakly identified by the data
 - different values of $\psi$ imply different effective exposure-response shapes
 - $\psi$ and $\beta$ are estimated jointly
+
+## Why does the prior on the threshold matter?
 
 As a result, the prior on $\psi$ can affect:
 
@@ -430,6 +441,8 @@ the covariance kernel often depends on hyperparameters such as:
 
 - a variance parameter
 - a length-scale parameter
+
+## Hyperpriors in Gaussian processes
 
 For example:
 
@@ -527,6 +540,8 @@ The parameter $\sigma_b$ determines how much the regional effects $b_i$ are allo
 - small $\sigma_b$ implies stronger shrinkage toward the overall mean
 - large $\sigma_b$ allows more regional heterogeneity
 
+## The prior on $\sigma_b$ controls pooling
+
 So the prior on $\sigma_b$ directly influences the amount of **partial pooling**:
 
 - stronger concentration near zero $\rightarrow$ more pooling
@@ -551,12 +566,9 @@ A useful strategy is:
 Variance priors should be scientifically interpretable, not chosen only for convenience.
 
 
-## Key messages and next step
-::: {style="font-size: 0.8em;"}
-### What we have seen
+## What we have seen
 
-- Priors are a central part of Bayesian inference.
-- Different priors serve different purposes:
+- Priors are a central part of Bayesian inference. Different priors serve different purposes:
   - conjugate and default priors
   - informative priors based on existing evidence
   - hyperpriors for hierarchical and smoothing models
@@ -564,8 +576,7 @@ Variance priors should be scientifically interpretable, not chosen only for conv
   - pooling
   - smoothness
   - model complexity
-:::
-
+  
 ## Key messages and next step
 ::: {style="font-size: 0.8em;"}
 

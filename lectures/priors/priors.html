@@ -149,6 +149,16 @@ Garyfallos Konstantinoudis
 </section>
 <section id="outline" class="slide level2">
 <h2>Outline</h2>
+<ul>
+<li class="fragment">The purpose of priors</li>
+<li class="fragment">Different kinds of priors and their applications
+<ul>
+<li class="fragment">Conjugate priors</li>
+<li class="fragment">Jeffreys priors</li>
+<li class="fragment">Informative priors</li>
+</ul></li>
+<li class="fragment">Hyperpriors and variance priors</li>
+</ul>
 </section>
 <section id="a-motivating-question" class="slide level2">
 <h2>A motivating question</h2>
@@ -161,10 +171,10 @@ Garyfallos Konstantinoudis
 <p>A <strong>prior distribution</strong> describes what is known, believed, or considered plausible about an unknown parameter before observing the current data.</p>
 <p>It may reflect:</p>
 <ul>
-<li>previous empirical studies,</li>
-<li>expert elicitation,</li>
-<li>biological or physical constraints,</li>
-<li>or weak assumptions used to regularize estimation.</li>
+<li class="fragment">previous empirical studies,</li>
+<li class="fragment">expert elicitation,</li>
+<li class="fragment">biological or physical constraints,</li>
+<li class="fragment">or weak assumptions used to regularize estimation.</li>
 </ul>
 </section>
 <section id="the-bayesian-framework" class="slide level2">
@@ -173,11 +183,11 @@ Garyfallos Konstantinoudis
 p(\theta \mid y) \propto p(y \mid \theta)p(\theta)
 \]</span></p>
 <ul>
-<li><span class="math inline">\(p(\theta)\)</span>: prior distribution<br>
+<li class="fragment"><span class="math inline">\(p(\theta)\)</span>: prior distribution<br>
 </li>
-<li><span class="math inline">\(p(y \mid \theta)\)</span>: likelihood<br>
+<li class="fragment"><span class="math inline">\(p(y \mid \theta)\)</span>: likelihood<br>
 </li>
-<li><span class="math inline">\(p(\theta \mid y)\)</span>: posterior distribution</li>
+<li class="fragment"><span class="math inline">\(p(\theta \mid y)\)</span>: posterior distribution</li>
 </ul>
 <p>The posterior combines prior information with information from the observed data.</p>
 </section>
@@ -185,10 +195,10 @@ p(\theta \mid y) \propto p(y \mid \theta)p(\theta)
 <h2>Why priors matter</h2>
 <p>Priors are important because:</p>
 <ul>
-<li>scientific inference rarely starts from zero knowledge,</li>
-<li>they allow existing evidence to be incorporated,</li>
-<li>they can stabilize estimation in noisy or sparse settings,</li>
-<li>and they make assumptions explicit.</li>
+<li class="fragment">scientific inference rarely starts from zero knowledge,</li>
+<li class="fragment">they allow existing evidence to be incorporated,</li>
+<li class="fragment">they can stabilize estimation in noisy or sparse settings,</li>
+<li class="fragment">and they make assumptions explicit.</li>
 </ul>
 <p>These issues are especially important in environmental health, where effects are often small and uncertainty is substantial.</p>
 </section>
@@ -197,17 +207,17 @@ p(\theta \mid y) \propto p(y \mid \theta)p(\theta)
 <div style="font-size: 0.8em;">
 <p>Priors can be chosen for different reasons:</p>
 <ul>
-<li>mathematical convenience,</li>
-<li>formal default rules,</li>
-<li>weak regularisation,</li>
-<li>or incorporation of external knowledge.</li>
+<li class="fragment">mathematical convenience,</li>
+<li class="fragment">formal default rules,</li>
+<li class="fragment">weak regularisation,</li>
+<li class="fragment">or incorporation of external knowledge.</li>
 </ul>
 <p>Some of the most commonly discussed classes are:</p>
 <ul>
-<li>conjugate priors</li>
-<li>Jeffreys priors</li>
-<li>vague or noninformative priors</li>
-<li>informative priors</li>
+<li class="fragment">conjugate priors</li>
+<li class="fragment">Jeffreys priors</li>
+<li class="fragment">vague or noninformative priors</li>
+<li class="fragment">informative priors</li>
 </ul>
 </div>
 </section>
@@ -282,9 +292,9 @@ p(\theta) \propto \sqrt{I(\theta)}
 <p>They are often used as default or “objective” priors because they are invariant under reparameterization.</p>
 <p><strong>Why useful?</strong></p>
 <ul>
-<li>principled default construction</li>
-<li>invariant to one-to-one transformations</li>
-<li>theoretically elegant</li>
+<li class="fragment">principled default construction</li>
+<li class="fragment">invariant to one-to-one transformations</li>
+<li class="fragment">theoretically elegant</li>
 </ul>
 </section>
 <section id="jeffreys-priors-1" class="slide level2">
@@ -296,9 +306,9 @@ p(\theta) \propto \sqrt{I(\theta)}
 <p>They are often used as default or “objective” priors because they are invariant under reparameterization.</p>
 <p><strong>Limitations:</strong></p>
 <ul>
-<li>may be improper</li>
-<li>may be hard to interpret in applied settings</li>
-<li>are not always practically noninformative</li>
+<li class="fragment">may be improper</li>
+<li class="fragment">may be hard to interpret in applied settings</li>
+<li class="fragment">are not always practically noninformative</li>
 </ul>
 </section>
 <section id="informative-priors" class="slide level2">
@@ -306,24 +316,26 @@ p(\theta) \propto \sqrt{I(\theta)}
 <p>An <strong>informative prior</strong> incorporates substantive prior knowledge about a parameter.</p>
 <p>Sources may include:</p>
 <ul>
-<li>previous studies</li>
-<li>meta-analysis</li>
-<li>expert elicitation</li>
-<li>biological or physical constraints</li>
+<li class="fragment">previous studies</li>
+<li class="fragment">meta analyses</li>
+<li class="fragment">expert elicitation</li>
+<li class="fragment">biological or physical constraints</li>
 </ul>
-<p>Example:</p>
-<p><span class="math display">\[
-\beta \sim N(0.01,0.005^2)
-\]</span></p>
-<p>This may reflect earlier evidence suggesting a small positive association.</p>
 </section>
 <section id="informative-priors-1" class="slide level2">
 <h2>Informative priors</h2>
+<p>Example:</p>
+<p><span class="math display">\[
+\beta \sim N(0.01,0.005^2)
+\]</span> This may reflect earlier evidence suggesting a small positive association.</p>
+</section>
+<section id="informative-priors-2" class="slide level2">
+<h2>Informative priors</h2>
 <p><strong>Why useful?</strong></p>
 <ul>
-<li>incorporates existing knowledge</li>
-<li>improves precision</li>
-<li>supports cumulative scientific inference</li>
+<li class="fragment">incorporates existing knowledge</li>
+<li class="fragment">improves precision</li>
+<li class="fragment">supports cumulative scientific inference</li>
 </ul>
 <p><strong>Limitation:</strong> results should be checked with sensitivity analysis.</p>
 </section>
@@ -337,10 +349,10 @@ Y_i \sim \text{Poisson}(\mu_i)
 \log(\mu_i) = \alpha + \beta X_i + \gamma^\top Z_i
 \]</span></p>
 <ul>
-<li><span class="math inline">\(Y_i\)</span> is a health outcome</li>
-<li><span class="math inline">\(X_i\)</span> is air pollution exposure</li>
-<li><span class="math inline">\(Z_i\)</span> are confounders</li>
-<li><span class="math inline">\(\beta\)</span> is the association between air pollution and health</li>
+<li class="fragment"><span class="math inline">\(Y_i\)</span> is a health outcome</li>
+<li class="fragment"><span class="math inline">\(X_i\)</span> is air pollution exposure</li>
+<li class="fragment"><span class="math inline">\(Z_i\)</span> are confounders</li>
+<li class="fragment"><span class="math inline">\(\beta\)</span> is the association between air pollution and health</li>
 </ul>
 </section>
 <section id="example-air-pollution-health-model-1" class="slide level2">
@@ -355,8 +367,8 @@ Y_i \sim \text{Poisson}(\mu_i)
 \]</span></p>
 <p>Interpretation:</p>
 <ul>
-<li>the prior mean reflects the effect suggested by previous studies</li>
-<li>the prior variance reflects uncertainty in that evidence</li>
+<li class="fragment">the prior mean reflects the effect suggested by previous studies</li>
+<li class="fragment">the prior variance reflects uncertainty in that evidence</li>
 </ul>
 </section>
 <section id="example-air-pollution-health-model-2" class="slide level2">
@@ -396,18 +408,18 @@ Y_t \sim \text{Poisson}(\mu_t)
 \]</span></p>
 <p>where:</p>
 <ul>
-<li><span class="math inline">\(Y_t\)</span> is daily all-cause mortality</li>
-<li><span class="math inline">\(x_t\)</span> is daily ozone concentration (scaled)</li>
-<li><span class="math inline">\(\beta\)</span> is the log-relative risk associated with ozone</li>
+<li class="fragment"><span class="math inline">\(Y_t\)</span> is daily all-cause mortality</li>
+<li class="fragment"><span class="math inline">\(x_t\)</span> is daily ozone concentration (scaled)</li>
+<li class="fragment"><span class="math inline">\(\beta\)</span> is the log-relative risk associated with ozone</li>
 </ul>
 </section>
 <section id="example-ozone-and-all-cause-mortality-in-chicago-1" class="slide level2">
 <h2>Example: ozone and all-cause mortality in Chicago</h2>
 <p>To illustrate the role of the prior, we fit the same model under three different priors for <span class="math inline">\(\beta\)</span>:</p>
 <ul>
-<li><strong>Diffuse prior</strong>: <span class="math inline">\(N(0, 0.5)\)</span></li>
-<li><strong>Weakly informative prior</strong>: <span class="math inline">\(N(0, 0.1)\)</span></li>
-<li><strong>Informative prior</strong>: <span class="math inline">\(N(0.01, 0.005)\)</span></li>
+<li class="fragment"><strong>Diffuse prior</strong>: <span class="math inline">\(N(0, 0.5)\)</span></li>
+<li class="fragment"><strong>Weakly informative prior</strong>: <span class="math inline">\(N(0, 0.1)\)</span></li>
+<li class="fragment"><strong>Informative prior</strong>: <span class="math inline">\(N(0.01, 0.005)\)</span></li>
 </ul>
 </section>
 <section id="prior-choice-and-posterior-inference" class="slide level2">
@@ -421,10 +433,13 @@ Y_t \sim \text{Poisson}(\mu_t)
 <blockquote>
 <p>At what temperature does risk begin to increase, and how steep is the increase above that point?</p>
 </blockquote>
+</section>
+<section id="example-summer-temperature-and-mortality-1" class="slide level2">
+<h2>Example: summer temperature and mortality</h2>
 <p>A Bayesian threshold model allows us to estimate both:</p>
 <ul>
-<li>the <strong>threshold temperature</strong></li>
-<li>the <strong>slope above the threshold</strong></li>
+<li class="fragment">the <strong>threshold temperature</strong></li>
+<li class="fragment">the <strong>slope above the threshold</strong></li>
 </ul>
 </section>
 <section id="a-simple-linear-threshold-model" class="slide level2">
@@ -436,24 +451,27 @@ Y_t \sim \text{Poisson}(\mu_t) \\
 (T_t - \psi)_+ = \max(T_t - \psi,0)
 \]</span></p>
 <ul>
-<li>below <span class="math inline">\(\psi\)</span>, temperature has no effect</li>
-<li>above <span class="math inline">\(\psi\)</span>, mortality increases linearly</li>
-<li><span class="math inline">\(\beta\)</span> is the slope above the threshold</li>
-<li><span class="math inline">\(\psi\)</span> is the unknown threshold</li>
+<li class="fragment">below <span class="math inline">\(\psi\)</span>, temperature has no effect</li>
+<li class="fragment">above <span class="math inline">\(\psi\)</span>, mortality increases linearly</li>
+<li class="fragment"><span class="math inline">\(\beta\)</span> is the slope above the threshold</li>
+<li class="fragment"><span class="math inline">\(\psi\)</span> is the unknown threshold</li>
 </ul>
 </section>
 <section id="why-does-the-prior-on-the-threshold-matter" class="slide level2">
 <h2>Why does the prior on the threshold matter?</h2>
 <p>The prior matters because:</p>
 <ul>
-<li>the threshold may be only weakly identified by the data</li>
-<li>different values of <span class="math inline">\(\psi\)</span> imply different effective exposure-response shapes</li>
-<li><span class="math inline">\(\psi\)</span> and <span class="math inline">\(\beta\)</span> are estimated jointly</li>
+<li class="fragment">the threshold may be only weakly identified by the data</li>
+<li class="fragment">different values of <span class="math inline">\(\psi\)</span> imply different effective exposure-response shapes</li>
+<li class="fragment"><span class="math inline">\(\psi\)</span> and <span class="math inline">\(\beta\)</span> are estimated jointly</li>
 </ul>
+</section>
+<section id="why-does-the-prior-on-the-threshold-matter-1" class="slide level2">
+<h2>Why does the prior on the threshold matter?</h2>
 <p>As a result, the prior on <span class="math inline">\(\psi\)</span> can affect:</p>
 <ul>
-<li>the posterior of the threshold</li>
-<li>the posterior of the slope above threshold</li>
+<li class="fragment">the posterior of the threshold</li>
+<li class="fragment">the posterior of the slope above threshold</li>
 </ul>
 </section>
 <section id="result" class="slide level2">
@@ -466,9 +484,9 @@ Y_t \sim \text{Poisson}(\mu_t) \\
 <p>These are <strong>hyperparameters</strong>, and priors placed on them are called <strong>hyperpriors</strong>.</p>
 <p>Variance hyperparameters are especially important because they control:</p>
 <ul>
-<li>pooling</li>
-<li>smoothness</li>
-<li>model complexity</li>
+<li class="fragment">pooling</li>
+<li class="fragment">smoothness</li>
+<li class="fragment">model complexity</li>
 </ul>
 </section>
 <section id="what-is-a-hyperprior" class="slide level2">
@@ -491,8 +509,8 @@ b_i \sim N(0,\sigma_b^2)
 b_i \sim N(0,\sigma_b^2)
 \]</span></p>
 <ul>
-<li>small <span class="math inline">\(\sigma_b\)</span> implies stronger shrinkage toward zero</li>
-<li>large <span class="math inline">\(\sigma_b\)</span> allows more heterogeneity across groups</li>
+<li class="fragment">small <span class="math inline">\(\sigma_b\)</span> implies stronger shrinkage toward zero</li>
+<li class="fragment">large <span class="math inline">\(\sigma_b\)</span> allows more heterogeneity across groups</li>
 </ul>
 <p>So the hyperprior on <span class="math inline">\(\sigma_b\)</span> controls the amount of <strong>partial pooling</strong>.</p>
 </section>
@@ -504,8 +522,8 @@ f_t \sim N(f_{t-1}, \sigma_f^2)
 \]</span></p>
 <p>the variance parameter <span class="math inline">\(\sigma_f^2\)</span> controls how much the function can change over time.</p>
 <ul>
-<li>small <span class="math inline">\(\sigma_f\)</span> gives a smoother function</li>
-<li>large <span class="math inline">\(\sigma_f\)</span> allows a rougher function</li>
+<li class="fragment">small <span class="math inline">\(\sigma_f\)</span> gives a smoother function</li>
+<li class="fragment">large <span class="math inline">\(\sigma_f\)</span> allows a rougher function</li>
 </ul>
 <p>A prior on <span class="math inline">\(\sigma_f\)</span> is therefore a prior on <strong>roughness</strong>.</p>
 </section>
@@ -517,9 +535,12 @@ f(\cdot) \sim GP(0,K(\cdot,\cdot))
 \]</span></p>
 <p>the covariance kernel often depends on hyperparameters such as:</p>
 <ul>
-<li>a variance parameter</li>
-<li>a length-scale parameter</li>
+<li class="fragment">a variance parameter</li>
+<li class="fragment">a length-scale parameter</li>
 </ul>
+</section>
+<section id="hyperpriors-in-gaussian-processes-1" class="slide level2">
+<h2>Hyperpriors in Gaussian processes</h2>
 <p>For example:</p>
 <p><span class="math display">\[
 K(x,x') = \sigma^2 \exp\left(-\frac{(x-x')^2}{2\ell^2}\right)
@@ -534,9 +555,9 @@ K(x,x') = \sigma^2 \exp\left(-\frac{(x-x')^2}{2\ell^2}\right)
 \]</span></p>
 <p>Common parameterizations include:</p>
 <ul>
-<li>variance <span class="math inline">\(\sigma^2\)</span></li>
-<li>standard deviation <span class="math inline">\(\sigma\)</span></li>
-<li>precision <span class="math inline">\(\tau = 1/\sigma^2\)</span></li>
+<li class="fragment">variance <span class="math inline">\(\sigma^2\)</span></li>
+<li class="fragment">standard deviation <span class="math inline">\(\sigma\)</span></li>
+<li class="fragment">precision <span class="math inline">\(\tau = 1/\sigma^2\)</span></li>
 </ul>
 <p>In practice, priors on the standard deviation are often easier to interpret.</p>
 </section>
@@ -544,9 +565,9 @@ K(x,x') = \sigma^2 \exp\left(-\frac{(x-x')^2}{2\ell^2}\right)
 <h2>Common prior choices for <span class="math inline">\(\sigma\)</span></h2>
 <p>Common priors for scale parameters include:</p>
 <ul>
-<li>half-normal</li>
-<li>half-Student-<span class="math inline">\(t\)</span></li>
-<li>bounded uniform priors</li>
+<li class="fragment">half-normal</li>
+<li class="fragment">half-Student-<span class="math inline">\(t\)</span></li>
+<li class="fragment">bounded uniform priors</li>
 </ul>
 <p>Examples:</p>
 <p><span class="math display">\[
@@ -584,22 +605,25 @@ Y_i \sim \text{Poisson}(\mu_i) \\
 b_i \sim N(0,\sigma_b^2)
 \]</span></p>
 <ul>
-<li><span class="math inline">\(\lambda_i\)</span> is the region-specific relative risk</li>
-<li><span class="math inline">\(b_i\)</span> is the region-specific deviation on the log scale</li>
-<li><span class="math inline">\(\sigma_b\)</span> controls the heterogeneity across regions</li>
+<li class="fragment"><span class="math inline">\(\lambda_i\)</span> is the region-specific relative risk</li>
+<li class="fragment"><span class="math inline">\(b_i\)</span> is the region-specific deviation on the log scale</li>
+<li class="fragment"><span class="math inline">\(\sigma_b\)</span> controls the heterogeneity across regions</li>
 </ul>
 </section>
 <section id="the-prior-on-sigma_b-controls-pooling" class="slide level2">
 <h2>The prior on <span class="math inline">\(\sigma_b\)</span> controls pooling</h2>
 <p>The parameter <span class="math inline">\(\sigma_b\)</span> determines how much the regional effects <span class="math inline">\(b_i\)</span> are allowed to vary.</p>
 <ul>
-<li>small <span class="math inline">\(\sigma_b\)</span> implies stronger shrinkage toward the overall mean</li>
-<li>large <span class="math inline">\(\sigma_b\)</span> allows more regional heterogeneity</li>
+<li class="fragment">small <span class="math inline">\(\sigma_b\)</span> implies stronger shrinkage toward the overall mean</li>
+<li class="fragment">large <span class="math inline">\(\sigma_b\)</span> allows more regional heterogeneity</li>
 </ul>
+</section>
+<section id="the-prior-on-sigma_b-controls-pooling-1" class="slide level2">
+<h2>The prior on <span class="math inline">\(\sigma_b\)</span> controls pooling</h2>
 <p>So the prior on <span class="math inline">\(\sigma_b\)</span> directly influences the amount of <strong>partial pooling</strong>:</p>
 <ul>
-<li>stronger concentration near zero <span class="math inline">\(\rightarrow\)</span> more pooling</li>
-<li>broader support for larger values <span class="math inline">\(\rightarrow\)</span> less pooling</li>
+<li class="fragment">stronger concentration near zero <span class="math inline">\(\rightarrow\)</span> more pooling</li>
+<li class="fragment">broader support for larger values <span class="math inline">\(\rightarrow\)</span> less pooling</li>
 </ul>
 <p><span class="math inline">\(\sigma_b\)</span> important in hierarchical models.</p>
 </section>
@@ -611,44 +635,40 @@ b_i \sim N(0,\sigma_b^2)
 <h2>How should we tune the variance prior?</h2>
 <p>A useful strategy is:</p>
 <ol type="1">
-<li>think on the scale of <span class="math inline">\(\sigma\)</span></li>
-<li>ask what amount of heterogeneity or roughness is plausible</li>
-<li>choose a weakly informative prior that respects that scale</li>
-<li>use prior predictive checks</li>
-<li>examine sensitivity to alternative priors</li>
+<li class="fragment">think on the scale of <span class="math inline">\(\sigma\)</span></li>
+<li class="fragment">ask what amount of heterogeneity or roughness is plausible</li>
+<li class="fragment">choose a weakly informative prior that respects that scale</li>
+<li class="fragment">use prior predictive checks</li>
+<li class="fragment">examine sensitivity to alternative priors</li>
 </ol>
 <p>Variance priors should be scientifically interpretable, not chosen only for convenience.</p>
 </section>
-<section id="key-messages-and-next-step" class="slide level2">
-<h2>Key messages and next step</h2>
-<section id="what-we-have-seen" style="font-size: 0.8em;">
-<h3>What we have seen</h3>
+<section id="what-we-have-seen" class="slide level2">
+<h2>What we have seen</h2>
 <ul>
-<li>Priors are a central part of Bayesian inference.</li>
-<li>Different priors serve different purposes:
+<li class="fragment">Priors are a central part of Bayesian inference. Different priors serve different purposes:
 <ul>
-<li>conjugate and default priors</li>
-<li>informative priors based on existing evidence</li>
-<li>hyperpriors for hierarchical and smoothing models</li>
+<li class="fragment">conjugate and default priors</li>
+<li class="fragment">informative priors based on existing evidence</li>
+<li class="fragment">hyperpriors for hierarchical and smoothing models</li>
 </ul></li>
-<li>Priors on variance parameters are especially important because they control:
+<li class="fragment">Priors on variance parameters are especially important because they control:
 <ul>
-<li>pooling</li>
-<li>smoothness</li>
-<li>model complexity</li>
+<li class="fragment">pooling</li>
+<li class="fragment">smoothness</li>
+<li class="fragment">model complexity</li>
 </ul></li>
 </ul>
 </section>
-</section>
-<section id="key-messages-and-next-step-1" class="slide level2">
+<section id="key-messages-and-next-step" class="slide level2">
 <h2>Key messages and next step</h2>
 <div style="font-size: 0.8em;">
 <h3 id="good-practice">Good practice</h3>
 <ul>
-<li>choose priors on an interpretable scale</li>
-<li>respect parameter constraints, such as positivity</li>
-<li>use prior predictive thinking</li>
-<li>assess sensitivity to alternative reasonable priors</li>
+<li class="fragment">choose priors on an interpretable scale</li>
+<li class="fragment">respect parameter constraints, such as positivity</li>
+<li class="fragment">use prior predictive thinking</li>
+<li class="fragment">assess sensitivity to alternative reasonable priors</li>
 </ul>
 <h3 id="next-tutorial">Next: tutorial</h3>
 <p>In the tutorial, we will fit simple Bayesian models and examine directly how different prior choices affect posterior inference.</p>
