@@ -75,7 +75,7 @@ the expected number of deaths, and:
 ```{r fig.width=11}
 ggplot(data = data_england, aes(fill = expectd)) +
   geom_sf(colour = "white", size = 0.1) +
-  labs("Expected number of deaths") +
+  labs(title= "Expected number of deaths") +
   theme_void() +
   scale_fill_continuous_sequential(palette = "Blues")
 ```
@@ -84,7 +84,7 @@ and the SMR:
 ```{r fig.width=11}
 ggplot(data = data_england, aes(fill = deaths / expectd)) +
   geom_sf(colour = "white", size = 0.1) +
-  labs("Standardised mortality ratio") +
+  labs(title = "Standardised mortality ratio") +
   theme_void() +
   scale_fill_continuous_divergingx(palette = "RdBu", mid = 1, rev = TRUE)
 ```

@@ -2,7 +2,7 @@
 title: "Introduction to non-linear regression"
 subtitle: "SHARP Bayesian Modeling for Environmental Health Workshop"
 author: "Garyfallos Konstantinoudis, Robbie M. Parks"
-date: "August 05 2026"
+date: "August 06 2026"
 format: html
 editor:
   markdown:
@@ -101,6 +101,14 @@ We will first write the model in `NIMBLE`.
 
 ```{r eval=TRUE, echo = TRUE}
 Model1_ecoCode <- nimbleCode({
+  
+  # likelihood
+  for (i in 1:N) {
+    O[i] ~ dpois(mu[i]) # Poisson likelihood for observed counts
+    log(mu[i]) <- log(E[i]) + alpha +  inprod(beta[], X[i, ])
+    # the inprod is equivalent to beta[1]*X1[i] + beta[2]*X2[i] + beta[3]*X32[i] + beta[4]*X33[i] + beta[5]*X34[i] + beta[6]*X35[i]
+  }
+  
   # priors
   alpha ~ dflat() # vague prior (Unif(-inf, +inf))
   overallRR <- exp(alpha) # overall RR across study region
@@ -111,13 +119,6 @@ Model1_ecoCode <- nimbleCode({
   }
 
   RR.beta1_1NO2 <- exp(beta[1] / sd.no2) # get per 1 unit increase in the air-pollution (scale back)
-
-  # likelihood
-  for (i in 1:N) {
-    O[i] ~ dpois(mu[i]) # Poisson likelihood for observed counts
-    log(mu[i]) <- log(E[i]) + alpha +  inprod(beta[], X[i, ])
-    # the inprod is equivalent to beta[1]*X1[i] + beta[2]*X2[i] + beta[3]*X32[i] + beta[4]*X33[i] + beta[5]*X34[i] + beta[6]*X35[i]
-  }
 })
 ```
 
@@ -295,6 +296,12 @@ Xmat <- cbind(
 
 ```{r eval=TRUE, echo = TRUE}
 Model2_ecoCode <- nimbleCode({
+  # likelihood
+  for (i in 1:N) {
+    O[i] ~ dpois(mu[i]) # Poisson likelihood for observed counts
+    log(mu[i]) <- log(E[i]) + alpha + inprod(beta[], X[i, ])
+  }
+  
   # priors
   alpha ~ dflat() 
   overallRR <- exp(alpha) 
@@ -304,11 +311,6 @@ Model2_ecoCode <- nimbleCode({
     RR.beta[j] <- exp(beta[j])
   }
 
-  # likelihood
-  for (i in 1:N) {
-    O[i] ~ dpois(mu[i]) # Poisson likelihood for observed counts
-    log(mu[i]) <- log(E[i]) + alpha + inprod(beta[], X[i, ])
-  }
 })
 ```
 
@@ -434,6 +436,12 @@ Linearity of an exposure response relationship is an assumption. It is also wort
 
 ```{r eval=TRUE, echo = TRUE}
 Model3_ecoCode <- nimbleCode({
+  # likelihood
+  for (i in 1:N) {
+    O[i] ~ dpois(mu[i]) # Poisson likelihood for observed counts
+    log(mu[i]) <- log(E[i]) + alpha + inprod(beta[], X[i, ]) 
+  }
+  
   # priors
   alpha ~ dflat() # vague prior (Unif(-inf, +inf))
   overallRR <- exp(alpha) # overall RR across study region
@@ -442,11 +450,6 @@ Model3_ecoCode <- nimbleCode({
     beta[j] ~ dnorm(0, tau = 1)
   }
 
-  # likelihood
-  for (i in 1:N) {
-    O[i] ~ dpois(mu[i]) # Poisson likelihood for observed counts
-    log(mu[i]) <- log(E[i]) + alpha + inprod(beta[], X[i, ]) 
-  }
 })
 ```
 
@@ -455,8 +458,8 @@ Define the basis function for NO2. We will use natural splines with 2 knots. The
 ggplot() + 
   geom_histogram(data = data_england, aes(x = NO2))
 
-X_basis <- splines::ns(data_england$NO2, knots = c(10, 20))
-head(X_basis)
+#X_basis <- splines::ns(data_england$NO2, knots = c(10, 20))
+#head(X_basis)
 ```
 
 You can also visualise the basis function:

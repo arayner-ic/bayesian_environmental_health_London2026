@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.354">
+<meta name="generator" content="quarto-1.8.27">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -23,6 +23,7 @@ ul.task-list li input[type="checkbox"] {
   vertical-align: middle;
 }
 /* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -60,25 +61,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <script src="inla_files/libs/clipboard/clipboard.min.js"></script>
-<script src="inla_files/libs/quarto-html/quarto.js"></script>
+<script src="inla_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="inla_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="inla_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="inla_files/libs/quarto-html/popper.min.js"></script>
 <script src="inla_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="inla_files/libs/quarto-html/anchor.min.js"></script>
 <link href="inla_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="inla_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="inla_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="inla_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="inla_files/libs/bootstrap/bootstrap-6a8e6d95bfcd174082ff54166b04dcf7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
-<body>
+<body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
 </div>
 <main class="content page-columns page-full" id="quarto-document-content">
 
@@ -110,7 +140,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+
 </header>
+
 
 <section id="goal-of-this-computing-lab-session" class="level2">
 <h2 class="anchored" data-anchor-id="goal-of-this-computing-lab-session">Goal of this computing lab session</h2>
@@ -132,21 +164,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>In the hierarchical modelling session we estimated the standardised mortality ratio (SMR) for the provinces of Italy in September 2018 using three models — full pooling, no pooling and partial pooling — fitted with MCMC in <code>NIMBLE</code>. That workflow required initial values, burn-in, convergence checks, trace plots and <span class="math inline">\(\hat{R}\)</span>.</p>
 <p>All three of those models are <strong>latent Gaussian models</strong>: a Poisson likelihood, a Gaussian latent field (the intercept, fixed effects and IID province effects), and at most one hyperparameter (the precision of the province effects). That means we can fit them with <code>INLA</code>, which replaces sampling with a deterministic approximation to the posterior marginals, so no convergence diagnostics are needed and results are reproducible without setting a seed.</p>
 
-<div class="no-row-height column-margin column-container"><div class="">
+<div class="no-row-height column-margin column-container"><div class="margin-aside">
 <p><code>INLA</code> is not on CRAN. If you have not installed it yet:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"INLA"</span>,</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">repos =</span> <span class="fu">c</span>(<span class="fu">getOption</span>(<span class="st">"repos"</span>),</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">INLA =</span> <span class="st">"https://inla.r-inla-download.org/R/stable"</span>),</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">dep =</span> <span class="cn">TRUE</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div></div></section>
 <section id="exploratory-data-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory data analysis</h2>
 <p>Let’s load in the data, exactly as before.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy_mortality.rds"</span>))</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy_mortality.rds"</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Rows: 96,300
 Columns: 13
@@ -164,15 +196,15 @@ $ o3_lag0_3               &lt;dbl&gt; 101.69444, 98.83333, 99.25000, 100.05556, 
 $ pm10_lag0_3             &lt;dbl&gt; 40.13326, 39.26412, 35.22450, 29.67259, 26.707…
 $ week                    &lt;dbl&gt; 18, 18, 18, 19, 19, 19, 19, 19, 19, 19, 20, 20…</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> NOME_PROVINCIA        SIGLA                date                deaths      
- Length:96300       Length:96300       Min.   :2013-05-04   Min.   :  0.00  
- Class :character   Class :character   1st Qu.:2014-07-17   1st Qu.:  7.00  
- Mode  :character   Mode  :character   Median :2016-01-16   Median : 11.00  
-                                       Mean   :2016-01-16   Mean   : 14.93  
-                                       3rd Qu.:2017-07-17   3rd Qu.: 17.00  
-                                       Max.   :2018-09-30   Max.   :272.00  
+<pre><code>   NOME_PROVINCIA        SIGLA            date                deaths      
+ Length   :96300   Length   :96300   Min.   :2013-05-04   Min.   :  0.00  
+ N.unique :  107   N.unique :  107   1st Qu.:2014-07-17   1st Qu.:  7.00  
+ N.blank  :    0   N.blank  :    0   Median :2016-01-16   Median : 11.00  
+ Min.nchar:    4   Min.nchar:    2   Mean   :2016-01-16   Mean   : 14.93  
+ Max.nchar:   21   Max.nchar:    2   3rd Qu.:2017-07-17   3rd Qu.: 17.00  
+                                     Max.   :2018-09-30   Max.   :272.00  
       year         expected            hol              month      
  Min.   :2013   Min.   :  2.909   Min.   :0.00000   Min.   :5.000  
  1st Qu.:2014   1st Qu.:  8.231   1st Qu.:0.00000   1st Qu.:6.000  
@@ -198,26 +230,30 @@ $ week                    &lt;dbl&gt; 18, 18, 18, 19, 19, 19, 19, 19, 19, 19, 20
 </div>
 <p>As in the hierarchical modelling lab, we collapse the time dimension and focus on September 2018.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">provincia_id =</span> data <span class="sc">|&gt;</span> <span class="fu">group_by</span>(SIGLA) <span class="sc">|&gt;</span> <span class="fu">group_indices</span>()) <span class="sc">|&gt;</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2018</span>) <span class="sc">|&gt;</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(month <span class="sc">==</span> <span class="dv">9</span>) <span class="sc">|&gt;</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(SIGLA)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(SIGLA)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>And load the shapefile for mapping (and, later, for the adjacency structure).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>shp_italy <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy_shp.rds"</span>)) <span class="sc">|&gt;</span> <span class="fu">arrange</span>(SIGLA)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>shp_italy <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy_shp.rds"</span>)) <span class="sc">|&gt;</span> <span class="fu">arrange</span>(SIGLA)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A quick reminder of what the raw SMR looks like.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>data <span class="sc">|&gt;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> deaths <span class="sc">/</span> expected)) <span class="sc">+</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
 </div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -241,7 +277,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 <li>We ask for DIC, WAIC and CPO up front so we can compare models later.</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>t_full_inla <span class="ot">&lt;-</span> <span class="fu">system.time</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>t_full_inla <span class="ot">&lt;-</span> <span class="fu">system.time</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  m_pooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    deaths <span class="sc">~</span> <span class="dv">1</span>,</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
@@ -252,15 +288,15 @@ y_i &amp;\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>t_full_inla</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>t_full_inla</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.761   0.490   1.373 </code></pre>
+  1.105   0.428   0.988 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m_pooled)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m_pooled)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Time used:
-    Pre = 1.05, Running = 0.201, Post = 0.0127, Total = 1.26 
+    Pre = 0.639, Running = 0.266, Post = 0.0265, Total = 0.931 
 Fixed effects:
               mean    sd 0.025quant 0.5quant 0.975quant   mode kld
 (Intercept) -0.109 0.005     -0.118   -0.109       -0.1 -0.109   0
@@ -280,7 +316,7 @@ Posterior summaries for the linear predictor and the fitted values are computed
 </div>
 <p>Note there are no initial values, iteration counts or burn-in settings to specify. The fixed-effect summary gives us the posterior of <span class="math inline">\(\alpha\)</span> directly:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>m_pooled<span class="sc">$</span>summary.fixed</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>m_pooled<span class="sc">$</span>summary.fixed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                  mean          sd 0.025quant   0.5quant 0.975quant       mode
 (Intercept) -0.1093622 0.004602091 -0.1183821 -0.1093622 -0.1003423 -0.1093622
@@ -289,12 +325,12 @@ Posterior summaries for the linear predictor and the fitted values are computed
 </div>
 </div>
 
-<div class="no-row-height column-margin column-container"><div class="">
+<div class="no-row-height column-margin column-container"><div class="margin-aside">
 <p>The <code>kld</code> column is the Kullback-Leibler divergence between the Gaussian and the simplified Laplace marginal for that parameter. Values much above <span class="math inline">\(\sim 0.01\)</span> suggest the approximation is straining. Here it should be essentially zero.</p>
 </div></div><p>Let’s map the (single, national) SMR, working with the full posterior marginal rather than just point summaries. <code>inla.tmarginal()</code> transforms a marginal through a function — here <span class="math inline">\(\exp\)</span> — and <code>inla.zmarginal()</code> summarises the result.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>smr_marg_pooled <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(exp, m_pooled<span class="sc">$</span>marginals.fixed<span class="sc">$</span><span class="st">`</span><span class="at">(Intercept)</span><span class="st">`</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.zmarginal</span>(smr_marg_pooled)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>smr_marg_pooled <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(exp, m_pooled<span class="sc">$</span>marginals.fixed<span class="sc">$</span><span class="st">`</span><span class="at">(Intercept)</span><span class="st">`</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.zmarginal</span>(smr_marg_pooled)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Mean            0.896415 
 Stdev           0.00409979 
@@ -304,7 +340,7 @@ Quantile  0.5   0.896399
 Quantile  0.75  0.899182 
 Quantile  0.975 0.904486 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>SMR_full_pooling <span class="ot">&lt;-</span> <span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, smr_marg_pooled)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>SMR_full_pooling <span class="ot">&lt;-</span> <span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, smr_marg_pooled)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>p_full <span class="ot">&lt;-</span> shp_italy <span class="sc">|&gt;</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">SMR =</span> SMR_full_pooling) <span class="sc">|&gt;</span></span>
@@ -313,9 +349,13 @@ Quantile  0.975 0.904486 </code></pre>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_continuous_sequential</span>(<span class="at">palette =</span> <span class="st">"Reds"</span>) <span class="sc">+</span></span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span>
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>p_full</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>p_full</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Still pretty boring, eh?</p>
@@ -334,7 +374,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 \]</span></p>
 <p>In <code>INLA</code>, provinces enter as a factor with the global intercept removed (<code>-1</code>), so each level is estimated directly — exactly as we would in <code>glm()</code>. The <code>prec = 1</code> in <code>control.fixed</code> puts an independent <span class="math inline">\(N(0, 1)\)</span> prior on each <span class="math inline">\(\alpha_j\)</span>, matching the <code>NIMBLE</code> model.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>t_no_inla <span class="ot">&lt;-</span> <span class="fu">system.time</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>t_no_inla <span class="ot">&lt;-</span> <span class="fu">system.time</span>(</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  m_unpooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    deaths <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> <span class="fu">factor</span>(provincia_id),</span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
@@ -345,15 +385,15 @@ y_i &amp;\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 <span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>t_no_inla</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>t_no_inla</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  0.728   0.746   1.499 </code></pre>
+  2.476   0.804   1.510 </code></pre>
 </div>
 </div>
 <p>There are now 107 rows in <code>summary.fixed</code> — one per province.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(m_unpooled<span class="sc">$</span>summary.fixed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(m_unpooled<span class="sc">$</span>summary.fixed)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                              mean         sd  0.025quant     0.5quant
 factor(provincia_id)1 -0.007405458 0.05270419 -0.11070377 -0.007405458
@@ -362,18 +402,18 @@ factor(provincia_id)3 -0.165089791 0.04931653 -0.26174842 -0.165089791
 factor(provincia_id)4 -0.134719088 0.09895178 -0.32866101 -0.134719088
 factor(provincia_id)5 -0.089664680 0.07159550 -0.22998927 -0.089664680
 factor(provincia_id)6 -0.052837176 0.05975598 -0.16995675 -0.052837176
-                       0.975quant         mode          kld
-factor(provincia_id)1  0.09589285 -0.007405458 0.000000e+00
-factor(provincia_id)2  0.08107125 -0.009238335 3.209331e-19
-factor(provincia_id)3 -0.06843117 -0.165089791 5.419757e-16
-factor(provincia_id)4  0.05922283 -0.134719088 0.000000e+00
-factor(provincia_id)5  0.05065992 -0.089664680 2.104870e-17
-factor(provincia_id)6  0.06428240 -0.052837176 0.000000e+00</code></pre>
+                       0.975quant         mode kld
+factor(provincia_id)1  0.09589285 -0.007405458   0
+factor(provincia_id)2  0.08107125 -0.009238335   0
+factor(provincia_id)3 -0.06843117 -0.165089791   0
+factor(provincia_id)4  0.05922284 -0.134719088   0
+factor(provincia_id)5  0.05065992 -0.089664680   0
+factor(provincia_id)6  0.06428240 -0.052837176   0</code></pre>
 </div>
 </div>
 <p>Map the province SMRs. For a map of posterior medians, exponentiating the <code>0.5quant</code> column is fine (the median commutes with monotone transformations — the posterior <em>mean</em> would not).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>SMR_no_pooling <span class="ot">&lt;-</span> <span class="fu">exp</span>(m_unpooled<span class="sc">$</span>summary.fixed<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>SMR_no_pooling <span class="ot">&lt;-</span> <span class="fu">exp</span>(m_unpooled<span class="sc">$</span>summary.fixed<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>)</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>p_no <span class="ot">&lt;-</span> shp_italy <span class="sc">|&gt;</span></span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">SMR =</span> SMR_no_pooling) <span class="sc">|&gt;</span></span>
@@ -382,9 +422,13 @@ factor(provincia_id)6  0.06428240 -0.052837176 0.000000e+00</code></pre>
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_continuous_sequential</span>(<span class="at">palette =</span> <span class="st">"Reds"</span>) <span class="sc">+</span></span>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span>
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>p_no</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>p_no</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -410,7 +454,7 @@ P(\sigma_p &gt; 1) = 0.01,
 <p>i.e.&nbsp;we consider it unlikely that the between-province SD exceeds 1 on the log scale. This prior shrinks towards the base model <span class="math inline">\(\sigma_p = 0\)</span> (the full pooling model) unless the data support between-province variation.</p>
 <p>The <code>f()</code> term needs an integer or factor <strong>index</strong>, which is exactly what <code>provincia_id</code> is.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>pc_prec <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>pc_prec <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>t_partial_inla <span class="ot">&lt;-</span> <span class="fu">system.time</span>(</span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  m_partial <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
@@ -423,15 +467,15 @@ P(\sigma_p &gt; 1) = 0.01,
 <span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>t_partial_inla</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>t_partial_inla</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
-  1.166   0.568   1.512 </code></pre>
+  2.353   0.537   1.220 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m_partial)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m_partial)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Time used:
-    Pre = 1.06, Running = 0.293, Post = 0.0206, Total = 1.38 
+    Pre = 0.47, Running = 0.672, Post = 0.0341, Total = 1.18 
 Fixed effects:
               mean    sd 0.025quant 0.5quant 0.975quant   mode kld
 (Intercept) -0.111 0.008     -0.128   -0.111     -0.095 -0.111   0
@@ -462,7 +506,7 @@ Posterior summaries for the linear predictor and the fitted values are computed
 <h3 class="anchored" data-anchor-id="from-precision-to-standard-deviation">From precision to standard deviation</h3>
 <p><code>INLA</code> reports the hyperparameter as a <strong>precision</strong>, <span class="math inline">\(\tau = 1/\sigma_p^2\)</span>:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>m_partial<span class="sc">$</span>summary.hyperpar</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>m_partial<span class="sc">$</span>summary.hyperpar</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                               mean       sd 0.025quant 0.5quant 0.975quant
 Precision for provincia_id 232.1072 52.90793   147.2307 225.7596   353.2072
@@ -472,12 +516,12 @@ Precision for provincia_id 213.9841</code></pre>
 </div>
 <p>A precision is difficult to interpret, and note that the posterior mean of <span class="math inline">\(1/\sqrt{\tau}\)</span> is <em>not</em> <span class="math inline">\(1/\sqrt{\text{posterior mean of } \tau}\)</span>. To summarise <span class="math inline">\(\sigma_p\)</span> correctly we transform the whole marginal, not the summary:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>sd_marg <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>sd_marg <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(x) <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(x),</span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  m_partial<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Precision for provincia_id</span><span class="st">`</span></span>
 <span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.zmarginal</span>(sd_marg)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.zmarginal</span>(sd_marg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Mean            0.066876 
 Stdev           0.0073997 
@@ -487,11 +531,11 @@ Quantile  0.5   0.0665431
 Quantile  0.75  0.0716696 
 Quantile  0.975 0.0823235 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, sd_marg)   <span class="co"># posterior mean of sigma_p</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, sd_marg)   <span class="co"># posterior mean of sigma_p</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.06687599</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.hpdmarginal</span>(<span class="fl">0.95</span>, sd_marg)          <span class="co"># 95% HPD interval</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.hpdmarginal</span>(<span class="fl">0.95</span>, sd_marg)          <span class="co"># 95% HPD interval</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                  low       high
 level:0.95 0.05265553 0.08161741</code></pre>
@@ -499,12 +543,16 @@ level:0.95 0.05265553 0.08161741</code></pre>
 </div>
 <p>Compare this against the posterior of <code>sigma_p</code> from your <code>NIMBLE</code> run in the hierarchical modelling lab. They should agree closely (they will not be identical — different priors on <span class="math inline">\(\sigma_p\)</span>, and one is a stochastic estimate while the other is a deterministic approximation).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">as.data.frame</span>(sd_marg), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">as.data.frame</span>(sd_marg), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"darkcyan"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(sigma[p]), <span class="at">y =</span> <span class="st">"Density"</span>,</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="fu">expression</span>(<span class="st">"Posterior marginal of "</span> <span class="sc">*</span> sigma[p]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="fu">expression</span>(<span class="st">"Posterior marginal of "</span> <span class="sc">*</span> sigma[p]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -512,20 +560,24 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <h3 class="anchored" data-anchor-id="random-effects-and-shrinkage">Random effects and shrinkage</h3>
 <p>The province effects live in <code>summary.random</code>:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> m_partial<span class="sc">$</span>summary.random<span class="sc">$</span>provincia_id</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>re <span class="ot">&lt;-</span> m_partial<span class="sc">$</span>summary.random<span class="sc">$</span>provincia_id</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(re, <span class="fu">aes</span>(<span class="at">x =</span> ID, <span class="at">y =</span> mean)) <span class="sc">+</span></span>
 <span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
 <span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_pointrange</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> <span class="st">`</span><span class="at">0.025quant</span><span class="st">`</span>, <span class="at">ymax =</span> <span class="st">`</span><span class="at">0.975quant</span><span class="st">`</span>),</span>
 <span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">linewidth =</span> <span class="fl">0.2</span>, <span class="at">size =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Province"</span>, <span class="at">y =</span> <span class="fu">expression</span>(theta[j]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Province"</span>, <span class="at">y =</span> <span class="fu">expression</span>(theta[j]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Now compare the unpooled and partially pooled estimates, province by province. The hierarchical estimates are pulled towards the overall mean, and provinces with small expected counts (the least data) are pulled hardest, with the amount of shrinkage estimated from the data via <span class="math inline">\(\sigma_p\)</span>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>shrinkage <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>shrinkage <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">provincia_id =</span> re<span class="sc">$</span>ID,</span>
 <span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">unpooled     =</span> m_unpooled<span class="sc">$</span>summary.fixed<span class="sc">$</span>mean,</span>
 <span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">partial      =</span> m_partial<span class="sc">$</span>summary.fixed<span class="sc">$</span>mean[<span class="dv">1</span>] <span class="sc">+</span> re<span class="sc">$</span>mean,</span>
@@ -538,9 +590,13 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size_continuous</span>(<span class="at">name =</span> <span class="st">"Expected deaths"</span>) <span class="sc">+</span></span>
 <span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(<span class="st">"Unpooled "</span> <span class="sc">*</span> alpha[j]),</span>
 <span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">expression</span>(<span class="st">"Partially pooled "</span> <span class="sc">*</span> alpha <span class="sc">+</span> theta[j]),</span>
-<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Shrinkage towards the national rate"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Shrinkage towards the national rate"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Points on the dashed line are unshrunk; points pulled towards the middle are shrunk.</p>
@@ -548,7 +604,7 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <section id="map-the-partially-pooled-smr" class="level3">
 <h3 class="anchored" data-anchor-id="map-the-partially-pooled-smr">Map the partially pooled SMR</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>SMR_partial_pooling <span class="ot">&lt;-</span> <span class="fu">exp</span>(m_partial<span class="sc">$</span>summary.fixed<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>[<span class="dv">1</span>] <span class="sc">+</span> re<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>SMR_partial_pooling <span class="ot">&lt;-</span> <span class="fu">exp</span>(m_partial<span class="sc">$</span>summary.fixed<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>[<span class="dv">1</span>] <span class="sc">+</span> re<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>)</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>p_partial <span class="ot">&lt;-</span> shp_italy <span class="sc">|&gt;</span></span>
 <span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">SMR =</span> SMR_partial_pooling) <span class="sc">|&gt;</span></span>
@@ -557,9 +613,13 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_continuous_sequential</span>(<span class="at">palette =</span> <span class="st">"Reds"</span>) <span class="sc">+</span></span>
 <span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span>
 <span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>p_partial</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>p_partial</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -568,28 +628,40 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <h2 class="anchored" data-anchor-id="comparing-each-of-the-models">Comparing each of the models</h2>
 <p>Side by side, as before:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>p_full <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"Full pooling model"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>p_full <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"Full pooling model"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>p_no <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"No pooling model"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-19-2.png" class="img-fluid" width="672"></p>
 </div>
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>p_partial <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"Partial pooling model"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>p_no <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"No pooling model"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-19-3.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-19-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>p_partial <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"Partial pooling model"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-19-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>There is clearly more smoothing in the partial pooling model.</p>
 <p>And the information criteria (lowest is preferred). WAIC here is directly comparable to the WAIC <code>nimbleMCMC()</code> gave us.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">model =</span> <span class="fu">c</span>(<span class="st">"Full pooling"</span>, <span class="st">"No pooling"</span>, <span class="st">"Partial pooling"</span>),</span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dic   =</span> <span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>dic<span class="sc">$</span>dic),</span>
 <span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">waic  =</span> <span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>waic<span class="sc">$</span>waic),</span>
 <span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_eff =</span> <span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>waic<span class="sc">$</span>p.eff)</span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 4
   model              dic   waic  p_eff
@@ -602,13 +674,13 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <p><code>p.eff</code> is the effective number of parameters, which gives a numerical measure of how much shrinkage is happening. The partial pooling model has 107 province effects but far fewer <em>effective</em> parameters, because they are tied together through <span class="math inline">\(\sigma_p\)</span>.</p>
 <p><code>INLA</code> also provides leave-one-out quantities via CPO at little extra cost, which would require refitting the model <span class="math inline">\(n\)</span> times with MCMC:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Leave-one-out log score (lower is better)</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>cpo), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Leave-one-out log score (lower is better)</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>cpo), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 2.667547</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the CPO computation is trustworthy (should be 0 failures)</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>failure <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the CPO computation is trustworthy (should be 0 failures)</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>failure <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0</code></pre>
 </div>
@@ -623,7 +695,7 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <li>the <code>loggamma</code> default.</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>fit_partial <span class="ot">&lt;-</span> <span class="cf">function</span>(hyper) {</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>fit_partial <span class="ot">&lt;-</span> <span class="cf">function</span>(hyper) {</span>
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inla</span>(</span>
 <span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(provincia_id, <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper),</span>
 <span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
@@ -636,11 +708,11 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>m_pc_1   <span class="ot">&lt;-</span> m_partial   <span class="co"># already fitted: pc.prec, c(1, 0.01)</span></span>
 <span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>m_pc_01  <span class="ot">&lt;-</span> <span class="fu">fit_partial</span>(<span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.1</span>, <span class="fl">0.01</span>))))</span>
-<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>m_gamma  <span class="ot">&lt;-</span> <span class="fu">fit_partial</span>(<span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"loggamma"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">5e-5</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>m_gamma  <span class="ot">&lt;-</span> <span class="fu">fit_partial</span>(<span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"loggamma"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">5e-5</span>))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Compare the posterior of <span class="math inline">\(\sigma_p\)</span> under each:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>get_sd_marg <span class="ot">&lt;-</span> <span class="cf">function</span>(m, label) {</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>get_sd_marg <span class="ot">&lt;-</span> <span class="cf">function</span>(m, label) {</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inla.tmarginal</span>(<span class="cf">function</span>(x) <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(x),</span>
 <span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>                 m<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Precision for provincia_id</span><span class="st">`</span>) <span class="sc">|&gt;</span></span>
 <span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
@@ -662,14 +734,18 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <span id="cb50-20"><a href="#cb50-20" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
 <span id="cb50-21"><a href="#cb50-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(sigma[p]), <span class="at">y =</span> <span class="st">"Density"</span>, <span class="at">colour =</span> <span class="st">"Prior"</span>,</span>
 <span id="cb50-22"><a href="#cb50-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="fu">expression</span>(<span class="st">"Posterior of "</span> <span class="sc">*</span> sigma[p] <span class="sc">*</span> <span class="st">" under three priors"</span>)) <span class="sc">+</span></span>
-<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>And whether it matters for the main quantity of interest, the province SMRs:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>smr_compare <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>smr_compare <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">pc_1  =</span> m_pc_1<span class="sc">$</span>summary.fixed<span class="sc">$</span>mean[<span class="dv">1</span>]  <span class="sc">+</span> m_pc_1<span class="sc">$</span>summary.random<span class="sc">$</span>provincia_id<span class="sc">$</span>mean,</span>
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">pc_01 =</span> m_pc_01<span class="sc">$</span>summary.fixed<span class="sc">$</span>mean[<span class="dv">1</span>] <span class="sc">+</span> m_pc_01<span class="sc">$</span>summary.random<span class="sc">$</span>provincia_id<span class="sc">$</span>mean,</span>
 <span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">gamma =</span> m_gamma<span class="sc">$</span>summary.fixed<span class="sc">$</span>mean[<span class="dv">1</span>] <span class="sc">+</span> m_gamma<span class="sc">$</span>summary.random<span class="sc">$</span>provincia_id<span class="sc">$</span>mean</span>
@@ -685,9 +761,13 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">colour =</span> <span class="st">"darkcyan"</span>) <span class="sc">+</span></span>
 <span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"SMR, PC c(1, 0.01)"</span>, <span class="at">y =</span> <span class="st">"SMR, loggamma default"</span>)</span>
 <span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a>p_a <span class="sc">+</span> p_b</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a>p_a <span class="sc">+</span> p_b</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>With 107 provinces and reasonably large expected counts, the data are informative and the SMRs should be fairly robust; the posterior of <span class="math inline">\(\sigma_p\)</span> itself will typically move more than the SMRs do. In general, priors on variance components should always be stated in a paper and checked with a sensitivity analysis; with <code>INLA</code> each refit takes seconds, which makes this straightforward.</p>
@@ -704,15 +784,15 @@ level:0.95 0.05265553 0.08161741</code></pre>
 <p>where <span class="math inline">\(\boldsymbol{v}\)</span> is IID noise, <span class="math inline">\(\boldsymbol{u}_\star\)</span> is a scaled ICAR (neighbours-only) field, and the <strong>mixing parameter</strong> <span class="math inline">\(\phi \in [0, 1]\)</span> is the proportion of the variance that is spatially structured. <span class="math inline">\(\phi = 0\)</span> recovers the IID model; <span class="math inline">\(\phi = 1\)</span> is pure ICAR.</p>
 <p>First, build the adjacency structure from the shapefile using <code>spdep</code>, and write it in the format <code>INLA</code> expects:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(shp_italy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(shp_italy)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning in poly2nb(shp_italy): neighbour object has 3 sub-graphs;
 if this sub-graph count seems unexpected, try increasing the snap argument.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nb2INLA</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy.adj"</span>), nb)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nb2INLA</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy.adj"</span>), nb)</span>
 <span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>g <span class="ot">&lt;-</span> <span class="fu">inla.read.graph</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy.adj"</span>))</span>
 <span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(g)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(g)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    n =  107 
     ncc =  3 
@@ -721,11 +801,11 @@ if this sub-graph count seems unexpected, try increasing the snap argument.</cod
 </div>
 </div>
 
-<div class="no-row-height column-margin column-container"><div class="">
+<div class="no-row-height column-margin column-container"><div class="margin-aside">
 <p>Check <code>g$n</code> matches the number of provinces, and look out for islands (areas with no neighbours) — Italy has a couple of island provinces, which <code>INLA</code> handles but which you should know about. <code>summary(nb)</code> will tell you.</p>
 </div></div><p>Now fit. Two hyperparameters, two PC priors: one on the overall precision (as before), and one on <span class="math inline">\(\phi\)</span>, where <code>param = c(0.5, 0.5)</code> reads as <span class="math inline">\(P(\phi &lt; 0.5) = 0.5\)</span> — agnostic about how spatial the variation is. <code>scale.model = TRUE</code> scales the ICAR component so the precision means the same thing regardless of the graph — essential for the PC prior to be interpretable.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>t_bym2 <span class="ot">&lt;-</span> <span class="fu">system.time</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>t_bym2 <span class="ot">&lt;-</span> <span class="fu">system.time</span>(</span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  m_bym2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
 <span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(provincia_id, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g,</span>
 <span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
@@ -740,46 +820,50 @@ if this sub-graph count seems unexpected, try increasing the snap argument.</cod
 <span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb56-15"><a href="#cb56-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-16"><a href="#cb56-16" aria-hidden="true" tabindex="-1"></a>t_bym2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb56-16"><a href="#cb56-16" aria-hidden="true" tabindex="-1"></a>t_bym2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 19.370  13.495   7.882 </code></pre>
+ 22.906  10.492   9.595 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>m_bym2<span class="sc">$</span>summary.hyperpar</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>m_bym2<span class="sc">$</span>summary.hyperpar</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                                  mean         sd   0.025quant   0.5quant
-Precision for provincia_id 233.6131008 55.3586705 144.43853916 227.002118
-Phi for provincia_id         0.2490236  0.1504889   0.03902265   0.220823
+<pre><code>                                  mean       sd   0.025quant    0.5quant
+Precision for provincia_id 233.6130825 55.35889 144.43845316 227.0019790
+Phi for provincia_id         0.2490238  0.15049   0.03902147   0.2208231
                             0.975quant        mode
-Precision for provincia_id 361.1229685 214.0033442
-Phi for provincia_id         0.6014155   0.1308358</code></pre>
+Precision for provincia_id 361.1237526 214.0029040
+Phi for provincia_id         0.6014174   0.1308332</code></pre>
 </div>
 </div>
 <p>What does the posterior of <span class="math inline">\(\phi\)</span> tell us? Values near 1 say most of the between-province variation is spatially structured; values near 0 say the map adds little beyond IID effects.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>phi_marg <span class="ot">&lt;-</span> m_bym2<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Phi for provincia_id</span><span class="st">`</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>phi_marg <span class="ot">&lt;-</span> m_bym2<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Phi for provincia_id</span><span class="st">`</span></span>
 <span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.zmarginal</span>(phi_marg)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="fu">inla.zmarginal</span>(phi_marg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Mean            0.249141 
-Stdev           0.15045 
-Quantile  0.025 0.0392415 
-Quantile  0.25  0.13016 
+<pre><code>Mean            0.249142 
+Stdev           0.150451 
+Quantile  0.025 0.0392403 
+Quantile  0.25  0.130159 
 Quantile  0.5   0.222399 
-Quantile  0.75  0.34171 
-Quantile  0.975 0.599435 </code></pre>
+Quantile  0.75  0.341711 
+Quantile  0.975 0.599437 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">as.data.frame</span>(phi_marg), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">as.data.frame</span>(phi_marg), <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"darkcyan"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
 <span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(phi), <span class="at">y =</span> <span class="st">"Density"</span>,</span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="fu">expression</span>(<span class="st">"Posterior of the mixing parameter "</span> <span class="sc">*</span> phi))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="fu">expression</span>(<span class="st">"Posterior of the mixing parameter "</span> <span class="sc">*</span> phi))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Map the BYM2-smoothed SMRs next to the IID version. In the <code>bym2</code> model, <code>summary.random</code> has <span class="math inline">\(2 N_p\)</span> rows: the first <span class="math inline">\(N_p\)</span> are the <strong>combined</strong> effect <span class="math inline">\(b_j\)</span> (what we want for the map), the second <span class="math inline">\(N_p\)</span> are the structured component alone.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>Np <span class="ot">&lt;-</span> g<span class="sc">$</span>n</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>Np <span class="ot">&lt;-</span> g<span class="sc">$</span>n</span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>re_bym2 <span class="ot">&lt;-</span> m_bym2<span class="sc">$</span>summary.random<span class="sc">$</span>provincia_id[<span class="dv">1</span><span class="sc">:</span>Np, ]</span>
 <span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>SMR_bym2 <span class="ot">&lt;-</span> <span class="fu">exp</span>(m_bym2<span class="sc">$</span>summary.fixed<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>[<span class="dv">1</span>] <span class="sc">+</span> re_bym2<span class="sc">$</span><span class="st">`</span><span class="at">0.5quant</span><span class="st">`</span>)</span>
@@ -792,18 +876,22 @@ Quantile  0.975 0.599435 </code></pre>
 <span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span>
 <span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a>(p_partial <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"IID (partial pooling)"</span>)) <span class="sc">+</span></span>
-<span id="cb63-14"><a href="#cb63-14" aria-hidden="true" tabindex="-1"></a>  (p_bym2 <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"BYM2 (spatially structured)"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb63-14"><a href="#cb63-14" aria-hidden="true" tabindex="-1"></a>  (p_bym2 <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">caption =</span> <span class="st">"BYM2 (spatially structured)"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>We can compare the IID and BYM2 models with DIC and WAIC to check whether the spatial structure improves fit:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">model =</span> <span class="fu">c</span>(<span class="st">"Partial pooling (iid)"</span>, <span class="st">"BYM2"</span>),</span>
 <span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dic   =</span> <span class="fu">map_dbl</span>(<span class="fu">list</span>(m_partial, m_bym2), <span class="sc">~</span> .x<span class="sc">$</span>dic<span class="sc">$</span>dic),</span>
 <span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">waic  =</span> <span class="fu">map_dbl</span>(<span class="fu">list</span>(m_partial, m_bym2), <span class="sc">~</span> .x<span class="sc">$</span>waic<span class="sc">$</span>waic)</span>
-<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 3
   model                    dic   waic
@@ -817,10 +905,10 @@ Quantile  0.975 0.599435 </code></pre>
 <h2 class="anchored" data-anchor-id="comparing-inla-and-nimble">Comparing INLA and NIMBLE</h2>
 <p>Finally, let’s compare the two approaches directly. Below we refit the partial pooling model with <code>nimbleMCMC()</code> exactly as in the hierarchical modelling lab, and time it against <code>INLA</code>.</p>
 
-<div class="no-row-height column-margin column-container"><div class="">
+<div class="no-row-height column-margin column-container"><div class="margin-aside">
 <p>The <code>NIMBLE</code> fit takes a couple of minutes, most of it model compilation. Feel free to skip re-running it and use your saved output from the previous lab instead.</p>
-</div></div><div class="cell" data-hash="inla_cache/html/unnamed-chunk-30_368cc264a9da5c71dc1f41b1745903a8">
-<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>constants <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+</div></div><div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>constants <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
 <span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">N =</span> <span class="fu">nrow</span>(data),</span>
 <span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Np =</span> <span class="fu">max</span>(data<span class="sc">$</span>provincia_id),</span>
 <span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">province =</span> data<span class="sc">$</span>provincia_id</span>
@@ -865,7 +953,7 @@ Quantile  0.975 0.599435 </code></pre>
 <span id="cb66-43"><a href="#cb66-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">progressBar =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb66-44"><a href="#cb66-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">WAIC =</span> <span class="cn">TRUE</span></span>
 <span id="cb66-45"><a href="#cb66-45" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb66-46"><a href="#cb66-46" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb66-46"><a href="#cb66-46" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Defining model</code></pre>
 </div>
@@ -898,21 +986,21 @@ Quantile  0.975 0.599435 </code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
 <span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">engine  =</span> <span class="fu">c</span>(<span class="st">"NIMBLE (MCMC)"</span>, <span class="st">"INLA"</span>),</span>
 <span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">elapsed =</span> <span class="fu">c</span>(t_partial_nimble[<span class="st">"elapsed"</span>], t_partial_inla[<span class="st">"elapsed"</span>])</span>
-<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 2
   engine        elapsed
   &lt;chr&gt;           &lt;dbl&gt;
-1 NIMBLE (MCMC)   17.2 
-2 INLA             1.51</code></pre>
+1 NIMBLE (MCMC)   49.6 
+2 INLA             1.22</code></pre>
 </div>
 </div>
 <p>And do the two engines agree on the province effects?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>nimble_theta <span class="ot">&lt;-</span> <span class="fu">summarise_draws</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>nimble_theta <span class="ot">&lt;-</span> <span class="fu">summarise_draws</span>(</span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  partial_pooling_samples<span class="sc">$</span>samples,</span>
 <span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">default_summary_measures</span>()</span>
 <span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
@@ -928,9 +1016,13 @@ Quantile  0.975 0.599435 </code></pre>
 <span id="cb78-14"><a href="#cb78-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
 <span id="cb78-15"><a href="#cb78-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">colour =</span> <span class="st">"darkcyan"</span>) <span class="sc">+</span></span>
 <span id="cb78-16"><a href="#cb78-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(<span class="st">"NIMBLE posterior mean of "</span> <span class="sc">*</span> theta[j]),</span>
-<span id="cb78-17"><a href="#cb78-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">expression</span>(<span class="st">"INLA posterior mean of "</span> <span class="sc">*</span> theta[j]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb78-17"><a href="#cb78-17" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">expression</span>(<span class="st">"INLA posterior mean of "</span> <span class="sc">*</span> theta[j]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<p><img src="inla_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid" width="672"></p>
+<div>
+<figure class="figure">
+<p><img src="inla_files/figure-html/unnamed-chunk-32-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>The points should sit close to the line; any scatter is mostly Monte Carlo noise in the (short) <code>NIMBLE</code> run, plus the difference between the half-normal and PC priors on <span class="math inline">\(\sigma_p\)</span>. MCMC error shrinks as the chains run longer, whereas the <code>INLA</code> approximation error is fixed but, for models like this, very small.</p>
@@ -945,43 +1037,58 @@ Quantile  0.975 0.599435 </code></pre>
 </main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
-window.document.addEventListener("DOMContentLoaded", function (event) {
-  const toggleBodyColorMode = (bsSheetEl) => {
-    const mode = bsSheetEl.getAttribute("data-mode");
-    const bodyEl = window.document.querySelector("body");
-    if (mode === "dark") {
-      bodyEl.classList.add("quarto-dark");
-      bodyEl.classList.remove("quarto-light");
-    } else {
-      bodyEl.classList.add("quarto-light");
-      bodyEl.classList.remove("quarto-dark");
-    }
-  }
-  const toggleBodyColorPrimary = () => {
-    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
-    if (bsSheetEl) {
-      toggleBodyColorMode(bsSheetEl);
-    }
-  }
-  toggleBodyColorPrimary();  
-  const icon = "";
-  const anchorJS = new window.AnchorJS();
-  anchorJS.options = {
-    placement: 'right',
-    icon: icon
-  };
-  anchorJS.add('.anchored');
-  const isCodeAnnotation = (el) => {
-    for (const clz of el.classList) {
-      if (clz.startsWith('code-annotation-')) {                     
-        return true;
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
       }
+      return false;
     }
-    return false;
-  }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
       for (const childEl of codeEl.children) {
         if (isCodeAnnotation(childEl)) {
           childEl.remove();
@@ -989,195 +1096,348 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       }
       return codeEl.innerText;
     }
-  });
-  clipboard.on('success', function(e) {
-    // button target
-    const button = e.trigger;
-    // don't keep focus
-    button.blur();
-    // flash "checked"
-    button.classList.add('code-copy-button-checked');
-    var currentTitle = button.getAttribute("title");
-    button.setAttribute("title", "Copied!");
-    let tooltip;
-    if (window.bootstrap) {
-      button.setAttribute("data-bs-toggle", "tooltip");
-      button.setAttribute("data-bs-placement", "left");
-      button.setAttribute("data-bs-title", "Copied!");
-      tooltip = new bootstrap.Tooltip(button, 
-        { trigger: "manual", 
-          customClass: "code-copy-button-tooltip",
-          offset: [0, -8]});
-      tooltip.show();    
-    }
-    setTimeout(function() {
-      if (tooltip) {
-        tooltip.hide();
-        button.removeAttribute("data-bs-title");
-        button.removeAttribute("data-bs-toggle");
-        button.removeAttribute("data-bs-placement");
-      }
-      button.setAttribute("title", currentTitle);
-      button.classList.remove('code-copy-button-checked');
-    }, 1000);
-    // clear code selection
-    e.clearSelection();
-  });
-  function tippyHover(el, contentFn) {
-    const config = {
-      allowHTML: true,
-      content: contentFn,
-      maxWidth: 500,
-      delay: 100,
-      arrow: false,
-      appendTo: function(el) {
-          return el.parentElement;
-      },
-      interactive: true,
-      interactiveBorder: 10,
-      theme: 'quarto',
-      placement: 'bottom-start'
-    };
-    window.tippy(el, config); 
-  }
-  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
-  for (var i=0; i<noterefs.length; i++) {
-    const ref = noterefs[i];
-    tippyHover(ref, function() {
-      // use id or data attribute instead here
-      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
-      try { href = new URL(href).hash; } catch {}
-      const id = href.replace(/^#\/?/, "");
-      const note = window.document.getElementById(id);
-      return note.innerHTML;
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
     });
-  }
-      let selectedAnnoteEl;
-      const selectorForAnnotation = ( cell, annotation) => {
-        let cellAttr = 'data-code-cell="' + cell + '"';
-        let lineAttr = 'data-code-annotation="' +  annotation + '"';
-        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
-        return selector;
-      }
-      const selectCodeLines = (annoteEl) => {
-        const doc = window.document;
-        const targetCell = annoteEl.getAttribute("data-target-cell");
-        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
-        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
-        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
-        const lineIds = lines.map((line) => {
-          return targetCell + "-" + line;
-        })
-        let top = null;
-        let height = null;
-        let parent = null;
-        if (lineIds.length > 0) {
-            //compute the position of the single el (top and bottom and make a div)
-            const el = window.document.getElementById(lineIds[0]);
-            top = el.offsetTop;
-            height = el.offsetHeight;
-            parent = el.parentElement.parentElement;
-          if (lineIds.length > 1) {
-            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-            height = bottom - top;
-          }
-          if (top !== null && height !== null && parent !== null) {
-            // cook up a div (if necessary) and position it 
-            let div = window.document.getElementById("code-annotation-line-highlight");
-            if (div === null) {
-              div = window.document.createElement("div");
-              div.setAttribute("id", "code-annotation-line-highlight");
-              div.style.position = 'absolute';
-              parent.appendChild(div);
-            }
-            div.style.top = top - 2 + "px";
-            div.style.height = height + 4 + "px";
-            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-            if (gutterDiv === null) {
-              gutterDiv = window.document.createElement("div");
-              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-              gutterDiv.style.position = 'absolute';
-              const codeCell = window.document.getElementById(targetCell);
-              const gutter = codeCell.querySelector('.code-annotation-gutter');
-              gutter.appendChild(gutterDiv);
-            }
-            gutterDiv.style.top = top - 2 + "px";
-            gutterDiv.style.height = height + 4 + "px";
-          }
-          selectedAnnoteEl = annoteEl;
-        }
-      };
-      const unselectCodeLines = () => {
-        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
-        elementsIds.forEach((elId) => {
-          const div = window.document.getElementById(elId);
-          if (div) {
-            div.remove();
-          }
-        });
-        selectedAnnoteEl = undefined;
-      };
-      // Attach click handler to the DT
-      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
-      for (const annoteDlNode of annoteDls) {
-        annoteDlNode.addEventListener('click', (event) => {
-          const clickedEl = event.target;
-          if (clickedEl !== selectedAnnoteEl) {
-            unselectCodeLines();
-            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
-            if (activeEl) {
-              activeEl.classList.remove('code-annotation-active');
-            }
-            selectCodeLines(clickedEl);
-            clickedEl.classList.add('code-annotation-active');
-          } else {
-            // Unselect the line
-            unselectCodeLines();
-            clickedEl.classList.remove('code-annotation-active');
-          }
-        });
-      }
-  const findCites = (el) => {
-    const parentEl = el.parentElement;
-    if (parentEl) {
-      const cites = parentEl.dataset.cites;
-      if (cites) {
-        return {
-          el,
-          cites: cites.split(' ')
-        };
-      } else {
-        return findCites(el.parentElement)
-      }
-    } else {
-      return undefined;
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
     }
-  };
-  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-  for (var i=0; i<bibliorefs.length; i++) {
-    const ref = bibliorefs[i];
-    const citeInfo = findCites(ref);
-    if (citeInfo) {
-      tippyHover(citeInfo.el, function() {
-        var popup = window.document.createElement('div');
-        citeInfo.cites.forEach(function(cite) {
-          var citeDiv = window.document.createElement('div');
-          citeDiv.classList.add('hanging-indent');
-          citeDiv.classList.add('csl-entry');
-          var biblioDiv = window.document.getElementById('ref-' + cite);
-          if (biblioDiv) {
-            citeDiv.innerHTML = biblioDiv.innerHTML;
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
           }
-          popup.appendChild(citeDiv);
-        });
-        return popup.innerHTML;
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
       });
     }
-  }
-});
-</script>
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
 </div> <!-- /content -->
+
 
 
 

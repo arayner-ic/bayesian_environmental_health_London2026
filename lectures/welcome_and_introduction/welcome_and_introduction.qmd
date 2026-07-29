@@ -5,7 +5,7 @@ author:
  - name: "Robbie M. Parks, Garyfallos Konstantinoudis"
    email: "robbie.parks@columbia.edu, g.konstantinoudis@imperial.ac.uk"
 institute: ""
-date: 2025-08-14
+date: 2026-08-05
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
@@ -30,13 +30,13 @@ format:
 
 -   **Wi-Fi** Network: guest-net (no password). Open any webpage on your browser, a pop-up will appear to connect to guest Wi-Fi. Accept terms to gain access.
 -   **Restrooms**. Directly outside the classroom to the right.
--   **Course materials**. All material (lectures/labs) is located on Posit Cloud. You were invited to the ‘sharp_bayesian_environmental_health_2025’ workspace via email a few days ago.
+-   **Course materials**. All material (lectures/labs) is located on Posit Cloud. You were invited to the ‘sharp_bayesian_environmental_health_2026’ workspace via email a few days ago.
 -   **Name tags**. Please wear during workshop to make connecting with others easier! Please return them after the Workshop to help us be greener.
--   Contact Admin Coordinator Tristan Swedin **ts3716@cumc.columbia.edu** for any assistance.
+-   Contact Admin Coordinator Nader Elmehdawi **ne2336@cumc.columbia.edu** for any assistance.
 
 ## Overview of workshop
 
-The **Bayesian Modeling for Environmental Health Workshop** is a two-day intensive course of seminars and hands-on sessions to provide an *approachable* and *practical* overview of **concepts**, **techniques**, and **data analysis methods** used in Bayesian modeling with applications in Environmental Health.
+The **Bayesian Modeling for Environmental Health Workshop** is a three-day intensive course of seminars and hands-on sessions to provide an *approachable* and *practical* overview of **concepts**, **techniques**, and **data analysis methods** used in Bayesian modeling with applications in Environmental Health.
 
 ## Overview of workshop
 
@@ -46,10 +46,13 @@ The **Bayesian Modeling for Environmental Health Workshop** is a two-day intensi
     -   Principles of Bayesian statistics
     -   Bayesian workflow
     -   Hierarchical modeling
+    -   Priors
     -   Non-linear regression
     -   Spatial and spatio-temporal modeling
     -   Software options
     -   Advanced models
+    -   Attribution
+    -   Scaling
 :::
 
 ## Bayesian Modelling Workshop Team
