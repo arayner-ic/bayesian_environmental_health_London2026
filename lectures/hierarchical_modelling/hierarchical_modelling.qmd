@@ -49,8 +49,7 @@ set.seed(2)
 -   Models characterized by several parameters
 -   Assumptions of linear models
 -   What we want beyond linear model
--   Hierarchical models
--   Levels of hierarchy
+-   Hierarchical models and levels of hierarchy
 -   Comparing to frequenist random effects
 -   Bayesian advantages
 -   Model selection
@@ -100,7 +99,12 @@ summary(data)
 
 ![](assets/dogs1.jpeg){width="40%"}
 
+## Models characterized by several parameters
+
+<center>
+
 ![](assets/dogs4.jpeg){width="40%"}
+
 
 ## Assumptions of linear models
 

@@ -5,7 +5,7 @@ author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
-date: "08-05-2026"
+date: "08-06-2026"
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
@@ -20,7 +20,7 @@ format:
     chalkboard:
       buttons: false
       preview-links: auto
-    logo: "../../assets/bmeh_normal.png"
+    logo: "assets/bmeh_normal.png"
     theme: [default, ../../assets/style.scss]
 ---
 
@@ -1166,4 +1166,4 @@ p1 | p2 | p3
 
 -   Random walk of order 2 to model non-linearity
 
-Questions?
+# Questions?

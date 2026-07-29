@@ -117,6 +117,7 @@ $\exp(\theta_i)$:  RR in area i, relative to the overall SMR/SIR
 - Ignoring spatial dependence can lead to biased and inefficient inference.
 -  Interest in estimating the relationship between location and outcome.
 
+## Issues with global smoothing
 **Local smoothing**: prior distribution for the random effects allowing for spatial correlation to help uncover spatial patterns.
 
 
@@ -293,7 +294,7 @@ $$
 
 
 <center>
-![](figures/HPVRR.png){width=75%}
+![](figures/HPVRR.png){width=50%}
 </center>
 
 ##  Effect of covariates

@@ -693,6 +693,9 @@ model {
 <li class="fragment"><p>First, write the model:</p></li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource R number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>formula_iid <span class="ot">&lt;-</span> y <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(x, <span class="at">model =</span> <span class="st">"iid"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="running-inla-1" class="slide level2">
+<h2>Running <code>INLA</code></h2>
 <ul>
 <li class="fragment">Then, run the model using the <code>inla</code> function in <code>R</code>:</li>
 </ul>
@@ -765,6 +768,9 @@ model {
 <li class="fragment"><code>INLA</code> formula (custom priors):</li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource R number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a>formula_linear <span class="ot">&lt;-</span> y <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="linear-regression-3" class="slide level2">
+<h2>Linear regression</h2>
 <ul>
 <li class="fragment">Run model using inla function:</li>
 </ul>
@@ -772,7 +778,7 @@ model {
 <span id="cb15-2"><a href=""></a>  formula_linear,</span>
 <span id="cb15-3"><a href=""></a>  <span class="at">data =</span> data,</span>
 <span id="cb15-4"><a href=""></a>  <span class="at">family =</span> <span class="st">"gaussian"</span>,</span>
-<span id="cb15-5"><a href=""></a>  <span class="at">ccontrol.fixed =</span> <span class="fu">list</span>(</span>
+<span id="cb15-5"><a href=""></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(</span>
 <span id="cb15-6"><a href=""></a>    <span class="at">mean =</span> <span class="dv">0</span>,</span>
 <span id="cb15-7"><a href=""></a>    <span class="at">prec =</span> <span class="fl">0.0001</span></span>
 <span id="cb15-8"><a href=""></a>  ),</span>
@@ -818,6 +824,9 @@ model {
 <span id="cb17-4"><a href=""></a>               <span class="at">prior =</span> <span class="st">"pc.prec"</span>,</span>
 <span id="cb17-5"><a href=""></a>               <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
 <span id="cb17-6"><a href=""></a>             )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="hierarchical-model-2" class="slide level2">
+<h2>Hierarchical model</h2>
 <ul>
 <li class="fragment">Run model using inla function:</li>
 </ul>
@@ -857,6 +866,9 @@ model {
 <li class="fragment"><code>INLA</code> formula:</li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode numberSource R number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href=""></a>formula_non_linear <span class="ot">&lt;-</span> O <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> X1 <span class="sc">+</span> X2 <span class="sc">+</span> X3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="non-linear-exposure-response-2" class="slide level2">
+<h2>Non-linear exposure-response</h2>
 <ul>
 <li class="fragment">Run model using inla function:</li>
 </ul>

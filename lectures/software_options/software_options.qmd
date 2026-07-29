@@ -541,6 +541,8 @@ formula_iid <- y ~ 1 + f(x, model = "iid")
 formula_iid <- y ~ 1 + f(x, model = "iid")
 ```
 
+## Running `INLA`
+
 - Then, run the model using the `inla` function in `R`:
 ```{.R}
 model <- inla(
@@ -610,13 +612,14 @@ model_linear <- inla(
 formula_linear <- y ~ 1 + x1 + x2 + x3
 ```
 
+## Linear regression
 - Run model using inla function:
 ```{.R}
 model_linear <- inla(
   formula_linear,
   data = data,
   family = "gaussian",
-  ccontrol.fixed = list(
+  control.fixed = list(
     mean = 0,
     prec = 0.0001
   ),
@@ -662,6 +665,7 @@ formula_partial_pooling <- y ~ 1 + f(SIGLA, model = "iid",
              )
 ```
 
+## Hierarchical model
 - Run model using inla function:
 ```{.R}
 model_partial_pooling <- inla(
@@ -702,6 +706,7 @@ Model3_ecoCode <- nimbleCode({
 formula_non_linear <- O ~ 1 + X1 + X2 + X3
 ```
 
+## Non-linear exposure-response
 - Run model using inla function:
 ```{.R}
 model_non_linear <- inla(

@@ -5,7 +5,7 @@ author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
-date: 2026-08-06
+date: 2026-08-07
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
@@ -357,11 +357,12 @@ library(plotly)
 p <- plot_ly()
 p <- add_surface(p, x = 0:10, y = -20:30, z = pred2.temp$matRRfit)
 
-layout(p, scene = list(
+layout(p, margin = list(l = 0, r = 0), scene = list(
   xaxis = list(title = "Lag"),
   yaxis = list(title = "Temperature", range = c(0, 30)),
   zaxis = list(title = "Relative risk")
 ))
+
 ```
 :::
 
