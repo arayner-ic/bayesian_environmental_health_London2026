@@ -2,7 +2,7 @@
 title: "Advanced Environmental Modelling"
 subtitle: "SHARP Bayesian Modeling for Environmental Health Workshop"
 author: "Garyfallos Konstantinoudis, Ellen Steward"
-date: "August 06 2026"
+date: "August 07 2026"
 format: html
 ---
 
