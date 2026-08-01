@@ -90,13 +90,3 @@ Quarto is pretty cool. We won't bore you, but have a look at the [docs](https://
 
 <https://gkonstantinoudis.github.io/teaching/>\
 <https://github.com/sparklabnyc/resources/wiki>
-
-## To dos
-
-Robbie - Scaling
-
-Day 1: Robbie until 1:30, Akis after\
-Day 2: Akis until 2:00, Robbie after\
-Day 3: Akis until 12:45, Robbie after
-
-SPDEs in 2027?
