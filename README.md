@@ -41,8 +41,8 @@ Below is the set of labs to follow throughout the two days:
 | Time | Activity |
 |------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
-| 9:00 - 9:45 | [Non-linear regression](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
-| 9:45 - 10:30 | [Non-linear regression](/labs/non_linear_regression/non_linear_regression.qmd) (Hands-on Lab) |
+| 9:00 - 9:45 | [Regression with non-linear terms](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
+| 9:45 - 10:30 | [Regression with non-linear termsn](/labs/non_linear_regression/non_linear_regression.qmd) (Hands-on Lab) |
 | 10:30 - 10:45 | Break |
 | 10:45 - 11:45 | [Spatial and spatio-temporal modeling](/lectures/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Lecture) |
 | 11:45 - 12:45 | Lunch |
