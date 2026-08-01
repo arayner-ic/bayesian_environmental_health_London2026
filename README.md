@@ -62,7 +62,7 @@ Below is the set of labs to follow throughout the two days:
 | 9:00 - 10:00 | [Advanced models](lectures/advanced_models/advanced_models.qmd) (Lecture) |
 | 10:00 - 10:15 | Break |
 | 10:15 - 11:15 | [Advanced models](/labs/advanced_models/advanced_models.qmd) (Hands-on Lab) |
-| 11:15 - 11:45 | Attribution (Lecture) |
+| 11:15 - 11:45 | [Attribution](lectures/attribution/attribution.pptx) (Lecture) |
 | 11:45 - 12:45 | Lunch |
 | 12:45 - 1:30 | [Scaling models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
 | 1:30 - 2:15 | [Scaling models](/labs/scaling_models/scaling_models.qmd) (Lab) |
