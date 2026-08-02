@@ -121,7 +121,7 @@ $$
 -   These are exactly the models that climate-and-health work keeps
     reaching for.
 
-## INLA 
+## `INLA` 
 
 -   **I**ntegrated **N**ested **L**aplace **A**pproximation
     (Rue, Martino & Chopin, 2009).
@@ -425,7 +425,7 @@ $$
 -   Check with `inla(..., control.compute = list(config = TRUE))` and
     compare against a short MCMC run when it matters.
 
-## When not to use INLA {.smaller}
+## When not to use `INLA`
 
 -   The latent field is **not** Gaussian (e.g. discrete mixture
     components, changepoint indicators).

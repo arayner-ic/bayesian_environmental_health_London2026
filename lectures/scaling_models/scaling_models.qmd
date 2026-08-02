@@ -1,5 +1,6 @@
 ---
 title: "Scaling Bayesian models"
+subtitle: "Some considerations for larger model fits"
 author:
  - name: "Robbie M. Parks"
    email: "robbie.parks@columbia.edu"
@@ -139,6 +140,18 @@ formula_2 <- deaths ~ 1 +
 
 - RW2 gives a smooth, non-linear national trend — the smoothing idea from the non-linear regression session, as a random walk rather than a spline basis
 - `constr = TRUE` (sum-to-zero) keeps the trend identifiable alongside the intercept
+
+## Building the Italy model: the common trend
+
+Add the global temporal term: a smooth trend across years, shared by every province.
+
+```{.r}
+formula_2 <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc)
+```
 
 Now every province rises and falls **in exactly the same way**: the maps for different years are identical up to a single common shift.
 
@@ -447,7 +460,7 @@ model_formula <- deaths ~ 1 +
 
 Fitted with `family = "nbinomial"` and `E = dat$population`.
 
-## Step 1: main effects
+## Step 1: main effects {.smaller}
 
 - The BYM2 county term is exactly the model from the spatial session — the Swiss childhood cancer example — at ~3,100 areas instead of 26 cantons
 - The RW2 year term is the smooth trend from the non-linear regression session, as a random walk rather than a spline basis

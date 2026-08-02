@@ -495,7 +495,7 @@ p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
 </ul>
 </section>
 <section id="inla" class="slide level2">
-<h2>INLA</h2>
+<h2><code>INLA</code></h2>
 <ul>
 <li><strong>I</strong>ntegrated <strong>N</strong>ested <strong>L</strong>aplace <strong>A</strong>pproximation (Rue, Martino &amp; Chopin, 2009).</li>
 <li>We usually only want <strong>posterior marginals</strong>, not the joint posterior.</li>
@@ -505,7 +505,7 @@ p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
 </ul>
 </section>
 <section id="mcmc-and-inla" class="slide level2 smaller">
-<h2>MCMC and INLA</h2>
+<h2><code>MCMC</code> and <code>INLA</code></h2>
 <table>
 <colgroup>
 <col style="width: 33%">
@@ -515,8 +515,8 @@ p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
 <thead>
 <tr class="header">
 <th></th>
-<th>MCMC</th>
-<th>INLA</th>
+<th><code>MCMC</code></th>
+<th><code>INLA</code></th>
 </tr>
 </thead>
 <tbody>
@@ -831,8 +831,8 @@ p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y}
 <li>Check with <code>inla(..., control.compute = list(config = TRUE))</code> and compare against a short MCMC run when it matters.</li>
 </ul>
 </section>
-<section id="when-not-to-use-inla" class="slide level2 smaller">
-<h2>When not to use INLA</h2>
+<section id="when-not-to-use-inla" class="slide level2">
+<h2>When not to use <code>INLA</code></h2>
 <ul>
 <li>The latent field is <strong>not</strong> Gaussian (e.g.&nbsp;discrete mixture components, changepoint indicators).</li>
 <li><span class="math inline">\(\dim(\boldsymbol{\theta})\)</span> is large — say more than 10-15.</li>

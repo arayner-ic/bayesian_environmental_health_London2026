@@ -548,8 +548,20 @@ $$
 -   Spatial DLNMs
 -   Examples using air-pollution, radon and temperature
 
-::: {style="color: #58b364"}
-Next : Coding some of these models in INLA.
-:::
+<!-- ::: {style="color: #58b364"} -->
+<!-- Next : Coding some of these models in INLA. -->
+<!-- ::: -->
+
+# Getting ready for the lab
+
+## The lab for this session {.smaller}
+
+- This lab will involve taking the spatiotemporal and non-linear models from the Advanced Environmental Modelling lecture and fitting them in `INLA`, which is what makes models of this size practical to run at all.
+
+- During this lab session, we will:
+1. Explore dengue case data for 645 Brazilian micro-regions from 2009 to 2024, alongside temperature, rainfall and humidity from ERA5;
+2. Build the neighbourhood matrix that `INLA` needs, and fit a spatiotemporal model with seasonal, long-term and BYM2 spatial random effects;
+3. Allow the effects of temperature and rainfall to vary across space, and map the exceedance probabilities; and
+4. Fit a distributed lag non-linear model in `INLA`, so that the effect of temperature can be both non-linear and delayed.
 
 # Questions?

@@ -1,5 +1,6 @@
 ---
 title: "Priors"
+subtitle: "Key ideas and concepts"
 author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"
@@ -586,10 +587,18 @@ Variance priors should be scientifically interpretable, not chosen only for conv
 - respect parameter constraints, such as positivity
 - use prior predictive thinking
 - assess sensitivity to alternative reasonable priors
-
-### Next: tutorial
-
-In the tutorial, we will fit simple Bayesian models and examine directly how different prior choices affect posterior inference.
 ::: 
+
+# Getting ready for the lab
+
+## The lab for this session {.smaller}
+
+- This lab will involve taking some models and concepts from the Priors lecture and exploring how different prior choices affect posterior inference in `NIMBLE`.
+
+- During this lab session, we will:
+1. Fit a Bayesian Poisson regression model for ozone and all-cause mortality in Chicago;
+2. Compare posterior inference for the ozone effect under diffuse, weakly informative, and informative priors;
+3. Fit a linear-threshold model for summer temperature and mortality, and see how the prior on the threshold affects both the threshold and the slope above it; and
+4. Use basic MCMC diagnostics to assess convergence and sampling quality.
 
 # Questions?

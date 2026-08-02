@@ -1,5 +1,5 @@
 ---
-title: "Introduction to non-linear regression"
+title: "Regression with non-linear terms"
 subtitle: "SHARP Bayesian Modeling for Environmental Health Workshop"
 author: "Garyfallos Konstantinoudis, Robbie M. Parks"
 date: "August 06 2026"

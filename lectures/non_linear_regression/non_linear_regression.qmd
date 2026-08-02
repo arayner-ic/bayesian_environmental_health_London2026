@@ -1,6 +1,6 @@
 ---
-title: "Introduction to non-linear regression"
-subtitle: "Beyond the linear model"
+title: "Regression with non-linear terms"
+subtitle: "Beyond the linear Bayesian model"
 author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"

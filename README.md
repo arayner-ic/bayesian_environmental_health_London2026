@@ -48,9 +48,9 @@ Below is the set of labs to follow throughout the two days:
 | 11:45 - 12:45 | Lunch |
 | 12:45 - 1:45 | [Spatial and spatio-temporal modelling](/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Hands-on Lab) |
 | 1:45 - 2:00 | Break |
-| 2:00 - 2:45 | [Software options](lectures/software_options/software_options.qmd) (Lecture) |
-| 2:45 - 3:00 | Break |
-| 3:00 - 3:45 | [INLA and R-INLA](/lectures/inla/inla.qmd) (Lecture) |
+| 2:00 - 2:30 | [Software options for Bayesian modelling](lectures/software_options/software_options.qmd) (Lecture) |
+| 2:30 - 2:45 | Break |
+| 2:45 - 3:45 | [INLA and R-INLA](/lectures/inla/inla.qmd) (Lecture) |
 | 3:45 - 4:30 | [INLA and R-INLA](/labs/inla/inla.qmd) (Lab) |
 | 4:30 - 5:00 | Questions, survey on projects, and wrap-up |
 
@@ -59,13 +59,13 @@ Below is the set of labs to follow throughout the two days:
 | Time | Activity |
 |------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
-| 9:00 - 10:00 | [Advanced models](lectures/advanced_models/advanced_models.qmd) (Lecture) |
+| 9:00 - 10:00 | [Advanced environmental modelling](lectures/advanced_models/advanced_models.qmd) (Lecture) |
 | 10:00 - 10:15 | Break |
-| 10:15 - 11:15 | [Advanced models](/labs/advanced_models/advanced_models.qmd) (Hands-on Lab) |
+| 10:15 - 11:15 | [Advanced environmental modelling](/labs/advanced_models/advanced_models.qmd) (Hands-on Lab) |
 | 11:15 - 11:45 | [Attribution](lectures/attribution/attribution.pptx) (Lecture) |
 | 11:45 - 12:45 | Lunch |
-| 12:45 - 1:30 | [Scaling models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
-| 1:30 - 2:15 | [Scaling models](/labs/scaling_models/scaling_models.qmd) (Lab) |
+| 12:45 - 1:45 | [Scaling Bayesian models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
+| 1:45 - 2:15 | [Scaling Bayesian models](/labs/scaling_models/scaling_models.qmd) (Lab) |
 | 2:15 - 2:30 | Break |
 | 2:30 - 3:30 | Potential projects discussion |
 | 3:30 - 4:00 | Panel discussion |

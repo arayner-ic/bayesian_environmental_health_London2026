@@ -301,18 +301,18 @@ y_{jt} &amp;\sim \text{Pois}(E_{jt} \mu_{jt}) \\
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>t_1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 17.565  14.105   7.820 </code></pre>
+ 18.011  14.417   8.134 </code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>m_1<span class="sc">$</span>summary.hyperpar</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                              mean          sd   0.025quant    0.5quant
-Precision for id_space 232.6620080 34.74925419 171.33885138 230.2555185
-Phi for id_space         0.2360393  0.09153533   0.08789603   0.2257219
+<pre><code>                              mean         sd  0.025quant   0.5quant
+Precision for id_space 232.6619454 34.7492135 171.3387958 230.255481
+Phi for id_space         0.2360392  0.0915352   0.0878959   0.225722
                         0.975quant        mode
-Precision for id_space 307.8312598 225.7715159
-Phi for id_space         0.4406861   0.2033443</code></pre>
+Precision for id_space 307.8310439 225.7715611
+Phi for id_space         0.4406854   0.2033447</code></pre>
 </div>
 </div>
 <p>With only this term, the fitted SMR for a province is identical in every year. Let’s map the first and last year to see that.</p>
@@ -351,7 +351,7 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>t_2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 17.534  13.658   7.848 </code></pre>
+ 17.709  13.940   7.828 </code></pre>
 </div>
 </div>
 <p>Let’s plot the national trend.</p>
@@ -389,7 +389,7 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>t_I</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 17.746  13.922   8.042 </code></pre>
+ 17.860  14.034   7.734 </code></pre>
 </div>
 </div>
 </section>
@@ -413,7 +413,7 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>t_II</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 18.012  14.212   7.891 </code></pre>
+ 17.925  14.098   7.784 </code></pre>
 </div>
 </div>
 </section>
@@ -438,7 +438,7 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>t_III</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 18.964  14.341   8.013 </code></pre>
+ 18.898  14.084   8.102 </code></pre>
 </div>
 </div>
 </section>
@@ -463,7 +463,7 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>t_IV</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   user  system elapsed 
- 18.871  14.277   8.033 </code></pre>
+ 18.734  14.077   7.911 </code></pre>
 </div>
 </div>
 
@@ -487,11 +487,11 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <pre><code># A tibble: 5 × 5
   model          elapsed   dic  waic p_eff
   &lt;chr&gt;            &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1 No interaction    7.85 5936. 6018.  162.
-2 Type I            8.04 5798. 5794.  204.
-3 Type II           7.89 5874. 5943.  222.
-4 Type III          8.01 5747. 5768.  177.
-5 Type IV           8.03 5769. 5797.  182.</code></pre>
+1 No interaction    7.83 5936. 6018.  162.
+2 Type I            7.73 5798. 5794.  204.
+3 Type II           7.78 5874. 5943.  222.
+4 Type III          8.10 5747. 5768.  177.
+5 Type IV           7.91 5769. 5797.  182.</code></pre>
 </div>
 </div>
 <p>Every interaction model has the same number of latent values, 535 of them. The differences in <code>p_eff</code> show how much each structure shrinks that back down, and the runtimes show what each structure costs.</p>
@@ -567,8 +567,8 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <pre><code># A tibble: 2 × 5
   model         latent elapsed   dic  waic
   &lt;chr&gt;          &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1 Type IV          535    8.03 5769. 5797.
-2 Linear slopes    107    7.82 5922. 6008.</code></pre>
+1 Type IV          535    7.91 5769. 5797.
+2 Linear slopes    107    7.73 5922. 6008.</code></pre>
 </div>
 </div>
 <p>At 107 provinces and 5 years the saving is real but not dramatic. The point of the exercise is what happens to that <code>latent</code> column at 3,100 counties and twenty years.</p>
@@ -647,8 +647,8 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <pre><code># A tibble: 2 × 3
   fit        elapsed size_mb
   &lt;chr&gt;        &lt;dbl&gt;   &lt;dbl&gt;
-1 everything    8.05    5.22
-2 nothing       7.52    1.71</code></pre>
+1 everything    7.75    5.22
+2 nothing       7.65    1.71</code></pre>
 </div>
 </div>
 <p>Same posterior for the hyperparameters, a fraction of the cost and of the size. The discipline is to ask, for each fit: what will I actually use from this one?</p>
@@ -660,14 +660,14 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(fit, par, mean, sd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         fit                        par         mean           sd
-1 everything     Precision for id_space 2.327894e+02 3.473569e+01
-2 everything           Phi for id_space 2.361124e-01 9.133768e-02
-3 everything      Precision for id_year 4.521368e+04 6.665854e+04
-4 everything Precision for id_space_int 4.871572e+04 3.134126e+04
-5    nothing     Precision for id_space 2.328289e+02 3.477980e+01
-6    nothing           Phi for id_space 2.360835e-01 9.149282e-02
-7    nothing      Precision for id_year 4.545123e+04 6.807974e+04
-8    nothing Precision for id_space_int 4.872027e+04 3.137422e+04</code></pre>
+1 everything     Precision for id_space 2.327906e+02 3.473708e+01
+2 everything           Phi for id_space 2.361129e-01 9.133778e-02
+3 everything      Precision for id_year 4.516956e+04 6.646722e+04
+4 everything Precision for id_space_int 4.873777e+04 3.138827e+04
+5    nothing     Precision for id_space 2.328315e+02 3.478521e+01
+6    nothing           Phi for id_space 2.360825e-01 9.150137e-02
+7    nothing      Precision for id_year 4.548857e+04 6.827666e+04
+8    nothing Precision for id_space_int 4.870989e+04 3.135260e+04</code></pre>
 </div>
 </div>
 </section>
@@ -692,9 +692,9 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>fit_rough<span class="sc">$</span>mode<span class="sc">$</span>theta</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    Log precision for id_space         Logit phi for id_space 
-                      5.443377                      -1.162096 
+                      5.442703                      -1.162975 
      Log precision for id_year Log precision for id_space_int 
-                     10.265779                      10.507724 </code></pre>
+                     10.258432                      10.504461 </code></pre>
 </div>
 </div>
 <p>Stage 2 warm-starts from that mode via <code>control.mode</code>, and only now pays for accuracy.</p>
@@ -722,10 +722,10 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <pre><code># A tibble: 4 × 2
   workflow     elapsed
   &lt;chr&gt;          &lt;dbl&gt;
-1 one stage       8.05
-2 rough           8.30
-3 full            7.49
-4 rough + full   15.8 </code></pre>
+1 one stage       7.75
+2 rough           7.67
+3 full            7.65
+4 rough + full   15.3 </code></pre>
 </div>
 </div>
 <p>On a model this small the staging may not win, because the fixed overhead of a second <code>inla()</code> call is a large share of the total. The gap opens up as models grow, which is why the national model uses it.</p>
@@ -762,12 +762,12 @@ Phi for id_space         0.4406861   0.2033443</code></pre>
 <pre><code># A tibble: 6 × 7
   SIGLA id_space  year smr_med smr_lo smr_hi p_excess
   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
-1 AG           1  2014   1.04   1.01   1.07     0.998
-2 AG           1  2015   1.05   1.02   1.07     1    
-3 AG           1  2016   1.04   1.02   1.06     1    
-4 AG           1  2017   1.03   1.01   1.05     0.996
-5 AG           1  2018   1.03   1.01   1.06     0.988
-6 AL           2  2014   0.980  0.960  0.999    0.021</code></pre>
+1 AG           1  2014   1.04   1.01    1.07    0.996
+2 AG           1  2015   1.04   1.02    1.07    1    
+3 AG           1  2016   1.04   1.02    1.06    0.999
+4 AG           1  2017   1.03   1.01    1.05    0.994
+5 AG           1  2018   1.03   1.00    1.06    0.991
+6 AL           2  2014   0.980  0.959   1.00    0.029</code></pre>
 </div>
 </div>
 <p>The last column is a probability statement no summary table could have given us.</p>

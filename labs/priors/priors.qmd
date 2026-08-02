@@ -164,15 +164,15 @@ fit_diffuse <- fit_nimble_model(beta_mean = 0,    beta_sd = 0.5,   seed = 11)
 fit_weak    <- fit_nimble_model(beta_mean = 0,    beta_sd = 0.1,   seed = 12)
 fit_info    <- fit_nimble_model(beta_mean = 0.01, beta_sd = 0.005, seed = 13)
 
-saveRDS(fit_diffuse, "fit_diffuse.rds")
-saveRDS(fit_weak, "fit_weak.rds")
-saveRDS(fit_info,  "fit_info.rds")
+saveRDS(fit_diffuse, here::here(('labs','priors','model_fits',"fit_diffuse.rds"))
+saveRDS(fit_weak, here::here(('labs','priors','model_fits',"fit_weak.rds"))
+saveRDS(fit_info, here::here(('labs','priors','model_fits',"fit_info.rds"))
 ```
 
 ```{r echo = FALSE}
-fit_diffuse <- readRDS("fit_diffuse.rds")
-fit_weak    <- readRDS("fit_weak.rds")
-fit_info    <- readRDS("fit_info.rds")
+fit_diffuse <- readRDS(here::here('labs','priors','model_fits',"fit_diffuse.rds"))
+fit_weak    <- readRDS(here::here('labs','priors','model_fits',"fit_weak.rds"))
+fit_info    <- readRDS(here::here('labs','priors','model_fits',"fit_info.rds"))
 ```
 
 ### Posterior summaries
@@ -397,15 +397,15 @@ fit_psi_broad <- fit_threshold_uniform(psi_lower = 20, psi_upper = 35, seed = 21
 fit_psi_low   <- fit_threshold_uniform(psi_lower = 24, psi_upper = 28, seed = 22)
 fit_psi_high  <- fit_threshold_uniform(psi_lower = 29, psi_upper = 31, seed = 23)
 
-saveRDS(fit_psi_broad, "fit_psi_broad.rds")
-saveRDS(fit_psi_low,   "fit_psi_low.rds")
-saveRDS(fit_psi_high,  "fit_psi_high.rds")
+saveRDS(fit_psi_broad, here::here('labs','priors','model_fits',"fit_psi_broad.rds"))
+saveRDS(fit_psi_low,   here::here('labs','priors','model_fits',"fit_psi_low.rds"))
+saveRDS(fit_psi_high,  here::here('labs','priors','model_fits',"fit_psi_high.rds"))
 ```
 
 ```{r echo = FALSE}
-fit_psi_broad <- readRDS("fit_psi_broad.rds")
-fit_psi_low   <- readRDS("fit_psi_low.rds")
-fit_psi_high  <- readRDS("fit_psi_high.rds")
+fit_psi_broad <- readRDS(here::here('labs','priors','model_fits',"fit_psi_broad.rds"))
+fit_psi_low   <- readRDS(here::here('labs','priors','model_fits',"fit_psi_low.rds"))
+fit_psi_high  <- readRDS(here::here('labs','priors','model_fits',"fit_psi_high.rds"))
 ```
 
 ### Diagnostics

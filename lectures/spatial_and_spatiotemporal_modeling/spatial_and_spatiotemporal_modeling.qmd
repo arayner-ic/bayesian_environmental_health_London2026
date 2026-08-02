@@ -1,5 +1,5 @@
 ---
-title: "Spatial and Spatio-temporal Modelling"
+title: "Spatial and spatio-temporal modelling"
 subtitle: "Structured space-time dependence"
 author:
  - name: "Garyfallos Konstantinoudis"
