@@ -133,14 +133,14 @@ $$
     accurately, and very fast.
 -   No chains. No burn-in. No $\hat{R}$. Same answer every time you run it.
 
-## MCMC and INLA {.smaller}
+## `MCMC` and `INLA` {.smaller}
 
-| | MCMC | INLA |
+| | `MCMC` | `INLA` |
 |---|---|---|
 | Approach | Stochastic sampling | Deterministic approximation |
 | Model class | Almost anything | Latent Gaussian models only |
 | Error | Monte Carlo error, $\to 0$ with time | Approximation error, fixed |
-| Runtime | Minutes to days | Seconds to minutes |
+| Runtime | Good! But can be challenge to scale | Potentially accelerated |
 | Reproducible | Up to the seed | Exactly |
 | Diagnostics needed | Many | Few |
 

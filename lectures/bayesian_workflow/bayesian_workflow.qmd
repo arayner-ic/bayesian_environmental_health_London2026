@@ -2,7 +2,7 @@
 title: "Bayesian workflow"
 subtitle: "Good practice of Bayesian inference"
 author:
- - name: "Garyfallos Konstantinoudis, Elizaveta Semenova"
+ - name: "Robbie M. Parks, Garyfallos Konstantinoudis, Elizaveta Semenova"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
 date: 2026-08-05

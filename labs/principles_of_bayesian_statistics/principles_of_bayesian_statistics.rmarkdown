@@ -23,6 +23,7 @@ color_scheme_set(scheme = "viridis")
 set.seed(2)
 ```
 
+
 ## Goal of this computing lab session
 
 The goal of this lab is to take some models and concepts from the Introduction to Bayesian Methods lecture and introduce you to the way `NIMBLE` works.
@@ -61,6 +62,7 @@ y_i &\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 $$
 
 First create some example data:
+
 ```{r}
 set.seed(1)
 
@@ -72,24 +74,30 @@ sigma <- 0.5 # standard deviation of variability around perfect agreement
 y <- rnorm(n, X %*% true_betas, sigma)
 ```
 
+
 We also centre the three explanatory variables now, which helps MCMC performance later.
 Centring shifts the intercept but leaves the slopes unchanged, so the frequentist and Bayesian fits below are directly comparable.
+
 ```{r}
 x1 <- X[, 1] - mean(X[, 1])
 x2 <- X[, 2] - mean(X[, 2])
 x3 <- X[, 3] - mean(X[, 3])
 ```
 
+
 ## Exploratory data analysis
 
 What does the dataset look like?
+
 ```{r}
 df <- tibble(y = y, x1 = x1, x2 = x2, x3 = x3)
 df |> head()
 ```
 
+
 What does equivalent frequentist model output look like for reference?
 By the way, what's the interpretation of the 95% CI in this frequentist world?
+
 ```{r}
 model_freq <- lm(
   y ~ x1 + x2 + x3,
@@ -100,7 +108,9 @@ conf_int <- confint(model_freq)
 cbind(central_est, conf_int)
 ```
 
+
 Let's rewrite this model in a Bayesian framework using `NIMBLE`. It can be written in lots of different ways, but here we're going to try and stick to defining the priors first, then writing the formula.
+
 ```{r}
 code <- nimbleCode({
   # priors for parameters
@@ -119,15 +129,19 @@ code <- nimbleCode({
 })
 ```
 
+
 Final preparation of the (already centred) data into lists for input into `NIMBLE` MCMC running
+
 ```{r}
 constants <- list(n = n)
 data <- list(y = y, x1 = x1, x2 = x2, x3 = x3)
 ```
 
+
 Set initial values for MCMC samples (very important for convergence).
 As in the lecture, we run four chains, so we supply four sets of starting values, deliberately spread out.
 If all four chains end up in the same place, that is good evidence the sampler has found the posterior rather than got stuck near where it started.
+
 ```{r}
 inits <- list(
   list(alpha = -1, beta1 = -1, beta2 = -1, beta3 = -1, sigma = 0.5),
@@ -137,14 +151,18 @@ inits <- list(
 )
 ```
 
+
 The following code will establish which samples will be used in the sampling of the posteriors. It is not going to run the model yet.
 If there is a conjugate relationship apparent between prior and posterior (e.g., Normal-Normal, Binomial-Beta, Poisson-Gamma), `NIMBLE` will automatically detect it here. This is an example where there is a Normal-Normal conjugate relationship
+
 ```{r}
 model <- nimbleModel(code, constants = constants, data = data, inits = inits[[1]])
 mcmcConf <- configureMCMC(model)
 ```
 
+
 Run the MCMC simulations. There are lots of arguments in the main function, `nimbleMCMC()`. Take a second to look through each of them and make sure you understand where they're coming from and what they mean as each one is very important.
+
 ```{r}
 tic <- Sys.time()
 nimbleMCMC_samples_initial <- nimbleMCMC(
@@ -163,31 +181,40 @@ toc <- Sys.time()
 toc - tic
 ```
 
+
 What is the summary of each estimated parameter from the samples? The following operations will help us understand.
 
 First a summary of how the statistics of the samples of each parameter look
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_initial, default_summary_measures())
 ```
 
+
 Then examine how well the model has converged, which typically is identified by how close each rhat value is to 1.00.
 As in the lecture, rhat compares variation within each chain to variation between the four chains, which is why running more than one chain matters here.
 If it is much above 1.00 (>1.05) then the samples will not be very well converged and therefore either the model is not well specified or there just needs to be more iterations of the MCMC. It is a little bit of an art to figure that out, but rhat helps.
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_initial, default_convergence_measures())
 ```
 
+
 What do the samples of the target parameters actually look like?
 Let's have a look at the parameters and their samples from running the model above.
 There is one colour per chain: we want them overlapping, not drifting apart.
+
 ```{r}
 mcmc_trace(nimbleMCMC_samples_initial)
 ```
 
+
 Let's now focus on `beta1` (which we know is 0.2 from setting up initially).
+
 ```{r}
 mcmc_trace(nimbleMCMC_samples_initial, pars = c("beta1"))
 ```
+
 
 It looks like all four chains converge quickly from their different starting values to ~0.2 for `beta1`. But typically we will throw away some samples at the beginning to ensure that the transient samples (which is when the model samples haven't stabilized around a particular value because they are travelling from the initial values we give them as above for `inits`) are not included in calculating estimates of the mean and credible intervals, which could bias the results up or down slightly.
 
@@ -196,6 +223,7 @@ For example, you can see how the `sigma` chains had to travel from their initial
 This period where we throw away samples (defined by the `nburnin` argument below) is called the 'burn in' or 'warm up' period.
 
 Let's do it again but with a burn in of 1000 samples, i.e., throw away the first 1000 samples because they may not yet be centred around a particular stable value (assuming the model is reasonably parameterized, this will happen at some point).
+
 ```{r}
 tic <- Sys.time()
 nimbleMCMC_samples_burnin <- nimbleMCMC(
@@ -215,27 +243,37 @@ toc <- Sys.time()
 toc - tic
 ```
 
+
 What is the summary of each estimated parameter from the samples with burn in?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_burnin, default_summary_measures())
 ```
 
+
 And how good do convergence indicators look?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_burnin, default_convergence_measures())
 ```
 
+
 Now the samples for each parameter look to be very tidily centred around their estimated values, with `sigma` no longer showing that journey from its initial starting values, as the burn in period has thrown those samples out.
+
 ```{r}
 mcmc_trace(nimbleMCMC_samples_burnin)
 ```
 
+
 Let's focus on the `sigma` plot
+
 ```{r}
 mcmc_trace(nimbleMCMC_samples_burnin, pars = c("sigma"))
 ```
 
+
 Let's try changing the priors and see if that makes any difference to how the model fits. Take some time to compare this with the code for the original model above. Notice how the real value of `beta2` (0.5) is not allowed as a value from the prior it is assigned below.
+
 ```{r}
 code_worse_priors <- nimbleCode({
   # priors for parameters
@@ -253,7 +291,9 @@ code_worse_priors <- nimbleCode({
 })
 ```
 
+
 Run the MCMC simulations
+
 ```{r}
 tic <- Sys.time()
 nimbleMCMC_samples_worse_priors <- nimbleMCMC(
@@ -276,20 +316,27 @@ toc <- Sys.time()
 toc - tic
 ```
 
+
 What is the summary of each estimated parameter from the samples with different priors?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_worse_priors, default_summary_measures())
 ```
 
+
 And how good do convergence indicators look?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_worse_priors, default_convergence_measures())
 ```
 
+
 What do the samples look like here?
+
 ```{r}
 mcmc_trace(nimbleMCMC_samples_worse_priors)
 ```
+
 
 You can see how the model cannot recover the true value of `beta2` because of our choice of prior.
 
@@ -299,6 +346,7 @@ This is a warning: even though the model has converged, it might not be a good m
 
 Back to our sensible priors, say we wanted to establish the estimated difference between two betas?
 Let's say `beta1` and `beta2` in this case. `NIMBLE` formulas are flexible so you can define this as an output of the model, as seen in last elements of formula code below.
+
 ```{r}
 code_diff_betas <- nimbleCode({
   # priors for parameters
@@ -319,7 +367,9 @@ code_diff_betas <- nimbleCode({
 })
 ```
 
+
 Run the MCMC simulations and specifically only monitor differences between `beta1` and `beta2` to get an estimate of the difference between `beta1` and `beta2`.
+
 ```{r}
 parameters_to_monitor <- c("beta12_diff")
 
@@ -342,23 +392,30 @@ toc <- Sys.time()
 toc - tic
 ```
 
+
 What is the summary of each estimated parameter from the samples when monitoring difference between `beta1` and `beta2`?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_beta12_diff, default_summary_measures())
 ```
 
+
 And how good do convergence indicators look?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_beta12_diff, default_convergence_measures())
 ```
 
+
 Equally, we could also do this by operating on the samples themselves from the original model. `NIMBLE` is quite flexible.
+
 ```{r}
 draws_burnin <- as_draws_df(nimbleMCMC_samples_burnin)
 
 (draws_burnin$beta2 - draws_burnin$beta1) |>
   summary()
 ```
+
 
 ### Logistic regression (binomial) example
 
@@ -375,6 +432,7 @@ Note, a Bernoulli likelihood is equivalent to a Binomial with sample size 1.
 :::
 
 First create some example data for our model (for success (1) or failure (0) as the outcome):
+
 ```{r}
 n <- 10000
 p <- 3
@@ -394,13 +452,17 @@ x2 <- x2 - mean(x2)
 x3 <- x3 - mean(x3)
 ```
 
+
 What does the dataset look like?
+
 ```{r}
 df <- tibble(y = y, x1 = x1, x2 = x2, x3 = x3)
 df
 ```
 
+
 What does equivalent frequentist model output look like for reference?
+
 ```{r}
 # now feed it to glm:
 model_freq <- glm(
@@ -414,7 +476,9 @@ conf_int <- confint(model_freq)
 cbind(central_est, conf_int)
 ```
 
+
 Create the `NIMBLE` model for a logistic regression.
+
 ```{r}
 code_binomial <- nimbleCode({
   # priors for parameters
@@ -431,13 +495,17 @@ code_binomial <- nimbleCode({
 })
 ```
 
+
 Final preparation of the (already centred) data into lists.
+
 ```{r}
 constants <- list(n = n)
 data <- list(y = y, x1 = x1, x2 = x2, x3 = x3)
 ```
 
+
 Set initial values for MCMC samples, one set per chain.
+
 ```{r}
 inits <- list(
   list(alpha = -1, beta1 = -1, beta2 = -1, beta3 = -1),
@@ -447,13 +515,17 @@ inits <- list(
 )
 ```
 
+
 Let `NIMBLE` find out if there is a conjugate relationship between prior and posterior (e.g., Normal-Normal, Binomial-Beta, Poisson-Gamma).
+
 ```{r}
 model_binomial <- nimbleModel(code_binomial, constants = constants, data = data, inits = inits[[1]])
 mcmcConf <- configureMCMC(model_binomial)
 ```
 
+
 Let's run the model. We're going to go with the burn in period from the start here to throw away the weird transitionary samples.
+
 ```{r}
 tic <- Sys.time()
 
@@ -474,20 +546,27 @@ toc <- Sys.time()
 toc - tic
 ```
 
+
 What is the summary of each estimated parameter from the binomial model?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_binomial, default_summary_measures())
 ```
 
+
 And how good do convergence indicators look?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_binomial, default_convergence_measures())
 ```
 
+
 Now the samples, taking note, e.g., that the samples for `beta1` look to be very tidily centred around 2.
+
 ```{r}
 mcmc_trace(nimbleMCMC_samples_binomial)
 ```
+
 
 ### Poisson example
 
@@ -499,6 +578,7 @@ y_i &\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 $$
 
 Again, let's make some simulated data but this time for a Poisson model (for count data)
+
 ```{r}
 n <- 10000
 
@@ -517,13 +597,17 @@ x2 <- x2 - mean(x2)
 x3 <- x3 - mean(x3)
 ```
 
+
 What does the dataset look like?
+
 ```{r}
 df <- tibble(y = y, x1 = x1, x2 = x2, x3 = x3)
 df
 ```
 
+
 What does equivalent frequentist model output look like for reference? What's the interpretation of the 95% CI?
+
 ```{r}
 # now feed it to glm:
 model_freq <- glm(
@@ -537,7 +621,9 @@ conf_int <- confint(model_freq)
 cbind(central_est, conf_int)
 ```
 
+
 Create the `NIMBLE` model for the Poisson model.
+
 ```{r}
 code_poisson <- nimbleCode({
   # priors for parameters
@@ -554,13 +640,17 @@ code_poisson <- nimbleCode({
 })
 ```
 
+
 Final preparation of the (already centred) data into lists
+
 ```{r}
 constants <- list(n = n)
 data <- list(y = y, x1 = x1, x2 = x2, x3 = x3)
 ```
 
+
 Set initial values for MCMC samples, one set per chain
+
 ```{r}
 inits <- list(
   list(alpha = -1, beta1 = -1, beta2 = -1, beta3 = -1),
@@ -570,13 +660,17 @@ inits <- list(
 )
 ```
 
+
 Are there any conjugate relationships?
+
 ```{r}
 model_poisson <- nimbleModel(code_poisson, constants = constants, data = data, inits = inits[[1]])
 mcmcConf <- configureMCMC(model_poisson)
 ```
 
+
 Let's run the model.
+
 ```{r}
 tic <- Sys.time()
 nimbleMCMC_samples_poisson <- nimbleMCMC(
@@ -596,20 +690,27 @@ toc <- Sys.time()
 toc - tic
 ```
 
+
 What is the summary of each estimated parameter from the Poisson model?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_poisson, default_summary_measures())
 ```
 
+
 And how good do convergence indicators look?
+
 ```{r}
 summarise_draws(nimbleMCMC_samples_poisson, default_convergence_measures())
 ```
 
+
 Now the samples for, e.g., `beta1` look to be very tidily centred around 0.3.
+
 ```{r}
 mcmc_trace(nimbleMCMC_samples_poisson)
 ```
+
 
 ## Closing remarks
 
@@ -624,3 +725,4 @@ Also, not all real life examples fit any of the three likelihoods perfectly.
 For example, the data might be "overdispersed", where there is greater variability in the data than would be expected.
 Luckily, there are extensions to these likelihoods that can deal with overdispersion, such as the beta-binomial likelihood for overdispersed binomial data, or the negative binomial likelihood (sometimes called the gamma-Poisson) for overdispersed Poisson data.
 For more information on these likelihoods, see Chapter 12 of _Statistical Rethinking_ by Richard McElreath.
+

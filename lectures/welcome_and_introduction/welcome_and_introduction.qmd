@@ -47,7 +47,7 @@ The **Bayesian Modeling for Environmental Health Workshop** is a three-day inten
     -   Bayesian workflow
     -   Hierarchical modeling
     -   Priors
-    -   Non-linear regression
+    -   Regression with non-linear terms
     -   Spatial and spatio-temporal modeling
 :::
 
@@ -56,9 +56,11 @@ The **Bayesian Modeling for Environmental Health Workshop** is a three-day inten
 
     ::: incremental
     -   Software options
+    -   INLA and R-INLA
     -   Advanced models
     -   Attribution
-    -   Scaling
+    -   Scaling models
+    -   How this could apply to your research
     :::
 
 
@@ -104,8 +106,8 @@ The **Bayesian Modeling for Environmental Health Workshop** is a three-day inten
 | Time | Activity |
 |--------------------------|----------------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
-| 9:00 - 9:45 | Non-linear regression (Lecture) |
-| 9:45 - 10:30 | Non-linear regression (Hands-on Lab) |
+| 9:00 - 9:45 | Regression with non-linear terms (Lecture) |
+| 9:45 - 10:30 | Regression with non-linear terms (Hands-on Lab) |
 | 10:40 - 10:45 | Break |
 | 10:45 - 11:45 | Spatial and spatio-temporal modelling (Lecture) |
 | 11:45 - 12:45 | Lunch |
