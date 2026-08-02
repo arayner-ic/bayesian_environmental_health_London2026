@@ -23,14 +23,14 @@ Below is the set of labs to follow throughout the two days:
 | 8:30 - 9:00 | Check in and breakfast |
 | 9:00 - 9:15 | [Welcome and introduction](/lectures/welcome_and_introduction/welcome_and_introduction.qmd) |
 | 9:15 - 10:00 | [Principles of Bayesian statistics](/lectures/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lecture) |
-| 10:00 - 10:45 | [Principles of Bayesian statistics](/labs/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Hands-on Lab) |
+| 10:00 - 10:45 | [Principles of Bayesian statistics](/labs/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lab) |
 | 10:45 - 11:00 | Break |
 | 11:00 - 11:45 | [Bayesian workflow](/lectures/bayesian_workflow/bayesian_workflow.qmd) (Lecture) |
 | 11:45 - 12:45 | Lunch |
 | 12:45 - 1:30 | [Bayesian workflow](/labs/bayesian_workflow/bayesian_workflow.qmd) (Lab) |
 | 1:30 - 1:45 | Break |
 | 1:45 - 2:30 | [Hierarchical modeling](/lectures/hierarchical_modelling/hierarchical_modelling.qmd) (Lecture) |
-| 2:30 - 3:15 | [Hierarchical modelling](/labs/hierarchical_modelling/hierarchical_modelling.qmd) (Hands-on Lab) |
+| 2:30 - 3:15 | [Hierarchical modelling](/labs/hierarchical_modelling/hierarchical_modelling.qmd) (Lab) |
 | 3:15 - 3:30 | Break |
 | 3:30 - 4:15 | [Priors](/lectures/priors/priors.qmd) (Lecture) |
 | 4:15 - 4:45 | [Priors](/labs/priors/priors.qmd) (Lab) |
@@ -42,11 +42,11 @@ Below is the set of labs to follow throughout the two days:
 |------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
 | 9:00 - 9:45 | [Regression with non-linear terms](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
-| 9:45 - 10:30 | [Regression with non-linear terms](/labs/non_linear_regression/non_linear_regression.qmd) (Hands-on Lab) |
+| 9:45 - 10:30 | [Regression with non-linear terms](/labs/non_linear_regression/non_linear_regression.qmd) (Lab) |
 | 10:30 - 10:45 | Break |
 | 10:45 - 11:45 | [Spatial and spatio-temporal modeling](/lectures/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Lecture) |
 | 11:45 - 12:45 | Lunch |
-| 12:45 - 1:45 | [Spatial and spatio-temporal modelling](/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Hands-on Lab) |
+| 12:45 - 1:45 | [Spatial and spatio-temporal modelling](/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Lab) |
 | 1:45 - 2:00 | Break |
 | 2:00 - 2:30 | [Software options for Bayesian modelling](lectures/software_options/software_options.qmd) (Lecture) |
 | 2:30 - 2:45 | Break |
@@ -61,7 +61,7 @@ Below is the set of labs to follow throughout the two days:
 | 8:30 - 9:00 | Check in and breakfast |
 | 9:00 - 10:00 | [Advanced environmental modelling](lectures/advanced_models/advanced_models.qmd) (Lecture) |
 | 10:00 - 10:15 | Break |
-| 10:15 - 11:15 | [Advanced environmental modelling](/labs/advanced_models/advanced_models.qmd) (Hands-on Lab) |
+| 10:15 - 11:15 | [Advanced environmental modelling](/labs/advanced_models/advanced_models.qmd) (Lab) |
 | 11:15 - 11:45 | [Attribution](lectures/attribution/attribution.pptx) (Lecture) |
 | 11:45 - 12:45 | Lunch |
 | 12:45 - 1:45 | [Scaling Bayesian models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
