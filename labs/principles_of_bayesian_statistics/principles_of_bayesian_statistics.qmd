@@ -6,6 +6,7 @@ date: "August 05 2026"
 format: html
 execute:
   freeze: auto
+  cache: true
 ---
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
