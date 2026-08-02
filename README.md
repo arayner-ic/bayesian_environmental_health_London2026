@@ -14,7 +14,7 @@ We will be using `Posit (RStudio) Cloud`, which assumes knowledge of `R` and `RS
 
 This workshop is written partly in [`NIMBLE`](https://r-nimble.org/). There are also several elements later on in [`R-INLA`](https://www.r-inla.org/).
 
-Below is the set of labs to follow throughout the two days:
+Below is the set of lectures and labs to follow throughout the two days:
 
 ### Day 1 (August 5th 2026)
 
