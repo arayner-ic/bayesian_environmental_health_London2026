@@ -10,7 +10,7 @@
 <link href="welcome_and_introduction_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.3.354">
 
-  <meta name="author" content="Robbie M. Parks, Garyfallos Konstantinoudis">
+  <meta name="author" content="Robbie M. Parks, Garyfallos Konstantinoudis, Carlos Carrillo-Gallegos">
   <title>Bayesian Model(l)ing for Environmental Health</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -333,7 +333,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-Robbie M. Parks, Garyfallos Konstantinoudis 
+Robbie M. Parks, Garyfallos Konstantinoudis, Carlos Carrillo-Gallegos 
 </div>
 <div class="quarto-title-author-email">
 <a href="mailto:robbie.parks@columbia.edu, g.konstantinoudis@imperial.ac.uk">robbie.parks@columbia.edu, g.konstantinoudis@imperial.ac.uk</a>
@@ -384,11 +384,11 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 <li><p>By the end of the workshop, participants should be familiar with the following topics:</p>
 <div>
 <ul>
-<li class="fragment">Software options</li>
+<li class="fragment">Software options for Bayesian modelling</li>
 <li class="fragment">INLA and R-INLA</li>
-<li class="fragment">Advanced models</li>
+<li class="fragment">Advanced environmental modelling</li>
 <li class="fragment">Attribution</li>
-<li class="fragment">Scaling models</li>
+<li class="fragment">Scaling Bayesian models</li>
 <li class="fragment">How this could apply to your research</li>
 </ul>
 </div></li>
@@ -410,10 +410,6 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 <h2>Day 1 (August 5th 2026)</h2>
 <div style="font-size: 50%;">
 <table>
-<colgroup>
-<col style="width: 36%">
-<col style="width: 63%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Time</th>
@@ -427,15 +423,15 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>9:00 - 9:15</td>
-<td>Welcome and introduction</td>
+<td><a href="/lectures/welcome_and_introduction/welcome_and_introduction.qmd">Welcome and introduction</a></td>
 </tr>
 <tr class="odd">
 <td>9:15 - 10:00</td>
-<td>Principles of Bayesian statistics (Lecture)</td>
+<td><a href="/lectures/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd">Principles of Bayesian statistics</a> (Lecture)</td>
 </tr>
 <tr class="even">
 <td>10:00 - 10:45</td>
-<td>Principles of Bayesian statistics (Hands-on Lab)</td>
+<td><a href="/labs/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd">Principles of Bayesian statistics</a> (Hands-on Lab)</td>
 </tr>
 <tr class="odd">
 <td>10:45 - 11:00</td>
@@ -443,7 +439,7 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>11:00 - 11:45</td>
-<td>Bayesian workflow (Lecture)</td>
+<td><a href="/lectures/bayesian_workflow/bayesian_workflow.qmd">Bayesian workflow</a> (Lecture)</td>
 </tr>
 <tr class="odd">
 <td>11:45 - 12:45</td>
@@ -451,7 +447,7 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>12:45 - 1:30</td>
-<td>Bayesian Workflow (Lab)</td>
+<td><a href="/labs/bayesian_workflow/bayesian_workflow.qmd">Bayesian workflow</a> (Lab)</td>
 </tr>
 <tr class="odd">
 <td>1:30 - 1:45</td>
@@ -459,11 +455,11 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>1:45 - 2:30</td>
-<td>Hierarchical modelling (Lecture)</td>
+<td><a href="/lectures/hierarchical_modelling/hierarchical_modelling.qmd">Hierarchical modeling</a> (Lecture)</td>
 </tr>
 <tr class="odd">
 <td>2:30 - 3:15</td>
-<td>Hierarchical modelling (Hands-on Lab)</td>
+<td><a href="/labs/hierarchical_modelling/hierarchical_modelling.qmd">Hierarchical modelling</a> (Hands-on Lab)</td>
 </tr>
 <tr class="even">
 <td>3:15 - 3:30</td>
@@ -471,11 +467,11 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="odd">
 <td>3:30 - 4:15</td>
-<td>Priors (Lecture)</td>
+<td><a href="/lectures/priors/priors.qmd">Priors</a> (Lecture)</td>
 </tr>
 <tr class="even">
 <td>4:15 - 4:45</td>
-<td>Priors (Lab)</td>
+<td><a href="/labs/priors/priors.qmd">Priors</a> (Lab)</td>
 </tr>
 <tr class="odd">
 <td>4:45 - 5:00</td>
@@ -489,10 +485,6 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 <h2>Day 2 (August 6th 2026)</h2>
 <div style="font-size: 50%;">
 <table>
-<colgroup>
-<col style="width: 36%">
-<col style="width: 63%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Time</th>
@@ -506,19 +498,19 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>9:00 - 9:45</td>
-<td>Regression with non-linear terms (Lecture)</td>
+<td><a href="/lectures/non_linear_regression/non_linear_regression.qmd">Regression with non-linear terms</a> (Lecture)</td>
 </tr>
 <tr class="odd">
 <td>9:45 - 10:30</td>
-<td>Regression with non-linear terms (Hands-on Lab)</td>
+<td><a href="/labs/non_linear_regression/non_linear_regression.qmd">Regression with non-linear terms</a> (Hands-on Lab)</td>
 </tr>
 <tr class="even">
-<td>10:40 - 10:45</td>
+<td>10:30 - 10:45</td>
 <td>Break</td>
 </tr>
 <tr class="odd">
 <td>10:45 - 11:45</td>
-<td>Spatial and spatio-temporal modelling (Lecture)</td>
+<td><a href="/lectures/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd">Spatial and spatio-temporal modeling</a> (Lecture)</td>
 </tr>
 <tr class="even">
 <td>11:45 - 12:45</td>
@@ -526,31 +518,31 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="odd">
 <td>12:45 - 1:45</td>
-<td>Spatial and spatio-temporal modelling (Hands-on Lab)</td>
+<td><a href="/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd">Spatial and spatio-temporal modelling</a> (Hands-on Lab)</td>
 </tr>
 <tr class="even">
 <td>1:45 - 2:00</td>
 <td>Break</td>
 </tr>
 <tr class="odd">
-<td>2:00 - 2:45</td>
-<td>Software Options (Lecture)</td>
+<td>2:00 - 2:30</td>
+<td><a href="lectures/software_options/software_options.qmd">Software options for Bayesian modelling</a> (Lecture)</td>
 </tr>
 <tr class="even">
-<td>2:45 - 3:00</td>
+<td>2:30 - 2:45</td>
 <td>Break</td>
 </tr>
 <tr class="odd">
-<td>3:00 - 3:45</td>
-<td>INLA and R-INLA (Lecture)</td>
+<td>2:45 - 3:45</td>
+<td><a href="/lectures/inla/inla.qmd">INLA and R-INLA</a> (Lecture)</td>
 </tr>
 <tr class="even">
 <td>3:45 - 4:30</td>
-<td>INLA and R-INLA (Lab)</td>
+<td><a href="/labs/inla/inla.qmd">INLA and R-INLA</a> (Lab)</td>
 </tr>
 <tr class="odd">
 <td>4:30 - 5:00</td>
-<td>Questions, survey on projects, and wrap up</td>
+<td>Questions, survey on projects, and wrap-up</td>
 </tr>
 </tbody>
 </table>
@@ -560,10 +552,6 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 <h2>Day 3 (August 7th 2026)</h2>
 <div style="font-size: 50%;">
 <table>
-<colgroup>
-<col style="width: 36%">
-<col style="width: 63%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Time</th>
@@ -577,7 +565,7 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>9:00 - 10:00</td>
-<td>Advanced Models (Lecture)</td>
+<td><a href="lectures/advanced_models/advanced_models.qmd">Advanced environmental modelling</a> (Lecture)</td>
 </tr>
 <tr class="odd">
 <td>10:00 - 10:15</td>
@@ -585,23 +573,23 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>10:15 - 11:15</td>
-<td>Advanced Models (Hands-on Lab)</td>
+<td><a href="/labs/advanced_models/advanced_models.qmd">Advanced environmental modelling</a> (Hands-on Lab)</td>
 </tr>
 <tr class="odd">
 <td>11:15 - 11:45</td>
-<td>Attribution (Lecture)</td>
+<td><a href="lectures/attribution/attribution.pptx">Attribution</a> (Lecture)</td>
 </tr>
 <tr class="even">
 <td>11:45 - 12:45</td>
 <td>Lunch</td>
 </tr>
 <tr class="odd">
-<td>12:45 - 1:30</td>
-<td>Scaling Models</td>
+<td>12:45 - 1:45</td>
+<td><a href="/lectures/scaling_models/scaling_models.qmd">Scaling Bayesian models</a> (Lecture)</td>
 </tr>
 <tr class="even">
-<td>1:30 - 2:15</td>
-<td>Scaling Models (Lab)</td>
+<td>1:45 - 2:15</td>
+<td><a href="/labs/scaling_models/scaling_models.qmd">Scaling Bayesian models</a> (Lab)</td>
 </tr>
 <tr class="odd">
 <td>2:15 - 2:30</td>
@@ -609,7 +597,7 @@ Robbie M. Parks, Garyfallos Konstantinoudis
 </tr>
 <tr class="even">
 <td>2:30 - 3:30</td>
-<td>Potential Projects Discussion</td>
+<td>Potential projects discussion</td>
 </tr>
 <tr class="odd">
 <td>3:30 - 4:00</td>

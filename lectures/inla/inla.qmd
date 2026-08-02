@@ -5,7 +5,7 @@ author:
  - name: "Robbie M. Parks"
    email: "robbie.parks@columbia.edu"
 institute: "Columbia University"
-date: 2026-08-6
+date: 2026-08-06
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
