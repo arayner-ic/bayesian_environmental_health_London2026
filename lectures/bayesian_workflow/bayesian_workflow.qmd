@@ -3,8 +3,8 @@ title: "Bayesian workflow"
 subtitle: "Good practice of Bayesian inference"
 author:
  - name: "Robbie M. Parks, Garyfallos Konstantinoudis, Elizaveta Semenova"
-   email: "g.konstantinoudis@imperial.ac.uk"
-institute: "Imperial College London"
+   email: "robbie.parks@columbia.edu"
+institute: "Environmental Health Sciences, Columbia University"
 date: 2026-08-05
 date-format: medium
 title-slide-attributes:
@@ -15,7 +15,7 @@ title-slide-attributes:
 format:
   revealjs:
     slide-number: true
-    incremental: true
+    incremental: false
     chalkboard:
       buttons: false
       preview-links: auto
@@ -23,12 +23,20 @@ format:
     theme: [default, ../../assets/style.scss]
 ---
 
-# Outline
+```{r}
+#| include: false
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+```
+
+## Outline
 
 -   Bayesian inference recap: What? Why? How?
 -   What is a Bayesian workflow and why do we need it?
 -   Principles of Bayesian workflow.
 -   Modern Bayesian workflow.
+-   Getting ready for the lab.
 
 # Bayesian inference
 
@@ -36,7 +44,7 @@ format:
 
 $$p(\theta|y) = \frac{p(y | \theta) p(\theta)}{p(y)}$$ Can you recall what the components of the Bayes formula are?
 
-![](assets/bmeh_normal.png){.r-stretch}
+![](assets/bmeh_normal.png){.r-stretch fig-align="center"}
 
 ## Bayes formula:
 
@@ -64,7 +72,7 @@ A lot can go wrong!
 
 -   Specify a complete Bayesian model:
     -   Specify likelihood.
-    -   Specify priors for all parameters. (saying "I don't know" is also a prior)
+    -   Specify priors for all parameters (saying 'I don't know' is also a prior).
 
 ## General principle of Bayesian inference:
 
@@ -84,7 +92,7 @@ Sometimes posterior is available in a closed form.
 
 . . .
 
--   Examples of *conjugate* models include the normal-normal, Gamma-Poisson Beta-binomial.
+-   Examples of *conjugate* models include Normal-Normal, Poisson-Gamma, and Binomial-Beta, as we saw this morning.
 
 ## Probabilistic programming languages
 
@@ -99,9 +107,10 @@ Probabilistic programming languages (PPLs) from a user's perspective:
 
 ## Remark on inference methods
 
--   Alongside "exact"methods such as MCMC, there also exists approximate methods, such as Variation Inference (VI) and integrated nested Laplace approximation.
--   The approximate methods are less flexible and there is no guaranteed *convergence*.
--   We are opting to use MCMC whenever possible since it has theoretical guarantees (conditional on time the chain will *converge*).
+-   Alongside sampling methods such as MCMC, there are also approximate methods, such as Variational Inference (VI) and `INLA`.
+-   MCMC is the more general of the two: it applies to almost any model, and given enough time the chain will *converge*.
+-   Approximate methods trade that generality for speed. `INLA` applies only to latent Gaussian models, but within that class it is deterministic and often much faster.
+-   For today we use MCMC, which is why the workflow below is built around chain diagnostics.
 
 # Principles of Bayesian workflow
 
@@ -109,25 +118,19 @@ Probabilistic programming languages (PPLs) from a user's perspective:
 
 Workflows exist in a variety of disciplines. For example, in machine learning, workflow standards are being formalised under the name of MLOps:
 
-<center>
-
-![](assets/mlops-loop-en.png){width="50%"}
+![](assets/mlops-loop-en.png){fig-align="center" width="50%"}
 
 ## Box's loop
 
 In the 1960's, the statistician Box formulated the notion of a loop to understand the nature of the scientific method. This loop is called Box's loop by Blei et. al. (2014):
 
-<center>
-
-![](assets/boxes_loop.png){width="60%"}
+![](assets/boxes_loop.png){fig-align="center" width="60%"}
 
 ## Modern Bayesian workflow
 
 A systematic review of the steps within the modern Bayesian workflow, described in Gelman et al. (2020):
 
-<center>
-
-![](assets/bayes_workflow.png){width="40%"}
+![](assets/bayes_workflow.png){fig-align="center" width="40%"}
 
 ## Iterative model building
 
@@ -172,39 +175,34 @@ A systematic review of the steps within the modern Bayesian workflow, described 
 #| fig-align: "center"
 #| fig-width: 10
 
-library(ggplot2); library(dplyr); library(patchwork)
-
 set.seed(11)
-x <- seq(from = -1, 
-         to = 2, 
-         length.out = 500)
 
+x <- seq(from = -1, to = 2, length.out = 500)
 
-data.frame(x=x, 
-           y=dunif(x=x, min = -1, max = 1), 
-           z=dnorm(x=x, mean = 1, sd = 0.2)) -> df
-df %>% 
-  ggplot() + 
-  geom_ribbon(aes(x=x, ymin = 0, ymax = y), 
-              fill = "red", alpha = 0.5) + 
-  geom_ribbon(aes(x=x, ymin = 0, ymax = z), 
-              fill = "blue", alpha = 0.5) + 
-  theme_bw() + 
-  ggtitle("Prior-posterior plot") -> p1
+df <- data.frame(
+  x = x,
+  prior = dunif(x = x, min = -1, max = 1),
+  posterior = dnorm(x = x, mean = 1, sd = 0.2)
+)
 
-df2 = 
-  data.frame(
-    x = 1:500,
-    y = rnorm(n = 500, mean = 1, sd = 0.2)
-  ) %>% 
-  mutate(y = ifelse(y>1, 1, y)) 
+p1 <- ggplot(df) +
+  geom_ribbon(aes(x = x, ymin = 0, ymax = prior), fill = "red", alpha = 0.5) +
+  geom_ribbon(aes(x = x, ymin = 0, ymax = posterior), fill = "blue", alpha = 0.5) +
+  theme_bw(base_size = 16) +
+  ggtitle("Prior (red) and posterior (blue)")
 
-df2 %>% 
-  ggplot() + 
-  geom_line(aes(x=x, y=y)) + theme_bw() + 
-  ggtitle("Traceplot of the posterior")-> p2
+df2 <- data.frame(
+  x = 1:500,
+  y = rnorm(n = 500, mean = 1, sd = 0.2)
+) |>
+  mutate(y = ifelse(y > 1, 1, y))
 
-p1|p2
+p2 <- ggplot(df2) +
+  geom_line(aes(x = x, y = y)) +
+  theme_bw(base_size = 16) +
+  ggtitle("Traceplot of the posterior")
+
+p1 | p2
 
 ```
 
@@ -281,28 +279,30 @@ ggsave("variance.png", width = 20, height = 8, units = "cm", dpi = 300)
 
 **Prior predictive checking** consists in simulating data from the priors:
 
--   Visualize priors. (especially after transformation)
--   This shows the range of data compatible with the model.
--   It helps understand the adequacy of the chosen priors, as it is often easier to elicit expert knowledge on measureable quantities of interest rather than abstract parameter values.
+-   Visualise priors, especially after transformation.
+-   This shows the range of data compatible with the model before any data are seen.
+-   It helps understand the adequacy of the chosen priors, as it is often easier to elicit expert knowledge on measurable quantities of interest rather than abstract parameter values.
 
 # Examples
 
 ## Data
 
-Assume that the true data comes from the model $$y_i = a + b x_i + \epsilon_i, \quad \epsilon_i \sim N(0, \sigma^2).$$
+Assume that the true data comes from the model $$y_i = \alpha + \beta x_i + \epsilon_i, \quad \epsilon_i \sim N(0, \sigma^2).$$
 
-<center>
-
-![](assets/data1.png){width="45%"}
+![](assets/data1.png){fig-align="center" width="45%"}
 
 ## Model
 
-We implemented the model in our favourite PPL:
+We implemented the model in (one of) our favourite PPLs:
 
 ``` r
 code <- nimbleCode({
+  alpha ~ dnorm(0, sd = 100)
+  beta ~ dnorm(0, sd = 100)
+  sigma ~ dunif(0, 10)
+
   for (i in 1:n) {
-    y[i] ~ dnorm(a, sd = sigma)
+    y[i] ~ dnorm(alpha, sd = sigma)
   }
 })
 ```
@@ -313,9 +313,7 @@ Let us draw samples **from the priors**, i.e. we are **not using any data at thi
 
 . . .
 
-<center>
-
-![](assets/data2.png){width="45%"}
+![](assets/data2.png){fig-align="center" width="45%"}
 
 ## Prior predictive check
 
@@ -323,43 +321,37 @@ Something doesn't look right...
 
 . . .
 
-<center>
-
-![](assets/data2.png){width="45%"}
+![](assets/data2.png){fig-align="center" width="45%"}
 
 ## Debug
 
-There was a bug in the model. Let's correct it:
+There was a bug in the model: the linear predictor left out the exposure entirely, so the model could only ever produce a flat line. Let's correct it:
 
 ``` r
 code <- nimbleCode({
-  a ~ dnorm(0, sd = 100)
-  b ~ dnorm(0, sd = 100)
-  sigma ~ T(dnorm(0, sd = 10))
+  alpha ~ dnorm(0, sd = 100)
+  beta ~ dnorm(0, sd = 100)
+  sigma ~ T(dnorm(0, sd = 10), 0, Inf) # half-normal: truncated below at zero
 
   for (i in 1:n) {
-    y[i] ~ dnorm(a + b * x, sd = sigma)
+    y[i] ~ dnorm(alpha + beta * x[i], sd = sigma) # the exposure term was missing
   }
 })
 ```
 
 ## Prior predictive check again
 
-<center>
-
-![](assets/data3.png){width="45%"}
+![](assets/data3.png){fig-align="center" width="45%"}
 
 Better: now the range of prior predictive draws is covering the data. 
 
 ## Posterior checks (MCMC output)
 
-We use multiple chains of MCMC to estimate the posterior:
+We use multiple chains of MCMC to estimate the posterior. In the lab we run four chains, each started from different initial values:
 
 . . .
 
-<center>
-
-![](assets/trace_theta.png){width="50%"}
+![](assets/trace_theta.png){fig-align="center" width="50%"}
 
 ## Diagnosing MCMC outputs
 
@@ -376,21 +368,13 @@ We use multiple chains of MCMC to inspect convergence after warm-up:
 
 . . .
 
-<center>
-
-![](assets/trace_theta.png){width="50%"}
+![](assets/trace_theta.png){fig-align="center" width="50%"}
 
 ## Diagnosing MCMC outputs
 
-We use multiple chains of MCMC to inspect convergence after warm-up:
+These chains have not converged: they are exploring different parts of the parameter space, which is exactly what a large rhat detects.
 
-. . .
-
-<center>
-
-![](assets/trace_theta_bad.png){width="50%"}
-
-...
+![](assets/trace_theta_bad.png){fig-align="center" width="50%"}
 
 ## Diagnosing MCMC outputs
 
@@ -398,9 +382,7 @@ The post-warm-up samples of $\theta$ approximate its **posterior** distribution:
 
 . . .
 
-<center>
-
-![](assets/post_theta.png){width="50%"}
+![](assets/post_theta.png){fig-align="center" width="50%"}
 
 ## Posterior predictive checks
 
@@ -412,6 +394,15 @@ This examines how well your model fits the data.
 
 ![](assets/posterior1.png){fig-align="center"}
 
+## Sensitivity analysis
+
+Having chosen priors and fitted a model, the last question of the workflow is whether the answer depends on the choices we made.
+
+-   Refit the model with reasonable alternative priors.
+-   Compare the posteriors for the parameters you actually care about.
+-   If they barely move, the data are informative and the priors are doing little work.
+-   If they move a lot, your conclusions are being driven by the prior, and that needs justifying rather than hiding.
+
 ## Other
 
 -   Cross validation -- The idea is to act like some of your data is missing, use your model to predict it, and then compare what the model predicts *well* with the truth.
@@ -421,6 +412,28 @@ This examines how well your model fits the data.
 -   Information criteria -- Penalise complexity over the fit. The smaller the better. 
     -  Examples: DIC, WAIC, AIC, BIC, etc.
 
--   Deviance + p
+-   Deviance + effective number of parameters -- the quantity most information criteria are built from.
+
+# Getting ready for the lab
+
+## The lab for this session {.smaller}
+
+- This lab will take the workflow above and walk through it end to end in `NIMBLE`, using simulated data so that we always know the right answer.
+
+- During this lab session, we will:
+  1. Simulate data from a known data-generating process;
+  2. Perform prior predictive checks, including diagnosing priors that are too wide and too narrow;
+  3. Fit a first model with MCMC and assess convergence using trace plots, rhat, and effective sample size;
+  4. Perform posterior predictive checks and identify where the model is misspecified;
+  5. Improve the model and compare results across specifications; and
+  6. Run a sensitivity analysis to see whether our conclusions depend on the priors.
+
+## The lab for this session
+
+::: nonincremental
+- The `NIMBLE` mechanics are the same as this morning: priors first, then the formula, four chains from different starting values, then rhat.
+- What is new is the loop around the fit.
+- The first model we fit will be *deliberately wrong*, and the point of the lab is to find that out from the checks rather than from being told.
+:::
 
 # Questions?
