@@ -579,7 +579,6 @@ Variance priors should be scientifically interpretable, not chosen only for conv
   - model complexity
   
 ## Key messages and next step
-::: {style="font-size: 0.8em;"}
 
 ### Good practice
 
