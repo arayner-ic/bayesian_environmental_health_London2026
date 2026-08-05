@@ -14,23 +14,23 @@ We will be using `Posit (RStudio) Cloud`, which assumes knowledge of `R` and `RS
 
 This workshop is written partly in [`NIMBLE`](https://r-nimble.org/). There are also several elements later on in [`R-INLA`](https://www.r-inla.org/).
 
-Below is the set of labs to follow throughout the two days:
+Below is the set of lectures and labs to follow throughout the two days:
 
 ### Day 1 (August 5th 2026)
 
 | Time | Activity |
-|----|----|
+|------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
 | 9:00 - 9:15 | [Welcome and introduction](/lectures/welcome_and_introduction/welcome_and_introduction.qmd) |
 | 9:15 - 10:00 | [Principles of Bayesian statistics](/lectures/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lecture) |
-| 10:00 - 10:45 | [Principles of Bayesian statistics](/labs/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Hands-on Lab) |
+| 10:00 - 10:45 | [Principles of Bayesian statistics](/labs/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lab) |
 | 10:45 - 11:00 | Break |
 | 11:00 - 11:45 | [Bayesian workflow](/lectures/bayesian_workflow/bayesian_workflow.qmd) (Lecture) |
 | 11:45 - 12:45 | Lunch |
-| 12:45 - 1:30 | [Bayesian workflow](/lab/bayesian_workflow/bayesian_workflow.qmd) (Lab)  |
+| 12:45 - 1:30 | [Bayesian workflow](/labs/bayesian_workflow/bayesian_workflow.qmd) (Lab) |
 | 1:30 - 1:45 | Break |
 | 1:45 - 2:30 | [Hierarchical modeling](/lectures/hierarchical_modelling/hierarchical_modelling.qmd) (Lecture) |
-| 2:30 - 3:15 | [Hierarchical modelling](/labs/hierarchical_modelling/hierarchical_modelling.qmd) (Hands-on Lab) |
+| 2:30 - 3:15 | [Hierarchical modelling](/labs/hierarchical_modelling/hierarchical_modelling.qmd) (Lab) |
 | 3:15 - 3:30 | Break |
 | 3:30 - 4:15 | [Priors](/lectures/priors/priors.qmd) (Lecture) |
 | 4:15 - 4:45 | [Priors](/labs/priors/priors.qmd) (Lab) |
@@ -39,33 +39,33 @@ Below is the set of labs to follow throughout the two days:
 ### Day 2 (August 6th 2026)
 
 | Time | Activity |
-|----|----|
+|------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
-| 9:00 - 9:45 | [Non-linear regression](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
-| 9:45 - 10:30 | [Non-linear regression](/labs/non_linear_regression/non_linear_regression.qmd) (Hands-on Lab) |
+| 9:00 - 9:45 | [Regression with non-linear terms](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
+| 9:45 - 10:30 | [Regression with non-linear terms](/labs/non_linear_regression/non_linear_regression.qmd) (Lab) |
 | 10:30 - 10:45 | Break |
 | 10:45 - 11:45 | [Spatial and spatio-temporal modeling](/lectures/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Lecture) |
 | 11:45 - 12:45 | Lunch |
-| 12:45 - 1:45 | [Spatial and spatio-temporal modelling](/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Hands-on Lab) |
+| 12:45 - 1:45 | [Spatial and spatio-temporal modelling](/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Lab) |
 | 1:45 - 2:00 | Break |
-| 2:00 - 2:45 | [Software options](lectures/software_options/software_options.qmd) (Lecture) |
-| 2:45 - 3:00 | Break |
-| 3:00 - 3:45 | [R-INLA](/lectures/inla/inla.qmd) (Lecture) |
-| 3:45 - 4:30 | [R-INLA](/labs/inla/inla.qmd) (Lab) |
+| 2:00 - 2:30 | [Software options for Bayesian modelling](lectures/software_options/software_options.qmd) (Lecture) |
+| 2:30 - 2:45 | Break |
+| 2:45 - 3:45 | [INLA and R-INLA](/lectures/inla/inla.qmd) (Lecture) |
+| 3:45 - 4:30 | [INLA and R-INLA](/labs/inla/inla.qmd) (Lab) |
 | 4:30 - 5:00 | Questions, survey on projects, and wrap-up |
 
 ### Day 3 (August 7th 2026)
 
 | Time | Activity |
-|----|----|
+|------------------------------------|------------------------------------|
 | 8:30 - 9:00 | Check in and breakfast |
-| 9:00 - 10:00 | [Advanced models](lectures/advanced_models/advanced_models.qmd) (Lecture) |
+| 9:00 - 10:00 | [Advanced environmental modelling](lectures/advanced_models/advanced_models.qmd) (Lecture) |
 | 10:00 - 10:15 | Break |
-| 10:15 - 11:15 | [Advanced models](/labs/advanced_models/advanced_models.qmd) (Hands-on Lab) |
-| 11:15 - 11:45 | Attribution (Lecture)|
+| 10:15 - 11:15 | [Advanced environmental modelling](/labs/advanced_models/advanced_models.qmd) (Lab) |
+| 11:15 - 11:45 | [Attribution](lectures/attribution/attribution.pptx) (Lecture) |
 | 11:45 - 12:45 | Lunch |
-| 12:45 - 1:30 | [Scaling models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
-| 1:30 - 2:15 | [Scaling models](/labs/scaling_models/scaling_models.qmd) (Lab) |
+| 12:45 - 1:45 | [Scaling Bayesian models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
+| 1:45 - 2:15 | [Scaling Bayesian models](/labs/scaling_models/scaling_models.qmd) (Lab) |
 | 2:15 - 2:30 | Break |
 | 2:30 - 3:30 | Potential projects discussion |
 | 3:30 - 4:00 | Panel discussion |
@@ -84,19 +84,9 @@ Run `pre-commit install` to install the hooks. You now won't be able to commit u
 
 ### Using `Quarto` for presentations
 
-Quarto is pretty cool. I won't bore you, but have a look at the [docs](https://quarto.org/docs/guide/). Here, we're using it for [presentations](https://quarto.org/docs/presentations/revealjs/). It's designed by the folks at `RStudio`, so you `R` folk will be happy. Make a `.qmd` file and run `quarto render *.qmd` to generate the `html`, which you can open in browser. We can get fancy and import our own `css` to have a consistent theme for out presentations.
+Quarto is pretty cool. We won't bore you, but have a look at the [docs](https://quarto.org/docs/guide/). Here, we're using it for [presentations](https://quarto.org/docs/presentations/revealjs/). It's designed by the folks at `RStudio`, so you `R` folk will be happy. Make a `.qmd` file and run `quarto render *.qmd` to generate the `html`, which you can open in browser. We can get fancy and import our own `css` to have a consistent theme for out presentations.
 
 ## Other material
-https://gkonstantinoudis.github.io/teaching/ \
-https://github.com/sparklabnyc/resources/wiki
 
-## To dos 
-Akis - Priors\
-Robbie - INLA\
-Robbie - Scaling
-
-Day 1: Robbie until 1:30, Akis after\
-Day 2: Akis until 2:00, Robbie after\
-Day 3: Akis until 12:45, Robbie after
-
-SPDEs in 2027?
+<https://gkonstantinoudis.github.io/teaching/>\
+<https://github.com/sparklabnyc/resources/wiki>

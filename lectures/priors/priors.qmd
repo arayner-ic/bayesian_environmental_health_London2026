@@ -1,5 +1,6 @@
 ---
 title: "Priors"
+subtitle: "Key ideas and concepts"
 author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"
@@ -45,9 +46,13 @@ set.seed(2)
 
 ## Outline
 
-- What is a prior?
-- Different types of priors
-- Examples
+- The purpose of priors
+- Different kinds of priors and their applications
+  - Conjugate priors
+  - Jeffreys priors
+  - Informative priors
+- Hyperpriors and variance priors
+
 
 ## A motivating question
 
@@ -183,16 +188,17 @@ An **informative prior** incorporates substantive prior knowledge about a parame
 Sources may include:
 
 - previous studies
-- meta-analysis
+- meta analyses
 - expert elicitation
 - biological or physical constraints
+
+## Informative priors
 
 Example:
 
 $$
 \beta \sim N(0.01,0.005^2)
 $$
-
 This may reflect earlier evidence suggesting a small positive association.
 
 
@@ -325,6 +331,8 @@ For summer mortality, a simple scientific question is:
 
 > At what temperature does risk begin to increase, and how steep is the increase above that point?
 
+## Example: summer temperature and mortality
+
 A Bayesian threshold model allows us to estimate both:
 
 - the **threshold temperature**
@@ -352,6 +360,8 @@ The prior matters because:
 - the threshold may be only weakly identified by the data
 - different values of $\psi$ imply different effective exposure-response shapes
 - $\psi$ and $\beta$ are estimated jointly
+
+## Why does the prior on the threshold matter?
 
 As a result, the prior on $\psi$ can affect:
 
@@ -433,6 +443,8 @@ the covariance kernel often depends on hyperparameters such as:
 
 - a variance parameter
 - a length-scale parameter
+
+## Hyperpriors in Gaussian processes
 
 For example:
 
@@ -530,6 +542,8 @@ The parameter $\sigma_b$ determines how much the regional effects $b_i$ are allo
 - small $\sigma_b$ implies stronger shrinkage toward the overall mean
 - large $\sigma_b$ allows more regional heterogeneity
 
+## The prior on $\sigma_b$ controls pooling
+
 So the prior on $\sigma_b$ directly influences the amount of **partial pooling**:
 
 - stronger concentration near zero $\rightarrow$ more pooling
@@ -554,12 +568,9 @@ A useful strategy is:
 Variance priors should be scientifically interpretable, not chosen only for convenience.
 
 
-## Key messages and next step
-::: {style="font-size: 0.8em;"}
-### What we have seen
+## What we have seen
 
-- Priors are a central part of Bayesian inference.
-- Different priors serve different purposes:
+- Priors are a central part of Bayesian inference. Different priors serve different purposes:
   - conjugate and default priors
   - informative priors based on existing evidence
   - hyperpriors for hierarchical and smoothing models
@@ -567,10 +578,8 @@ Variance priors should be scientifically interpretable, not chosen only for conv
   - pooling
   - smoothness
   - model complexity
-:::
-
+  
 ## Key messages and next step
-::: {style="font-size: 0.8em;"}
 
 ### Good practice
 
@@ -578,10 +587,18 @@ Variance priors should be scientifically interpretable, not chosen only for conv
 - respect parameter constraints, such as positivity
 - use prior predictive thinking
 - assess sensitivity to alternative reasonable priors
-
-### Next: tutorial
-
-In the tutorial, we will fit simple Bayesian models and examine directly how different prior choices affect posterior inference.
 ::: 
+
+# Getting ready for the lab
+
+## The lab for this session {.smaller}
+
+- This lab will involve taking some models and concepts from the Priors lecture and exploring how different prior choices affect posterior inference in `NIMBLE`.
+
+- During this lab session, we will:
+1. Fit a Bayesian Poisson regression model for ozone and all-cause mortality in Chicago;
+2. Compare posterior inference for the ozone effect under diffuse, weakly informative, and informative priors;
+3. Fit a linear-threshold model for summer temperature and mortality, and see how the prior on the threshold affects both the threshold and the slope above it; and
+4. Use basic MCMC diagnostics to assess convergence and sampling quality.
 
 # Questions?

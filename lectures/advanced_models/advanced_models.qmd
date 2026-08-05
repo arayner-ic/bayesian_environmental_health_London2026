@@ -5,7 +5,7 @@ author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
-date: 2025-08-15
+date: 2026-08-07
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
@@ -21,6 +21,10 @@ format:
       preview-links: auto
     logo: "assets/bmeh_normal.png"
     theme: [default, ../../assets/style.scss]
+    
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r}
@@ -353,11 +357,12 @@ library(plotly)
 p <- plot_ly()
 p <- add_surface(p, x = 0:10, y = -20:30, z = pred2.temp$matRRfit)
 
-layout(p, scene = list(
+layout(p, margin = list(l = 0, r = 0), scene = list(
   xaxis = list(title = "Lag"),
   yaxis = list(title = "Temperature", range = c(0, 30)),
   zaxis = list(title = "Relative risk")
 ))
+
 ```
 :::
 
@@ -543,8 +548,20 @@ $$
 -   Spatial DLNMs
 -   Examples using air-pollution, radon and temperature
 
-::: {style="color: #58b364"}
-Next : Coding some of these models in INLA.
-:::
+<!-- ::: {style="color: #58b364"} -->
+<!-- Next : Coding some of these models in INLA. -->
+<!-- ::: -->
+
+# Getting ready for the lab
+
+## The lab for this session {.smaller}
+
+- This lab will involve taking the spatiotemporal and non-linear models from the Advanced Environmental Modelling lecture and fitting them in `INLA`, which is what makes models of this size practical to run at all.
+
+- During this lab session, we will:
+1. Explore dengue case data for 645 Brazilian micro-regions from 2009 to 2024, alongside temperature, rainfall and humidity from ERA5;
+2. Build the neighbourhood matrix that `INLA` needs, and fit a spatiotemporal model with seasonal, long-term and BYM2 spatial random effects;
+3. Allow the effects of temperature and rainfall to vary across space, and map the exceedance probabilities; and
+4. Fit a distributed lag non-linear model in `INLA`, so that the effect of temperature can be both non-linear and delayed.
 
 # Questions?

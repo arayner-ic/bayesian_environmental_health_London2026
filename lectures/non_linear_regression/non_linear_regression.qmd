@@ -1,15 +1,15 @@
 ---
-title: "Introduction to non-linear regression"
-subtitle: "Beyond the linear model"
+title: "Regression with non-linear terms"
+subtitle: "Beyond the linear Bayesian model"
 author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
-date: "08-14-2025"
+date: "08-06-2026"
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
-  data-background-image: "../../assets/bmeh_normal.png"
+  data-background-image: "assets/bmeh_normal.png"
   data-background-size: 80%
   data-background-position: 60% 120%
   subparagraph: yes
@@ -20,7 +20,7 @@ format:
     chalkboard:
       buttons: false
       preview-links: auto
-    logo: "../../assets/bmeh_normal.png"
+    logo: "assets/bmeh_normal.png"
     theme: [default, ../../assets/style.scss]
 ---
 
@@ -193,7 +193,8 @@ data(chicagoNMMAPS)
 leg4coef <- legendre.polynomials(n = 5)
 
 ggplot() +
-  geom_hline(yintercept = leg4coef[[1]], linewidth = 1) +
+  #geom_hline(yintercept = leg4coef[[1]], linewidth = 1) +, old 
+  geom_hline(yintercept = as.numeric(leg4coef[[1]]), linewidth = 1) +
   xlim(-1, 1) +
   ylim(-1, 2) +
   theme_bw() +
@@ -228,7 +229,8 @@ data(chicagoNMMAPS)
 
 ggplot() +
   geom_abline(slope = 1, intercept = 0, col = cols[1], cex = .6, linewidth = 1) +
-  geom_hline(yintercept = leg4coef[[1]], linewidth = 1) +
+  #geom_hline(yintercept = leg4coef[[1]], linewidth = 1) +
+  geom_hline(yintercept = as.numeric(leg4coef[[1]]), linewidth = 1) +
   xlim(-1, 1) +
   ylim(-1, 2) +
   theme_bw() +
@@ -257,7 +259,8 @@ $$\Phi(X) = (1 \; X \; X^2) \text{ ,thus } Y _i = \beta_0 + \beta_1 X + \beta_2 
 
 ggplot() +
   geom_abline(slope = 1, intercept = 0, col = cols[1], cex = .6, linewidth = 1) +
-  geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  #geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  geom_hline(yintercept = as.numeric(leg4coef[[1]]), cex= .6, linewidth = 1) +
   xlim(-1, 1) +
   ylim(-1, 2) +
   geom_line(aes(
@@ -292,7 +295,8 @@ y <- -1.5 * x.plot + 2.5 * x.plot^3
 
 ggplot() +
   geom_abline(slope = 1, intercept = 0, col = cols[1], cex = .6, linewidth = 1) +
-  geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  #geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  geom_hline(yintercept = as.numeric(leg4coef[[1]]), cex= .6, linewidth = 1) +
   xlim(-1, 1) +
   ylim(-1, 2) +
   geom_line(aes(
@@ -334,7 +338,8 @@ y.1 <- 0.375 - 3.75 * x.plot.1^2 + 4.375 * x.plot.1^4
 
 ggplot() +
   geom_abline(slope = 1, intercept = 0, col = cols[1], cex = .6, linewidth = 1) +
-  geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  #geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  geom_hline(yintercept = as.numeric(leg4coef[[1]]), cex= .6, linewidth = 1) +
   xlim(-1, 1) +
   ylim(-1, 2) +
   geom_line(aes(
@@ -380,7 +385,9 @@ y.2 <- 1.875 * x.plot.2 - 8.75 * x.plot.2^3 + 7.875 * x.plot.2^5
 
 ggplot() +
   geom_abline(slope = 1, intercept = 0, col = cols[1], cex = .6, linewidth = 1) +
-  geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  #geom_hline(yintercept = leg4coef[[1]], cex = .6, linewidth = 1) +
+  geom_hline(yintercept = as.numeric(leg4coef[[1]]), cex= .6, linewidth = 1) +
+
   xlim(-1, 1) +
   ylim(-1, 2) +
   geom_line(aes(
@@ -1159,4 +1166,4 @@ p1 | p2 | p3
 
 -   Random walk of order 2 to model non-linearity
 
-Questions?
+# Questions?

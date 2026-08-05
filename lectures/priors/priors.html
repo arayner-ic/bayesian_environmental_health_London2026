@@ -133,6 +133,7 @@
 
 <section id="title-slide" data-background-color="#f3f4f4" data-background-image="assets/bmeh_normal.png" data-background-position="60% 120%" data-background-size="80%" class="quarto-title-block center">
   <h1 class="title">Priors</h1>
+  <p class="subtitle">Key ideas and concepts</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -152,11 +153,7 @@ Garyfallos Konstantinoudis
 </section>
 <section id="outline" class="slide level2">
 <h2>Outline</h2>
-<ul>
-<li class="fragment">What is a prior?</li>
-<li class="fragment">Different types of priors</li>
-<li class="fragment">Examples</li>
-</ul>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD - What is a prior? - Different types of priors - Examples ======= - The purpose of priors - Different kinds of priors and their applications - Conjugate priors - Jeffreys priors - Informative priors - Hyperpriors and variance priors &gt;&gt;&gt;&gt;&gt;&gt;&gt; bddf9919e2ce2d06d9de71fef17eafd53458d356</p>
 </section>
 <section id="a-motivating-question" class="slide level2">
 <h2>A motivating question</h2>
@@ -315,17 +312,19 @@ p(\theta) \propto \sqrt{I(\theta)}
 <p>Sources may include:</p>
 <ul>
 <li class="fragment">previous studies</li>
-<li class="fragment">meta-analysis</li>
+<li class="fragment">meta analyses</li>
 <li class="fragment">expert elicitation</li>
 <li class="fragment">biological or physical constraints</li>
 </ul>
+</section>
+<section id="informative-priors-1" class="slide level2">
+<h2>Informative priors</h2>
 <p>Example:</p>
 <p><span class="math display">\[
 \beta \sim N(0.01,0.005^2)
-\]</span></p>
-<p>This may reflect earlier evidence suggesting a small positive association.</p>
+\]</span> This may reflect earlier evidence suggesting a small positive association.</p>
 </section>
-<section id="informative-priors-1" class="slide level2">
+<section id="informative-priors-2" class="slide level2">
 <h2>Informative priors</h2>
 <p><strong>Why useful?</strong></p>
 <ul>
@@ -429,6 +428,9 @@ Y_t \sim \text{Poisson}(\mu_t)
 <blockquote>
 <p>At what temperature does risk begin to increase, and how steep is the increase above that point?</p>
 </blockquote>
+</section>
+<section id="example-summer-temperature-and-mortality-1" class="slide level2">
+<h2>Example: summer temperature and mortality</h2>
 <p>A Bayesian threshold model allows us to estimate both:</p>
 <ul>
 <li class="fragment">the <strong>threshold temperature</strong></li>
@@ -458,6 +460,9 @@ Y_t \sim \text{Poisson}(\mu_t) \\
 <li class="fragment">different values of <span class="math inline">\(\psi\)</span> imply different effective exposure-response shapes</li>
 <li class="fragment"><span class="math inline">\(\psi\)</span> and <span class="math inline">\(\beta\)</span> are estimated jointly</li>
 </ul>
+</section>
+<section id="why-does-the-prior-on-the-threshold-matter-1" class="slide level2">
+<h2>Why does the prior on the threshold matter?</h2>
 <p>As a result, the prior on <span class="math inline">\(\psi\)</span> can affect:</p>
 <ul>
 <li class="fragment">the posterior of the threshold</li>
@@ -528,6 +533,9 @@ f(\cdot) \sim GP(0,K(\cdot,\cdot))
 <li class="fragment">a variance parameter</li>
 <li class="fragment">a length-scale parameter</li>
 </ul>
+</section>
+<section id="hyperpriors-in-gaussian-processes-1" class="slide level2">
+<h2>Hyperpriors in Gaussian processes</h2>
 <p>For example:</p>
 <p><span class="math display">\[
 K(x,x') = \sigma^2 \exp\left(-\frac{(x-x')^2}{2\ell^2}\right)
@@ -604,6 +612,9 @@ b_i \sim N(0,\sigma_b^2)
 <li class="fragment">small <span class="math inline">\(\sigma_b\)</span> implies stronger shrinkage toward the overall mean</li>
 <li class="fragment">large <span class="math inline">\(\sigma_b\)</span> allows more regional heterogeneity</li>
 </ul>
+</section>
+<section id="the-prior-on-sigma_b-controls-pooling-1" class="slide level2">
+<h2>The prior on <span class="math inline">\(\sigma_b\)</span> controls pooling</h2>
 <p>So the prior on <span class="math inline">\(\sigma_b\)</span> directly influences the amount of <strong>partial pooling</strong>:</p>
 <ul>
 <li class="fragment">stronger concentration near zero <span class="math inline">\(\rightarrow\)</span> more pooling</li>
@@ -627,13 +638,10 @@ b_i \sim N(0,\sigma_b^2)
 </ol>
 <p>Variance priors should be scientifically interpretable, not chosen only for convenience.</p>
 </section>
-<section id="key-messages-and-next-step" class="slide level2">
-<h2>Key messages and next step</h2>
-<section id="what-we-have-seen" style="font-size: 0.8em;">
-<h3>What we have seen</h3>
+<section id="what-we-have-seen" class="slide level2">
+<h2>What we have seen</h2>
 <ul>
-<li class="fragment">Priors are a central part of Bayesian inference.</li>
-<li class="fragment">Different priors serve different purposes:
+<li class="fragment">Priors are a central part of Bayesian inference. Different priors serve different purposes:
 <ul>
 <li class="fragment">conjugate and default priors</li>
 <li class="fragment">informative priors based on existing evidence</li>
@@ -647,21 +655,34 @@ b_i \sim N(0,\sigma_b^2)
 </ul></li>
 </ul>
 </section>
-</section>
-<section id="key-messages-and-next-step-1" class="slide level2">
+<section id="key-messages-and-next-step" class="slide level2">
 <h2>Key messages and next step</h2>
-<div style="font-size: 0.8em;">
 <h3 id="good-practice">Good practice</h3>
 <ul>
 <li class="fragment">choose priors on an interpretable scale</li>
 <li class="fragment">respect parameter constraints, such as positivity</li>
 <li class="fragment">use prior predictive thinking</li>
-<li class="fragment">assess sensitivity to alternative reasonable priors</li>
+<li class="fragment">assess sensitivity to alternative reasonable priors :::</li>
 </ul>
-<h3 id="next-tutorial">Next: tutorial</h3>
-<p>In the tutorial, we will fit simple Bayesian models and examine directly how different prior choices affect posterior inference.</p>
-</div>
 </section>
+<section>
+<section id="getting-ready-for-the-lab" class="title-slide slide level1 center">
+<h1>Getting ready for the lab</h1>
+
+</section>
+<section id="the-lab-for-this-session" class="slide level2 smaller">
+<h2>The lab for this session</h2>
+<ul>
+<li class="fragment"><p>This lab will involve taking some models and concepts from the Priors lecture and exploring how different prior choices affect posterior inference in <code>NIMBLE</code>.</p></li>
+<li class="fragment"><p>During this lab session, we will:</p></li>
+</ul>
+<ol type="1">
+<li class="fragment">Fit a Bayesian Poisson regression model for ozone and all-cause mortality in Chicago;</li>
+<li class="fragment">Compare posterior inference for the ozone effect under diffuse, weakly informative, and informative priors;</li>
+<li class="fragment">Fit a linear-threshold model for summer temperature and mortality, and see how the prior on the threshold affects both the threshold and the slope above it; and</li>
+<li class="fragment">Use basic MCMC diagnostics to assess convergence and sampling quality.</li>
+</ol>
+</section></section>
 <section id="questions" class="title-slide slide level1 center">
 <h1>Questions?</h1>
 

@@ -2,10 +2,10 @@
 title: "Hierarchical modelling"
 subtitle: "Bayesian multilevel models"
 author:
- - name: "Gryfallos Konstantinoudis, Robbie M. Parks, Elizaveta Semenova"
+ - name: "Garyfallos Konstantinoudis, Robbie M. Parks, Elizaveta Semenova"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
-date: 2026-08-5
+date: 2026-08-05
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
@@ -49,8 +49,7 @@ set.seed(2)
 -   Models characterized by several parameters
 -   Assumptions of linear models
 -   What we want beyond linear model
--   Hierarchical models
--   Levels of hierarchy
+-   Hierarchical models and levels of hierarchy
 -   Comparing to frequenist random effects
 -   Bayesian advantages
 -   Model selection
@@ -100,7 +99,12 @@ summary(data)
 
 ![](assets/dogs1.jpeg){width="40%"}
 
+## Models characterized by several parameters
+
+<center>
+
 ![](assets/dogs4.jpeg){width="40%"}
+
 
 ## Assumptions of linear models
 
