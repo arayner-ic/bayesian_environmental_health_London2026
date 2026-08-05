@@ -44,14 +44,11 @@ format:
 
 ## The model and the software are different things
 
-::: nonincremental
 - This matters practically:
-:::
-
-- Reviewers ask about the model, not the package.
-- Collaborators may use a different language than you do.
-- The right tool for a pilot analysis is often not the right tool for the final one.
-- Software changes far faster than statistics does.
+  - Reviewers ask about the model, not the package.
+  - Collaborators may use a different language than you do.
+  - The right tool for a pilot analysis is often not the right tool for the final one.
+  - Software changes far faster than statistics does.
 
 ## What a probabilistic programming language does
 
@@ -79,7 +76,7 @@ The boundary between these two columns is what really differs between languages.
 - **Sampling**: draw from the posterior, and use the draws to answer questions.
   - `BUGS`, `JAGS`, `NIMBLE`, `Stan`, `PyMC`, `numpyro`.
 - **Approximation**: compute an approximation to the posterior directly, without drawing from it.
-  - Variational inference, `INLA`.
+  - Variational inference (VI), `INLA`.
 
 # A running example
 
@@ -90,7 +87,7 @@ The boundary between these two columns is what really differs between languages.
 - It is the partial pooling model from the hierarchical modelling lab: monthly deaths by Italian province, with an expected count as offset and a province-level random effect.
 :::
 
-## The model, as maths
+## The model, as math(s)
 
 $$
 \begin{split}
@@ -104,7 +101,7 @@ $$
 
 . . .
 
-Everything that follows is this model, written five different ways.
+Everything that follows is this model, written in five different PPLs.
 
 ## The model, in `NIMBLE`
 
@@ -254,9 +251,9 @@ fit <- brm(
 )
 ```
 
-. . .
+<!-- . . . -->
 
-The same model, in fewer lines.
+<!-- The same model, in fewer lines. -->
 
 ## Python: `PyMC` and `numpyro`
 
@@ -287,7 +284,7 @@ Note how close this is in structure to the `NIMBLE` code, despite sharing no syn
 ## Others you may meet
 
 - `Turing.jl` — Julia, elegant, fast, small community.
-- `TMB` and `RTMB` — Laplace approximation with automatic differentiation, popular in fisheries and ecology.
+- `TMB` and `RTMB` — Laplace approximation with automatic differentiation, popular in fisheries and ecology (and IHME/GBD).
 - `greta` — an `R` front-end on TensorFlow.
 - `Pyro` — the PyTorch sibling of `numpyro`.
 
@@ -353,7 +350,7 @@ When a translated model gives different answers, this is the first thing to chec
 - Everything so far draws from the posterior and uses the draws.
 - The cost is time, and the price of stopping early is Monte Carlo error.
 - But for some models we can compute the answer directly instead.
-- Two approaches: variational inference, and `INLA`.
+- Two approaches: variational inference (VI), and `INLA`.
 
 ## Variational inference, briefly
 
@@ -386,7 +383,7 @@ model <- inla(
 
 . . .
 
-Notice what is missing: no priors written out, no loop, no initial values, no chains. We unpack every one of those choices in the next session.
+Notice what is missing: no priors written out (necessarily), no loop, no initial values, no chains. We unpack every one of those choices in the next session.
 
 ## What you give up
 
@@ -397,14 +394,14 @@ Notice what is missing: no priors written out, no loop, no initial values, no ch
 
 ## What you get
 
-- Speed, by one to three orders of magnitude for the models we care about.
+- Speed, by orders of magnitude potentially for the models we care about.
 - Exact reproducibility: no seed, no Monte Carlo noise.
 - No convergence diagnostics to check, because there is nothing to converge.
 - Cheap sensitivity analyses, which makes the workflow from yesterday genuinely practical.
 
 ## Coming next
 
-- You saw the `MCMC` and `INLA` introduction on Day 1. The next session fills it in properly:
+- You saw the `MCMC` and `INLA` introduction on Day 1. The next session fills `INLA` in a lot more:
   - What a latent Gaussian model actually is, and how to tell whether yours is one.
   - How priors are specified in `INLA`, and why they are on the precision scale.
   - Spatial models, where `INLA` earns its reputation.
@@ -412,7 +409,7 @@ Notice what is missing: no priors written out, no loop, no initial values, no ch
 
 # How to choose
 
-## The honest answer
+## The practical (and honest) answer?
 
 > Use whatever the people around you use, until you have a reason not to.
 
@@ -436,11 +433,11 @@ Notice what is missing: no priors written out, no loop, no initial values, no ch
 | Sampling time | Scales with data and model complexity |
 | Your time writing it | Highest in `Stan`, lowest in `brms` and `INLA` |
 | Your time debugging it | Highest where the errors are least legible |
-| Reviewer time | Lowest for whatever your field already knows |
+<!-- | Reviewer time | Lowest for whatever your field already knows | -->
 
 ## Summary
 
-- The model is the thing. The software is a choice you make afterwards.
+- The model is the important thing. The software is a choice you make afterwards.
 - Sampling languages differ mostly in ergonomics and sampler quality, not in what they can express.
 - `INLA` is a genuinely different trade: a restricted model class in exchange for speed and determinism.
 - Being able to read all of them, and translate between them, is more valuable than mastery of any one.

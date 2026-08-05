@@ -6,8 +6,8 @@
 <script src="software_options_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="software_options_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="software_options_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="software_options_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+<link href="software_options_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.25">
 
   <meta name="author" content="Robbie M. Parks, Theo Rashid">
   <title>Software options</title>
@@ -243,13 +243,13 @@ Robbie M. Parks, Theo Rashid
 <section id="the-model-and-the-software-are-different-things-1" class="slide level2">
 <h2>The model and the software are different things</h2>
 <ul>
-<li>This matters practically:</li>
-</ul>
+<li>This matters practically:
 <ul>
 <li>Reviewers ask about the model, not the package.</li>
 <li>Collaborators may use a different language than you do.</li>
 <li>The right tool for a pilot analysis is often not the right tool for the final one.</li>
 <li>Software changes far faster than statistics does.</li>
+</ul></li>
 </ul>
 </section>
 <section id="what-a-probabilistic-programming-language-does" class="slide level2">
@@ -302,7 +302,7 @@ Robbie M. Parks, Theo Rashid
 </ul></li>
 <li><strong>Approximation</strong>: compute an approximation to the posterior directly, without drawing from it.
 <ul>
-<li>Variational inference, <code>INLA</code>.</li>
+<li>Variational inference (VI), <code>INLA</code>.</li>
 </ul></li>
 </ul>
 </section></section>
@@ -319,7 +319,7 @@ Robbie M. Parks, Theo Rashid
 </ul>
 </section>
 <section id="the-model-as-maths" class="slide level2">
-<h2>The model, as maths</h2>
+<h2>The model, as math(s)</h2>
 <p><span class="math display">\[
 \begin{split}
 y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
@@ -330,7 +330,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 \end{split}
 \]</span></p>
 <div class="fragment">
-<p>Everything that follows is this model, written five different ways.</p>
+<p>Everything that follows is this model, written in five different PPLs.</p>
 </div>
 </section>
 <section id="the-model-in-nimble" class="slide level2">
@@ -490,9 +490,8 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <span id="cb3-9"><a href=""></a>    <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">class =</span> <span class="st">"sd"</span>)</span>
 <span id="cb3-10"><a href=""></a>  )</span>
 <span id="cb3-11"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="fragment">
-<p>The same model, in fewer lines.</p>
-</div>
+<!-- . . . -->
+<!-- The same model, in fewer lines. -->
 </section>
 <section id="python-pymc-and-numpyro" class="slide level2">
 <h2>Python: <code>PyMC</code> and <code>numpyro</code></h2>
@@ -523,7 +522,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <h2>Others you may meet</h2>
 <ul>
 <li><code>Turing.jl</code> — Julia, elegant, fast, small community.</li>
-<li><code>TMB</code> and <code>RTMB</code> — Laplace approximation with automatic differentiation, popular in fisheries and ecology.</li>
+<li><code>TMB</code> and <code>RTMB</code> — Laplace approximation with automatic differentiation, popular in fisheries and ecology (and IHME/GBD).</li>
 <li><code>greta</code> — an <code>R</code> front-end on TensorFlow.</li>
 <li><code>Pyro</code> — the PyTorch sibling of <code>numpyro</code>.</li>
 </ul>
@@ -614,7 +613,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li>Everything so far draws from the posterior and uses the draws.</li>
 <li>The cost is time, and the price of stopping early is Monte Carlo error.</li>
 <li>But for some models we can compute the answer directly instead.</li>
-<li>Two approaches: variational inference, and <code>INLA</code>.</li>
+<li>Two approaches: variational inference (VI), and <code>INLA</code>.</li>
 </ul>
 </section>
 <section id="variational-inference-briefly" class="slide level2">
@@ -648,7 +647,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <span id="cb7-9"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb7-10"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="fragment">
-<p>Notice what is missing: no priors written out, no loop, no initial values, no chains. We unpack every one of those choices in the next session.</p>
+<p>Notice what is missing: no priors written out (necessarily), no loop, no initial values, no chains. We unpack every one of those choices in the next session.</p>
 </div>
 </section>
 <section id="what-you-give-up" class="slide level2">
@@ -663,7 +662,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <section id="what-you-get" class="slide level2">
 <h2>What you get</h2>
 <ul>
-<li>Speed, by one to three orders of magnitude for the models we care about.</li>
+<li>Speed, by orders of magnitude potentially for the models we care about.</li>
 <li>Exact reproducibility: no seed, no Monte Carlo noise.</li>
 <li>No convergence diagnostics to check, because there is nothing to converge.</li>
 <li>Cheap sensitivity analyses, which makes the workflow from yesterday genuinely practical.</li>
@@ -672,7 +671,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <section id="coming-next" class="slide level2">
 <h2>Coming next</h2>
 <ul>
-<li>You saw the <code>MCMC</code> and <code>INLA</code> introduction on Day 1. The next session fills it in properly:
+<li>You saw the <code>MCMC</code> and <code>INLA</code> introduction on Day 1. The next session fills <code>INLA</code> in a lot more:
 <ul>
 <li>What a latent Gaussian model actually is, and how to tell whether yours is one.</li>
 <li>How priors are specified in <code>INLA</code>, and why they are on the precision scale.</li>
@@ -686,8 +685,8 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <h1>How to choose</h1>
 
 </section>
-<section id="the-honest-answer" class="slide level2">
-<h2>The honest answer</h2>
+<section id="the-practical-and-honest-answer" class="slide level2">
+<h2>The practical (and honest) answer?</h2>
 <blockquote>
 <p>Use whatever the people around you use, until you have a reason not to.</p>
 </blockquote>
@@ -737,17 +736,14 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <td>Your time debugging it</td>
 <td>Highest where the errors are least legible</td>
 </tr>
-<tr class="odd">
-<td>Reviewer time</td>
-<td>Lowest for whatever your field already knows</td>
-</tr>
 </tbody>
 </table>
+<!-- | Reviewer time | Lowest for whatever your field already knows | -->
 </section>
 <section id="summary" class="slide level2">
 <h2>Summary</h2>
 <ul>
-<li>The model is the thing. The software is a choice you make afterwards.</li>
+<li>The model is the important thing. The software is a choice you make afterwards.</li>
 <li>Sampling languages differ mostly in ergonomics and sampler quality, not in what they can express.</li>
 <li><code>INLA</code> is a genuinely different trade: a restricted model class in exchange for speed and determinism.</li>
 <li>Being able to read all of them, and translate between them, is more valuable than mastery of any one.</li>
