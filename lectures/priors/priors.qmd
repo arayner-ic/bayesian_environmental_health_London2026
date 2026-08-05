@@ -4,7 +4,7 @@ author:
  - name: "Garyfallos Konstantinoudis"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
-date: 2025-08-14
+date: 2026-08-05
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
@@ -14,9 +14,9 @@ title-slide-attributes:
 format:
   revealjs:
     slide-number: true
-    incremental: false
+    incremental: true
     chalkboard:
-      buttons: false
+      buttons: true
       preview-links: auto
     logo: "assets/bmeh_normal.png"
     theme: [default, ../../assets/style.scss]
@@ -45,6 +45,9 @@ set.seed(2)
 
 ## Outline
 
+- What is a prior?
+- Different types of priors
+- Examples
 
 ## A motivating question
 
