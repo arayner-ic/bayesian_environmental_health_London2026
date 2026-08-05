@@ -159,14 +159,14 @@ fit_nimble_model <- function(beta_mean, beta_sd,
 }
 ```
 
-```{r eval = FALSE}
+```{r}
 fit_diffuse <- fit_nimble_model(beta_mean = 0,    beta_sd = 0.5,   seed = 11)
 fit_weak    <- fit_nimble_model(beta_mean = 0,    beta_sd = 0.1,   seed = 12)
 fit_info    <- fit_nimble_model(beta_mean = 0.01, beta_sd = 0.005, seed = 13)
 
-saveRDS(fit_diffuse, here::here(('labs','priors','model_fits',"fit_diffuse.rds"))
-saveRDS(fit_weak, here::here(('labs','priors','model_fits',"fit_weak.rds"))
-saveRDS(fit_info, here::here(('labs','priors','model_fits',"fit_info.rds"))
+saveRDS(fit_diffuse, here::here('labs','priors','model_fits',"fit_diffuse.rds"))
+saveRDS(fit_weak, here::here('labs','priors','model_fits',"fit_weak.rds"))
+saveRDS(fit_info, here::here('labs','priors','model_fits',"fit_info.rds"))
 ```
 
 ```{r echo = FALSE}
@@ -392,7 +392,7 @@ fit_threshold_uniform <- function(psi_lower, psi_upper,
 }
 ```
 
-```{r eval = FALSE}
+```{r eval}
 fit_psi_broad <- fit_threshold_uniform(psi_lower = 20, psi_upper = 35, seed = 21)
 fit_psi_low   <- fit_threshold_uniform(psi_lower = 24, psi_upper = 28, seed = 22)
 fit_psi_high  <- fit_threshold_uniform(psi_lower = 29, psi_upper = 31, seed = 23)
