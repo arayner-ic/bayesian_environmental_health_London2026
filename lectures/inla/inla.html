@@ -6,8 +6,8 @@
 <script src="inla_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="inla_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="inla_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.25">
 
   <meta name="author" content="Robbie M. Parks">
   <title>INLA and R-INLA</title>
@@ -232,34 +232,10 @@ Robbie M. Parks
 <section id="recap-bayesian-inference" class="slide level2">
 <h2>Recap: Bayesian inference</h2>
 <ul>
-<li>We have data <span class="math inline">\(y\)</span>, parameters <span class="math inline">\(x\)</span>, and Bayes’ theorem:</li>
-</ul>
-<p><span class="math display">\[
-p(x \mid y) = \frac{p(y \mid x)\, p(x)}{p(y)}
-\]</span></p>
-<ul>
-<li>The numerator is easy: it is just the likelihood times the prior.</li>
-<li>The denominator <span class="math inline">\(p(y) = \int p(y \mid x) p(x)\, dx\)</span> is the problem.</li>
-<li>For anything beyond conjugate toy examples, that integral has no closed form.</li>
-</ul>
-</section>
-<section id="non-closed-solutions" class="slide level2">
-<h2>Non-closed solutions</h2>
-<ul>
-<li>In a hierarchical model, <span class="math inline">\(x\)</span> is not one parameter but thousands: intercepts, coefficients, one random effect per area, per year, per city-year…</li>
-<li>The normalising constant is then a <em>very</em> high-dimensional integral.</li>
-</ul>
-</section>
-<section id="non-closed-solutions-1" class="slide level2">
-<h2>Non-closed solutions</h2>
-<ul>
-<li>And we rarely want the joint posterior anyway — we want <strong>marginals</strong>:</li>
-</ul>
-<p><span class="math display">\[
-p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
-\]</span></p>
-<ul>
-<li>Which requires integrating out everything else. <span style="color:red">Also intractable.</span></li>
+<li><p><span class="math display">\[P(\theta|y) \propto P(y|\theta) P(\theta)\]</span></p></li>
+<li><p><span class="math inline">\(P(\theta)\)</span> is the <code>prior</code> (known or estimated a priori).</p></li>
+<li><p><span class="math inline">\(P(y|\theta)\)</span> is the <code>likelihood</code> (probability of data given parameters of interest).</p></li>
+<li><p><span class="math inline">\(P(\theta|y)\)</span> is the <code>posterior</code> (parameters of interest given data).</p></li>
 </ul>
 </section>
 <section id="the-usual-answer-mcmc" class="slide level2">
@@ -269,7 +245,7 @@ p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
 <li>Gibbs, Metropolis-Hastings, HMC/NUTS (<code>NIMBLE</code>, <code>Stan</code>, <code>JAGS</code>).</li>
 <li>Guaranteed to be correct <em>in the limit</em> of infinite samples.</li>
 <li>Extremely general: works for essentially any model you can write down.</li>
-<li>This is what we did last session with <code>NIMBLE</code>.</li>
+<li>This is what we did basically until now with <code>NIMBLE</code>.</li>
 </ul>
 </section>
 <section id="what-mcmc-costs" class="slide level2">
@@ -633,11 +609,11 @@ p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y}
 <section id="when-not-to-use-inla" class="slide level2">
 <h2>When not to use <code>INLA</code></h2>
 <ul>
-<li>The latent field is <strong>not</strong> Gaussian (e.g.&nbsp;discrete mixture components, changepoint indicators).</li>
+<li>The latent field is <strong>not</strong> Gaussian (e.g.&nbsp;discrete mixture components).</li>
 <li><span class="math inline">\(\dim(\boldsymbol{\theta})\)</span> is large — say more than 10-15.</li>
 <li>You need the <strong>joint</strong> posterior over many latent parameters, not marginals. (Partly recoverable via <code>inla.posterior.sample()</code>.)</li>
 <li>Genuinely multimodal posteriors.</li>
-<li>Novel likelihoods with no <code>INLA</code> implementation — though <code>rgeneric</code> and <code>cgeneric</code> let you write your own.</li>
+<li>(Potentially): Novel likelihoods with no <code>INLA</code> implementation — though <code>rgeneric</code> and <code>cgeneric</code> let you write your own.</li>
 </ul>
 </section></section>
 <section>
@@ -936,12 +912,17 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <li><code>scale.model = TRUE</code> makes the precision comparable across maps — essential for the prior to mean anything.</li>
 </ul>
 </section>
-<section id="practical-tips-and-common-errors" class="slide level2 smaller">
+<section id="practical-tips-and-common-errors" class="slide level2">
 <h2>Practical tips and common errors</h2>
 <ul>
 <li><em>“Index for f() must be integer or factor”</em> — you passed a covariate value. Create an explicit <code>1:n</code> index.</li>
 <li>Missing values in <code>y</code> are <strong>predicted</strong>, not dropped. Useful, but be deliberate about it.</li>
 <li>Model does not converge: try <code>control.inla = list(strategy = "gaussian", int.strategy = "eb")</code> first to check the model runs, then tighten.</li>
+</ul>
+</section>
+<section id="practical-tips-and-common-errors-1" class="slide level2">
+<h2>Practical tips and common errors</h2>
+<ul>
 <li><code>control.inla = list(h = 0.01)</code> if the numerical Hessian misbehaves.</li>
 <li>Centre and scale continuous covariates: it helps the optimiser and makes priors interpretable.</li>
 <li><code>verbose = TRUE</code> prints what the optimiser is actually doing.</li>

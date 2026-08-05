@@ -56,34 +56,11 @@ set.seed(2)
 
 ## Recap: Bayesian inference
 
--   We have data $y$, parameters $x$, and Bayes' theorem:
+- $$P(\theta|y) \propto P(y|\theta) P(\theta)$$
 
-$$
-p(x \mid y) = \frac{p(y \mid x)\, p(x)}{p(y)}
-$$
-
--   The numerator is easy: it is just the likelihood times the prior.
--   The denominator $p(y) = \int p(y \mid x) p(x)\, dx$ is the problem.
--   For anything beyond conjugate toy examples, that integral has no
-    closed form.
-
-## Non-closed solutions 
-
--   In a hierarchical model, $x$ is not one parameter but thousands:
-    intercepts, coefficients, one random effect per area, per year, per
-    city-year...
--   The normalising constant is then a *very* high-dimensional integral.
-
-## Non-closed solutions 
-
--   And we rarely want the joint posterior anyway — we want **marginals**:
-
-$$
-p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
-$$
-
--   Which requires integrating out everything else. [Also
-    intractable.]{style="color:red"}
+- $P(\theta)$ is the `prior` (known or estimated a priori).
+- $P(y|\theta)$ is the `likelihood` (probability of data given parameters of interest).
+- $P(\theta|y)$ is the `posterior` (parameters of interest given data).
 
 ## The usual answer: MCMC
 
@@ -91,7 +68,7 @@ $$
 -   Gibbs, Metropolis-Hastings, HMC/NUTS (`NIMBLE`, `Stan`, `JAGS`).
 -   Guaranteed to be correct *in the limit* of infinite samples.
 -   Extremely general: works for essentially any model you can write down.
--   This is what we did last session with `NIMBLE`.
+-   This is what we did basically until now with `NIMBLE`.
 
 ## What MCMC costs
 
@@ -428,12 +405,12 @@ $$
 ## When not to use `INLA`
 
 -   The latent field is **not** Gaussian (e.g. discrete mixture
-    components, changepoint indicators).
+    components).
 -   $\dim(\boldsymbol{\theta})$ is large — say more than 10-15.
 -   You need the **joint** posterior over many latent parameters, not
     marginals. (Partly recoverable via `inla.posterior.sample()`.)
 -   Genuinely multimodal posteriors.
--   Novel likelihoods with no `INLA` implementation — though `rgeneric`
+-   (Potentially): Novel likelihoods with no `INLA` implementation — though `rgeneric`
     and `cgeneric` let you write your own.
 
 # Using R-INLA
@@ -732,7 +709,7 @@ m_bym2 <- inla(
 -   `scale.model = TRUE` makes the precision comparable across maps —
     essential for the prior to mean anything.
 
-## Practical tips and common errors {.smaller}
+## Practical tips and common errors
 
 -   *"Index for f() must be integer or factor"* — you passed a covariate
     value. Create an explicit `1:n` index.
@@ -741,6 +718,9 @@ m_bym2 <- inla(
 -   Model does not converge: try
     `control.inla = list(strategy = "gaussian", int.strategy = "eb")`
     first to check the model runs, then tighten.
+    
+## Practical tips and common errors
+
 -   `control.inla = list(h = 0.01)` if the numerical Hessian misbehaves.
 -   Centre and scale continuous covariates: it helps the optimiser and
     makes priors interpretable.
@@ -756,6 +736,7 @@ m_bym2 <- inla(
 | Priors | Fully flexible | Gaussian latent field required |
 | Diagnostics | $\hat{R}$, ESS, traces | `kld`, CPO failures, PIT |
 | Best for | Bespoke, non-standard models | Standard hierarchical/spatial models, model development |
+
 
 - We will see models in `INLA` going forward 
 
