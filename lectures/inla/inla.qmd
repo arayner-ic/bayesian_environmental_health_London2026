@@ -389,6 +389,10 @@ $$
     small — **not** with the size of the latent field, which is large.
 -   Everything at a given $\boldsymbol{\theta}^{(k)}$ is parallel (`num.threads`).
 
+## Why it's not instant
+
+TO FINISH
+
 ## How accurate is it? {.smaller}
 
 -   For latent Gaussian models with well-behaved likelihoods, INLA and
