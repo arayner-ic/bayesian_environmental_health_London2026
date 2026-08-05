@@ -3,7 +3,8 @@ title: "Priors in Bayesian Environmental Health Models"
 subtitle: "SHARP Bayesian Modeling for Environmental Health Workshop"
 author: "Garyfallos Konstantinoudis"
 date: "August 5 2026"
-format: html
+format: html 
+
 ---
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
@@ -159,7 +160,7 @@ fit_nimble_model <- function(beta_mean, beta_sd,
 }
 ```
 
-```{r}
+```{r eval=FALSE}
 fit_diffuse <- fit_nimble_model(beta_mean = 0,    beta_sd = 0.5,   seed = 11)
 fit_weak    <- fit_nimble_model(beta_mean = 0,    beta_sd = 0.1,   seed = 12)
 fit_info    <- fit_nimble_model(beta_mean = 0.01, beta_sd = 0.005, seed = 13)
@@ -392,7 +393,7 @@ fit_threshold_uniform <- function(psi_lower, psi_upper,
 }
 ```
 
-```{r eval}
+```{r eval=FALSE}
 fit_psi_broad <- fit_threshold_uniform(psi_lower = 20, psi_upper = 35, seed = 21)
 fit_psi_low   <- fit_threshold_uniform(psi_lower = 24, psi_upper = 28, seed = 22)
 fit_psi_high  <- fit_threshold_uniform(psi_lower = 29, psi_upper = 31, seed = 23)
