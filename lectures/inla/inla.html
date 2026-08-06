@@ -6,9 +6,8 @@
 <script src="inla_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="inla_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="inla_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="inla_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
-<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.3.354">
+<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.25">
 
   <meta name="author" content="Robbie M. Parks">
   <title>INLA and R-INLA</title>
@@ -30,6 +29,7 @@
       vertical-align: middle;
     }
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
     pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -70,7 +70,7 @@
     code span.at { color: #657422; } /* Attribute */
     code span.bn { color: #ad0000; } /* BaseN */
     code span.bu { } /* BuiltIn */
-    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
     code span.ch { color: #20794d; } /* Char */
     code span.cn { color: #8f5902; } /* Constant */
     code span.co { color: #5e5e5e; } /* Comment */
@@ -84,7 +84,7 @@
     code span.fu { color: #4758ab; } /* Function */
     code span.im { color: #00769e; } /* Import */
     code span.in { color: #5e5e5e; } /* Information */
-    code span.kw { color: #003b4f; } /* Keyword */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
     code span.op { color: #5e5e5e; } /* Operator */
     code span.ot { color: #003b4f; } /* Other */
     code span.pp { color: #ad0000; } /* Preprocessor */
@@ -95,210 +95,13 @@
     code span.vs { color: #20794d; } /* VerbatimString */
     code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="inla_files/libs/revealjs/dist/theme/quarto.css">
+  <link rel="stylesheet" href="inla_files/libs/revealjs/dist/theme/quarto-227af3a145c1d7f81fd1cd640f5fdb4e.css">
   <link href="inla_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="inla_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="inla_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
   <link href="inla_files/libs/revealjs/plugin/reveal-chalkboard/font-awesome/css/all.css" rel="stylesheet">
   <link href="inla_files/libs/revealjs/plugin/reveal-chalkboard/style.css" rel="stylesheet">
   <link href="inla_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
-  <style type="text/css">
-
-  .callout {
-    margin-top: 1em;
-    margin-bottom: 1em;  
-    border-radius: .25rem;
-  }
-
-  .callout.callout-style-simple { 
-    padding: 0em 0.5em;
-    border-left: solid #acacac .3rem;
-    border-right: solid 1px silver;
-    border-top: solid 1px silver;
-    border-bottom: solid 1px silver;
-    display: flex;
-  }
-
-  .callout.callout-style-default {
-    border-left: solid #acacac .3rem;
-    border-right: solid 1px silver;
-    border-top: solid 1px silver;
-    border-bottom: solid 1px silver;
-  }
-
-  .callout .callout-body-container {
-    flex-grow: 1;
-  }
-
-  .callout.callout-style-simple .callout-body {
-    font-size: 1rem;
-    font-weight: 400;
-  }
-
-  .callout.callout-style-default .callout-body {
-    font-size: 0.9rem;
-    font-weight: 400;
-  }
-
-  .callout.callout-titled.callout-style-simple .callout-body {
-    margin-top: 0.2em;
-  }
-
-  .callout:not(.callout-titled) .callout-body {
-      display: flex;
-  }
-
-  .callout:not(.no-icon).callout-titled.callout-style-simple .callout-content {
-    padding-left: 1.6em;
-  }
-
-  .callout.callout-titled .callout-header {
-    padding-top: 0.2em;
-    margin-bottom: -0.2em;
-  }
-
-  .callout.callout-titled .callout-title  p {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-  }
-    
-  .callout.callout-titled.callout-style-simple .callout-content  p {
-    margin-top: 0;
-  }
-
-  .callout.callout-titled.callout-style-default .callout-content  p {
-    margin-top: 0.7em;
-  }
-
-  .callout.callout-style-simple div.callout-title {
-    border-bottom: none;
-    font-size: .9rem;
-    font-weight: 600;
-    opacity: 75%;
-  }
-
-  .callout.callout-style-default  div.callout-title {
-    border-bottom: none;
-    font-weight: 600;
-    opacity: 85%;
-    font-size: 0.9rem;
-    padding-left: 0.5em;
-    padding-right: 0.5em;
-  }
-
-  .callout.callout-style-default div.callout-content {
-    padding-left: 0.5em;
-    padding-right: 0.5em;
-  }
-
-  .callout.callout-style-simple .callout-icon::before {
-    height: 1rem;
-    width: 1rem;
-    display: inline-block;
-    content: "";
-    background-repeat: no-repeat;
-    background-size: 1rem 1rem;
-  }
-
-  .callout.callout-style-default .callout-icon::before {
-    height: 0.9rem;
-    width: 0.9rem;
-    display: inline-block;
-    content: "";
-    background-repeat: no-repeat;
-    background-size: 0.9rem 0.9rem;
-  }
-
-  .callout-title {
-    display: flex
-  }
-    
-  .callout-icon::before {
-    margin-top: 1rem;
-    padding-right: .5rem;
-  }
-
-  .callout.no-icon::before {
-    display: none !important;
-  }
-
-  .callout.callout-titled .callout-body > .callout-content > :last-child {
-    margin-bottom: 0.5rem;
-  }
-
-  .callout.callout-titled .callout-icon::before {
-    margin-top: .5rem;
-    padding-right: .5rem;
-  }
-
-  .callout:not(.callout-titled) .callout-icon::before {
-    margin-top: 1rem;
-    padding-right: .5rem;
-  }
-
-  /* Callout Types */
-
-  div.callout-note {
-    border-left-color: #4582ec !important;
-  }
-
-  div.callout-note .callout-icon::before {
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEU0lEQVRYCcVXTWhcVRQ+586kSUMMxkyaElstCto2SIhitS5Ek8xUKV2poatCcVHtUlFQk8mbaaziwpWgglJwVaquitBOfhQXFlqlzSJpFSpIYyXNjBNiTCck7x2/8/LeNDOZxDuEkgOXe++553zfefee+/OYLOXFk3+1LLrRdiO81yNqZ6K9cG0P3MeFaMIQjXssE8Z1JzLO9ls20MBZX7oG8w9GxB0goaPrW5aNMp1yOZIa7Wv6o2ykpLtmAPs/vrG14Z+6d4jpbSKuhdcSyq9wGMPXjonwmESXrriLzFGOdDBLB8Y6MNYBu0dRokSygMA/mrun8MGFN3behm6VVAwg4WR3i6FvYK1T7MHo9BK7ydH+1uurECoouk5MPRyVSBrBHMYwVobG2aOXM07sWrn5qgB60rc6mcwIDJtQrnrEr44kmy+UO9r0u9O5/YbkS9juQckLed3DyW2XV/qWBBB3ptvI8EUY3I9p/67OW+g967TNr3Sotn3IuVlfMLVnsBwH4fsnebJvyGm5GeIUA3jljERmrv49SizPYuq+z7c2H/jlGC+Ghhupn/hcapqmcudB9jwJ/3jvnvu6vu5lVzF1fXyZuZZ7U8nRmVzytvT+H3kilYvH09mLWrQdwFSsFEsxFVs5fK7A0g8gMZjbif4ACpKbjv7gNGaD8bUrlk8x+KRflttr22JEMRUbTUwwDQScyzPgedQHZT0xnx7ujw2jfVfExwYHwOsDTjLdJ2ebmeQIlJ7neo41s/DrsL3kl+W2lWvAga0tR3zueGr6GL78M3ifH0rGXrBC2aAR8uYcIA5gwV8zIE8onoh8u0Fca/ciF7j1uOzEnqcIm59sEXoGc0+z6+H45V1CvAvHcD7THztu669cnp+L0okAeIc6zjbM/24LgGM1gZk7jnRu1aQWoU9sfUOuhrmtaPIO3YY1KLLWZaEO5TKUbMY5zx8W9UJ6elpLwKXbsaZ4EFl7B4bMtDv0iRipKoDQT2sNQI9b1utXFdYisi+wzZ/ri/1m7QfDgEuvgUUEIJPq3DhX/5DWNqIXDOweC2wvIR90Oq3lDpdMIgD2r0dXvGdsEW5H6x6HLRJYU7C69VefO1x8Gde1ZFSJLfWS1jbCnhtOPxmpfv2LXOA2Xk2tvnwKKPFuZ/oRmwBwqRQDcKNeVQkYcOjtWVBuM/JuYw5b6isojIkYxyYAFn5K7ZBF10fea52y8QltAg6jnMqNHFBmGkQ1j+U43HMi2xMar1Nv0zGsf1s8nUsmUtPOOrbFIR8bHFDMB5zL13Gmr/kGlCkUzedTzzmzsaJXhYawnA3UmARpiYj5ooJZiUoxFRtK3X6pgNPv+IZVPcnwbOl6f+aBaO1CNvPW9n9LmCp01nuSaTRF2YxHqZ8DYQT6WsXT+RD6eUztwYLZ8rM+rcPxamv1VQzFUkzFXvkiVrySGQgJNvXHJAxiU3/NwiC03rSf05VBaPtu/Z7/B8Yn/w7eguloAAAAAElFTkSuQmCC');
-  }
-
-  div.callout-note.callout-style-default .callout-title {
-    background-color: #dae6fb
-  }
-
-  div.callout-important {
-    border-left-color: #d9534f !important;
-  }
-
-  div.callout-important .callout-icon::before {
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEKklEQVRYCcVXTWhcVRS+575MJym48A+hSRFr00ySRQhURRfd2HYjk2SSTokuBCkU2o0LoSKKraKIBTcuFCoidGFD08nkBzdREbpQ1EDNIv8qSGMFUboImMSZd4/f9zJv8ibJMC8xJQfO3HPPPef7zrvvvnvviIkpC9nsw0UttFunbUhpFzFtarSd6WJkStVMw5xyVqYTvkwfzuf/5FgtkVoB0729j1rjXwThS7Vio+Mo6DNnvLfahoZ+i/o32lULuJ3NNiz7q6+pyAUkJaFF6JwaM2lUJlV0MlnQn5aTRbEu0SEqHUa0A4AdiGuB1kFXRfVyg5d87+Dg4DL6m2TLAub60ilj7A1Ec4odSAc8X95sHh7+ZRPCFo6Fnp7HfU/fBng/hi10CjCnWnJjsxvDNxWw0NfV6Rv5GgP3I3jGWXumdTD/3cbEOP2ZbOZp69yniG3FQ9z1jD7bnBu9Fc2tKGC2q+uAJOQHBDRiZX1x36o7fWBs7J9ownbtO+n0/qWkvW7UPIfc37WgT6ZGR++EOJyeQDSb9UB+DZ1G6DdLDzyS+b/kBCYGsYgJbSQHuThGKRcw5xdeQf8YdNHsc6ePXrlSYMBuSIAFTGAtQo+VuALo4BX83N190NWZWbynBjhOHsmNfFWLeL6v+ynsA58zDvvAC8j5PkbOcXCMg2PZFk3q8MjI7WAG/Dp9AwP7jdGBOOQkAvlFUB+irtm16I1Zw9YBcpGTGXYmk3kQIC/Cds55l+iMI3jqhjAuaoe+am2Jw5GT3Nbz3CkE12NavmzN5+erJW7046n/CH1RO/RVa8lBLozXk9uqykkGAyRXLWlLv5jyp4RFsG5vGVzpDLnIjTWgnRy2Rr+tDKvRc7Y8AyZq10jj8DqXdnIRNtFZb+t/ZRtXcDiVnzpqx8mPcDWxgARUqx0W1QB9MeUZiNrV4qP+Ehc+BpNgATsTX8ozYKL2NtFYAHc84fG7ndxUPr+AR/iQSns7uSUufAymwDOb2+NjK27lEFocm/EE2WpyIy/Hi66MWuMKJn8RvxIcj87IM5Vh9663ziW36kR0HNenXuxmfaD8JC7tfKbrhFr7LiZCrMjrzTeGx+PmkosrkNzW94ObzwocJ7A1HokLolY+AvkTiD/q1H0cN48c5EL8Crkttsa/AXQVDmutfyku0E7jShx49XqV3MFK8IryDhYVbj7Sj2P2eBxwcXoe8T8idsKKPRcnZw1b+slFTubwUwhktrfnAt7J++jwQtLZcm3sr9LQrjRzz6cfMv9aLvgmnAGvpoaGLxM4mAEaLV7iAzQ3oU0IvD5x9ix3yF2RAAuYAOO2f7PEFWCXZ4C9Pb2UsgDeVnFSpbFK7/IWu7TPTvBqzbGdCHOJQSxiEjt6IyZmxQyEJHv6xyQsYk//moVFsN2zP6fRImjfq7/n/wFDguUQFNEwugAAAABJRU5ErkJggg==');
-  }
-
-  div.callout-important.callout-style-default .callout-title {
-    background-color: #f7dddc
-  }
-
-  div.callout-warning {
-    border-left-color: #f0ad4e !important;
-  }
-
-  div.callout-warning .callout-icon::before {
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAETklEQVRYCeVWW2gcVRg+58yaTUnizqbipZeX4uWhBEniBaoUX1Ioze52t7sRq6APio9V9MEaoWlVsFasRq0gltaAPuxms8lu0gcviE/FFOstVbSIxgcv6SU7EZqmdc7v9+9mJtNks51NTUH84ed889/PP+cmxP+d5FIbMJmNbpREu4WUkiTtCicKny0l1pIKmBzovF2S+hIJHX8iEu3hZJ5lNZGqyRrGSIQpq15AzF28jgpeY6yk6GVdrfFqdrD6Iw+QlB8g0YS2g7dyQmXM/IDhBhT0UCiRf59lfqmmDvzRt6kByV/m4JjtzuaujMUM2c5Z2d6JdKrRb3K2q6mA+oYVz8JnDdKPmmNthzkAk/lN63sYPgevrguc72aZX/L9C6x09GYyxBgCX4NlvyGUHOKELlm5rXeR1kchuChJt4SSwyddZRXgvwMGvYo4QSlk3/zkHD8UHxwVJA6zjZZqP8v8kK8OWLnIZtLyCAJagYC4rTGW/9Pqj92N/c+LUaAj27movwbi19tk/whRCIE7Q9vyI6yvRpftAKVTdUjOW40X3h5OXsKCdmFcx0xlLJoSuQngnrJe7Kcjm4OMq9FlC7CMmScQANuNvjfP3PjGXDBaUQmbp296S5L4DrpbrHN1T87ZVEZVCzg1FF0Ft+dKrlLukI+/c9ENo+TvlTDbYFvuKPtQ9+l052rXrgKoWkDAFnvh0wTOmYn8R5f4k/jN/fZiCM1tQx9jQQ4ANhqG4hiL0qIFTGViG9DKB7GYzgubnpofgYRwO+DFjh0Zin2m4b/97EDkXkc+f6xYAPX0KK2I/7fUQuwzuwo/L3AkcjugPNixC8cHf0FyPjWlItmLxWw4Ou9YsQCr5fijMGoD/zpdRy95HRysyXA74MWOnscpO4j2y3HAVisw85hX5+AFBRSHt4ShfLFkIMXTqyKFc46xdzQM6XbAi702a7sy04J0+feReMFKp5q9esYLCqAZYw/k14E/xcLLsFElaornTuJB0svMuJINy8xkIYuL+xPAlWRceH6+HX7THJ0djLUom46zREu7tTkxwmf/FdOZ/sh6Q8qvEAiHpm4PJ4a/doJe0gH1t+aHRgCzOvBvJedEK5OFE5jpm4AGP2a8Dxe3gGJ/pAutug9Gp6he92CsSsWBaEcxGx0FHytmIpuqGkOpldqNYQK8cSoXvd+xLxXADw0kf6UkJNFtdo5MOgaLjiQOQHcn+A6h5NuL2s0qsC2LOM75PcF3yr5STuBSAcGG+meA14K/CI21HcS4LBT6tv0QAh8Dr5l93AhZzG5ZJ4VxAqdZUEl9z7WJ4aN+svMvwHHL21UKTd1mqvChH7/Za5xzXBBKrUcB0TQ+Ulgkfbi/H/YT5EptrGzsEK7tR1B7ln9BBwckYfMiuSqklSznIuoIIOM42MQO+QnduCoFCI0bpkzjCjddHPN/F+2Yu+sd9bKNpVwHhbS3LluK/0zgfwD0xYI5dXuzlQAAAABJRU5ErkJggg==');
-  }
-
-  div.callout-warning.callout-style-default .callout-title {
-    background-color: #fcefdc
-  }
-
-  div.callout-tip {
-    border-left-color: #02b875 !important;
-  }
-
-  div.callout-tip .callout-icon::before {
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAADr0lEQVRYCe1XTWgTQRj9ZjZV8a9SPIkKgj8I1bMHsUWrqYLVg4Ue6v9BwZOxSYsIerFao7UiUryIqJcqgtpimhbBXoSCVxUFe9CTiogUrUp2Pt+3aUI2u5vdNh4dmMzOzHvvezuz8xNFM0mjnbXaNu1MvFWRXkXEyE6aYOYJpdW4IXuA4r0fo8qqSMDBU0v1HJUgVieAXxzCsdE/YJTdFcVIZQNMyhruOMJKXYFoLfIfIvVIMWdsrd+Rpd86ZmyzzjJmLStqRn0v8lzkb4rVIXvnpScOJuAn2ACC65FkPzEdEy4TPWRLJ2h7z4cArXzzaOdKlbOvKKX25Wl00jSnrwVxAg3o4dRxhO13RBSdNvH0xSARv3adTXbBdTf64IWO2vH0LT+cv4GR1DJt+DUItaQogeBX/chhbTBxEiZ6gftlDNXTrvT7co4ub5A6gp9HIcHvzTa46OS5fBeP87Qm0fQkr4FsYgVQ7Qg+ZayaDg9jhg1GkWj8RG6lkeSacrrHgDaxdoBiZPg+NXV/KifMuB6//JmYH4CntVEHy/keA6x4h4CU5oFy8GzrBS18cLJMXcljAKB6INjWsRcuZBWVaS3GDrqB7rdapVIeA+isQ57Eev9eCqzqOa81CY05VLd6SamW2wA2H3SiTbnbSxmzfp7WtKZkqy4mdyAlGx7ennghYf8voqp9cLSgKdqNfa6RdRsAAkPwRuJZNbpByn+RrJi1RXTwdi8RQF6ymDwGMAtZ6TVE+4uoKh+MYkcLsT0Hk8eAienbiGdjJHZTpmNjlbFJNKDVAp2fJlYju6IreQxQ08UJDNYdoLSl6AadO+fFuCQqVMB1NJwPm69T04Wv5WhfcWyfXQB+wXRs1pt+nCknRa0LVzSA/2B+a9+zQJadb7IyyV24YAxKp2Jqs3emZTuNnKxsah+uabKbMk7CbTgJx/zIgQYErIeTKRQ9yD9wxVof5YolPHqaWo7TD6tJlh7jQnK5z2n3+fGdggIOx2kaa2YI9QWarc5Ce1ipNWMKeSG4DysFF52KBmTNMmn5HqCFkwy34rDg05gDwgH3bBi+sgFhN/e8QvRn8kbamCOhgrZ9GJhFDgfcMHzFb6BAtjKpFhzTjwv1KCVuxHvCbsSiEz4CANnj84cwHdFXAbAOJ4LTSAawGWFn5tDhLMYz6nWeU2wJfIhmIJBefcd/A5FWQWGgrWzyORZ3Q6HuV+Jf0Bj+BTX69fm1zWgK7By1YTXchFDORywnfQ7GpzOo6S+qECrsx2ifVQAAAABJRU5ErkJggg==');
-  }
-
-  div.callout-tip.callout-style-default .callout-title {
-    background-color: #ccf1e3
-  }
-
-  div.callout-caution {
-    border-left-color: #fd7e14 !important;
-  }
-
-  div.callout-caution .callout-icon::before {
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAACV0lEQVRYCdVWzWoUQRCuqp2ICBLJXgITZL1EfQDBW/bkzUMUD7klD+ATSHBEfAIfQO+iXsWDxJsHL96EHAwhgzlkg8nBg25XWb0zIb0zs9muYYWkoKeru+vn664fBqElyZNuyh167NXJ8Ut8McjbmEraKHkd7uAnAFku+VWdb3reSmRV8PKSLfZ0Gjn3a6Xlcq9YGb6tADjn+lUfTXtVmaZ1KwBIvFI11rRXlWlatwIAAv2asaa9mlB9wwygiDX26qaw1yYPzFXg2N1GgG0FMF8Oj+VIx7E/03lHx8UhvYyNZLN7BwSPgekXXLribw7w5/c8EF+DBK5idvDVYtEEwMeYefjjLAdEyQ3M9nfOkgnPTEkYU+sxMq0BxNR6jExrAI31H1rzvLEfRIdgcv1XEdj6QTQAS2wtstEALLG1yEZ3QhH6oDX7ExBSFEkFINXH98NTrme5IOaaA7kIfiu2L8A3qhH9zRbukdCqdsA98TdElyeMe5BI8Rs2xHRIsoTSSVFfCFCWGPn9XHb4cdobRIWABNf0add9jakDjQJpJ1bTXOJXnnRXHRf+dNL1ZV1MBRCXhMbaHqGI1JkKIL7+i8uffuP6wVQAzO7+qVEbF6NbS0LJureYcWXUUhH66nLR5rYmva+2tjRFtojkM2aD76HEGAD3tPtKM309FJg5j/K682ywcWJ3PASCcycH/22u+Bh7Aa0ehM2Fu4z0SAE81HF9RkB21c5bEn4Dzw+/qNOyXr3DCTQDMBOdhi4nAgiFDGCinIa2owCEChUwD8qzd03PG+qdW/4fDzjUMcE1ZpIAAAAASUVORK5CYII=');
-  }
-
-  div.callout-caution.callout-style-default .callout-title {
-    background-color: #ffe5d0
-  }
-
-  </style>
   <style type="text/css">
     .reveal div.sourceCode {
       margin: 0;
@@ -469,40 +272,49 @@ Robbie M. Parks
 <li>Cross-validation: refitting the model <span class="math inline">\(n\)</span> times often not feasible.</li>
 <li>Sensitivity analysis over priors: same problem again.</li>
 </ul>
+<!-- ## Which joint do we need? {.smaller} -->
+<!-- ```{=html} -->
+<!-- <svg viewBox="0 0 920 360" style="width:100%;color:inherit" font-family="inherit"> -->
+<!-- <rect x="60" y="90" width="440" height="220" rx="8" fill="none" -->
+<!--       stroke="currentColor" stroke-opacity="0.45" stroke-width="1.2"/> -->
+<!-- <g transform="rotate(-25 280 200)"> -->
+<!-- <ellipse cx="280" cy="200" rx="130" ry="70" fill="#2980b9" fill-opacity="0.10" -->
+<!--          stroke="#2980b9" stroke-opacity="0.5" stroke-width="1.2"/> -->
+<!-- <ellipse cx="280" cy="200" rx="95" ry="50" fill="#2980b9" fill-opacity="0.16" -->
+<!--          stroke="#2980b9" stroke-opacity="0.6" stroke-width="1.2"/> -->
+<!-- <ellipse cx="280" cy="200" rx="58" ry="30" fill="#2980b9" fill-opacity="0.26" -->
+<!--          stroke="#2980b9" stroke-opacity="0.7" stroke-width="1.2"/> -->
+<!-- </g> -->
+<!-- <text x="280" y="338" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a latent element</text> -->
+<!-- <text x="42" y="205" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a hyperparameter</text> -->
+<!-- <path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82 Z" -->
+<!--       fill="#c0392b" fill-opacity="0.14" stroke="none"/> -->
+<!-- <path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82" -->
+<!--       fill="none" stroke="#c0392b" stroke-width="2.8"/> -->
+<!-- <path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90 Z" -->
+<!--       fill="#c0392b" fill-opacity="0.14" stroke="none"/> -->
+<!-- <path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90" -->
+<!--       fill="none" stroke="#c0392b" stroke-width="2.8"/> -->
+<!-- <text x="620" y="128" font-size="17" font-weight="600" fill="currentColor">The all-at-once joint</text> -->
+<!-- <text x="620" y="152" font-size="15" fill="currentColor" opacity="0.8">field and hyperparameters together</text> -->
+<!-- <text x="620" y="216" font-size="17" font-weight="600" fill="#c0392b">What we report</text> -->
+<!-- <text x="620" y="240" font-size="15" fill="#c0392b" opacity="0.9">one marginal at a time</text> -->
+<!-- <path d="M612,210 L568,202" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="4 3" -->
+<!--       opacity="0.75" fill="none"/> -->
+<!-- </svg> -->
+<!-- ``` -->
+<!-- ::: {.nonincremental} -->
+<!-- -   MCMC draws from the joint posterior over **everything at once** — the -->
+<!--     latent field and the hyperparameters together. -->
+<!-- -   Almost everything we publish is **marginal**: a mean and interval per -->
+<!--     coefficient, a relative risk per area, an exposure–response curve with a -->
+<!--     band. -->
+<!-- -   We never need that all-at-once joint. So the two need not be handled -->
+<!--     together. -->
+<!-- ::: -->
 </section>
-<section id="which-joint-do-we-need" class="slide level2 smaller">
-<h2>Which joint do we need?</h2>
-<svg viewbox="0 0 920 360" style="width:100%;color:inherit" font-family="inherit">
-<rect x="60" y="90" width="440" height="220" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="1.2"></rect>
-<g transform="rotate(-25 280 200)">
-<ellipse cx="280" cy="200" rx="130" ry="70" fill="#2980b9" fill-opacity="0.10" stroke="#2980b9" stroke-opacity="0.5" stroke-width="1.2"></ellipse>
-<ellipse cx="280" cy="200" rx="95" ry="50" fill="#2980b9" fill-opacity="0.16" stroke="#2980b9" stroke-opacity="0.6" stroke-width="1.2"></ellipse>
-<ellipse cx="280" cy="200" rx="58" ry="30" fill="#2980b9" fill-opacity="0.26" stroke="#2980b9" stroke-opacity="0.7" stroke-width="1.2"></ellipse>
-</g>
-<text x="280" y="338" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a latent element</text>
-<text x="42" y="205" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a hyperparameter</text>
-
-<path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82 Z" fill="#c0392b" fill-opacity="0.14" stroke="none"></path>
-<path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82" fill="none" stroke="#c0392b" stroke-width="2.8"></path>
-<path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90 Z" fill="#c0392b" fill-opacity="0.14" stroke="none"></path>
-<path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90" fill="none" stroke="#c0392b" stroke-width="2.8"></path>
-
-<text x="620" y="128" font-size="17" font-weight="600" fill="currentColor">The all-at-once joint</text>
-<text x="620" y="152" font-size="15" fill="currentColor" opacity="0.8">field and hyperparameters together</text>
-<text x="620" y="216" font-size="17" font-weight="600" fill="#c0392b">What we report</text>
-<text x="620" y="240" font-size="15" fill="#c0392b" opacity="0.9">one marginal at a time</text>
-<path d="M612,210 L568,202" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.75" fill="none"></path>
-</svg>
-<div>
-<ul>
-<li>MCMC draws from the joint posterior over <strong>everything at once</strong> — the latent field and the hyperparameters together.</li>
-<li>Almost everything we publish is <strong>marginal</strong>: a mean and interval per coefficient, a relative risk per area, an exposure–response curve with a band.</li>
-<li>We never need that all-at-once joint. So the two need not be handled together.</li>
-</ul>
-</div>
-</section>
-<section id="how-the-inference-is-performed" class="slide level2 smaller">
-<h2>How the inference is performed</h2>
+<section id="building-blocks-of-inference" class="slide level2 smaller">
+<h2>Building blocks of inference</h2>
 <svg viewbox="0 0 920 340" style="width:100%;color:inherit" font-family="inherit">
 <defs><marker id="ah1" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
 <path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
@@ -541,32 +353,32 @@ Robbie M. Parks
 <section id="an-illustrative-example" class="slide level2 smaller">
 <h2>An illustrative example</h2>
 <p>Example: weekly death counts by county, with a heat term, a spatial term and a temporal trend.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>code <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
-<span id="cb1-4"><a href="#cb1-4"></a>  beta  <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
-<span id="cb1-5"><a href="#cb1-5"></a>  tau_b <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
-<span id="cb1-6"><a href="#cb1-6"></a>  tau_g <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
-<span id="cb1-7"><a href="#cb1-7"></a>  phi   <span class="sc">~</span> <span class="fu">dbeta</span>(<span class="dv">1</span>, <span class="dv">1</span>)</span>
-<span id="cb1-8"><a href="#cb1-8"></a></span>
-<span id="cb1-9"><a href="#cb1-9"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N) {</span>
-<span id="cb1-10"><a href="#cb1-10"></a>    deaths[i] <span class="sc">~</span> <span class="fu">dpois</span>(mu[i])</span>
-<span id="cb1-11"><a href="#cb1-11"></a>    <span class="fu">log</span>(mu[i]) <span class="ot">&lt;-</span> <span class="fu">log</span>(E[i]) <span class="sc">+</span> alpha <span class="sc">+</span> beta <span class="sc">*</span> heat[i] <span class="sc">+</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a>                    b[county[i]] <span class="sc">+</span> gamma[week[i]]</span>
-<span id="cb1-13"><a href="#cb1-13"></a>  }</span>
-<span id="cb1-14"><a href="#cb1-14"></a></span>
-<span id="cb1-15"><a href="#cb1-15"></a>  s[<span class="dv">1</span><span class="sc">:</span>M] <span class="sc">~</span> <span class="fu">dcar_normal</span>(adj[<span class="dv">1</span><span class="sc">:</span>L], w[<span class="dv">1</span><span class="sc">:</span>L], num[<span class="dv">1</span><span class="sc">:</span>M], <span class="dv">1</span>, <span class="at">zero_mean =</span> <span class="dv">1</span>)</span>
-<span id="cb1-16"><a href="#cb1-16"></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>M) {</span>
-<span id="cb1-17"><a href="#cb1-17"></a>    theta[j] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
-<span id="cb1-18"><a href="#cb1-18"></a>    b[j] <span class="ot">&lt;-</span> (<span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> phi) <span class="sc">*</span> theta[j] <span class="sc">+</span> <span class="fu">sqrt</span>(phi <span class="sc">/</span> scl) <span class="sc">*</span> s[j]) <span class="sc">/</span> <span class="fu">sqrt</span>(tau_b)</span>
-<span id="cb1-19"><a href="#cb1-19"></a>  }</span>
-<span id="cb1-20"><a href="#cb1-20"></a></span>
-<span id="cb1-21"><a href="#cb1-21"></a>  gamma[<span class="dv">1</span>] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
-<span id="cb1-22"><a href="#cb1-22"></a>  <span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>Tw) {</span>
-<span id="cb1-23"><a href="#cb1-23"></a>    gamma[t] <span class="sc">~</span> <span class="fu">dnorm</span>(gamma[t <span class="sc">-</span> <span class="dv">1</span>], tau_g)</span>
-<span id="cb1-24"><a href="#cb1-24"></a>  }</span>
-<span id="cb1-25"><a href="#cb1-25"></a></span>
-<span id="cb1-26"><a href="#cb1-26"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>code <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
+<span id="cb1-2"><a href=""></a></span>
+<span id="cb1-3"><a href=""></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb1-4"><a href=""></a>  beta  <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb1-5"><a href=""></a>  tau_b <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb1-6"><a href=""></a>  tau_g <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb1-7"><a href=""></a>  phi   <span class="sc">~</span> <span class="fu">dbeta</span>(<span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb1-8"><a href=""></a></span>
+<span id="cb1-9"><a href=""></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N) {</span>
+<span id="cb1-10"><a href=""></a>    deaths[i] <span class="sc">~</span> <span class="fu">dpois</span>(mu[i])</span>
+<span id="cb1-11"><a href=""></a>    <span class="fu">log</span>(mu[i]) <span class="ot">&lt;-</span> <span class="fu">log</span>(E[i]) <span class="sc">+</span> alpha <span class="sc">+</span> beta <span class="sc">*</span> heat[i] <span class="sc">+</span></span>
+<span id="cb1-12"><a href=""></a>                    b[county[i]] <span class="sc">+</span> gamma[week[i]]</span>
+<span id="cb1-13"><a href=""></a>  }</span>
+<span id="cb1-14"><a href=""></a></span>
+<span id="cb1-15"><a href=""></a>  s[<span class="dv">1</span><span class="sc">:</span>M] <span class="sc">~</span> <span class="fu">dcar_normal</span>(adj[<span class="dv">1</span><span class="sc">:</span>L], w[<span class="dv">1</span><span class="sc">:</span>L], num[<span class="dv">1</span><span class="sc">:</span>M], <span class="dv">1</span>, <span class="at">zero_mean =</span> <span class="dv">1</span>)</span>
+<span id="cb1-16"><a href=""></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>M) {</span>
+<span id="cb1-17"><a href=""></a>    theta[j] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb1-18"><a href=""></a>    b[j] <span class="ot">&lt;-</span> (<span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> phi) <span class="sc">*</span> theta[j] <span class="sc">+</span> <span class="fu">sqrt</span>(phi <span class="sc">/</span> scl) <span class="sc">*</span> s[j]) <span class="sc">/</span> <span class="fu">sqrt</span>(tau_b)</span>
+<span id="cb1-19"><a href=""></a>  }</span>
+<span id="cb1-20"><a href=""></a></span>
+<span id="cb1-21"><a href=""></a>  gamma[<span class="dv">1</span>] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb1-22"><a href=""></a>  <span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>Tw) {</span>
+<span id="cb1-23"><a href=""></a>    gamma[t] <span class="sc">~</span> <span class="fu">dnorm</span>(gamma[t <span class="sc">-</span> <span class="dv">1</span>], tau_g)</span>
+<span id="cb1-24"><a href=""></a>  }</span>
+<span id="cb1-25"><a href=""></a></span>
+<span id="cb1-26"><a href=""></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="the-data" class="slide level2 smaller">
 <h2>The data</h2>
@@ -584,12 +396,10 @@ Robbie M. Parks
 <text x="660" y="172" font-size="16" font-weight="600" fill="currentColor">data</text>
 <text x="660" y="192" font-size="15" fill="currentColor" opacity="0.75">161,616 rows</text>
 </svg>
-<div>
 <ul>
 <li>3,108 counties over 52 weeks.</li>
 <li>Each row reaches the model through <strong>one</strong> number — its own linear predictor.</li>
 </ul>
-</div>
 </section>
 <section id="the-latent-field" class="slide level2 smaller">
 <h2>The latent field</h2>
@@ -608,7 +418,7 @@ Robbie M. Parks
 <text x="660" y="172" font-size="16" fill="currentColor" opacity="0.3">data</text>
 </svg>
 <p>Everything unobserved, stacked into one vector:</p>
-<table>
+<table class="caption-top">
 <thead>
 <tr class="header">
 <th>Piece</th>
@@ -656,32 +466,444 @@ Robbie M. Parks
 <text x="660" y="172" font-size="16" fill="currentColor" opacity="0.3">data</text>
 </svg>
 <p>Not part of what the model predicts, but quantities that govern the shape of the latent field:</p>
-<div>
 <ul>
 <li>the <code>bym2</code> precision — how much the county effects vary.</li>
 <li>the <code>bym2</code> mixing proportion <span class="math inline">\(\phi\)</span> — how much of that is spatial rather than unstructured.</li>
 <li>the <code>rw1</code> precision — how smooth the weekly trend is.</li>
 </ul>
-</div>
 </section>
 <section id="what-is-in-each-layer" class="slide level2 smaller">
 <h2>What is in each layer</h2>
 <p><strong>The latent field</strong> collects everything unobserved that enters the linear predictor:</p>
-<div>
 <ul>
 <li>the intercept and every regression coefficient,</li>
 <li>every random effect, smooth curve, spatial field and time trend,</li>
 <li>and the linear predictors themselves.</li>
 </ul>
-</div>
 <p>It is usually <strong>larger than the dataset</strong>, because the linear predictors sit inside it. Fixed effects belong to it too, since a vague Gaussian prior is still a Gaussian prior.</p>
-<div class="fragment">
 <p><strong>The hyperparameters</strong> are what remains — the precisions of random effects, correlation and range parameters, mixing proportions such as the BYM2 <span class="math inline">\(\phi\)</span>, and likelihood-specific quantities such as negative binomial dispersion.</p>
-<p>They govern the shape of the latent field. There are far fewer of them than there are elements in the field — usually fewer than ten. This model has three.</p>
+<p>They govern the shape of the latent field. There are far fewer of them than there are elements in the field. This model has three.</p>
+</section>
+<section id="the-class-of-latent-gaussian-models" class="slide level2">
+<h2>The class of latent Gaussian models</h2>
+<p>Every latent Gaussian model has a linear predictor of this form:</p>
+<p><span class="math display">\[
+\eta_i \;=\; \underbrace{\alpha}_{\text{intercept}} \;+\; \underbrace{\sum_{k} \beta_k z_{ki}}_{\text{linear terms}} \;+\; \underbrace{\sum_{j} f_j(u_{ji})}_{\text{structured terms}}
+\]</span></p>
+<p>with a Gaussian prior on everything in it, and a short list of hyperparameters governing the <span class="math inline">\(f_j\)</span>.</p>
+</section>
+<section id="the-class-of-latent-gaussian-models-1" class="slide level2 smaller">
+<h2>The class of latent Gaussian models</h2>
+<p>The whole class comes from choosing what the <span class="math inline">\(f_j\)</span> are:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Choose <span class="math inline">\(f_j\)</span> to be</th>
+<th>and you have</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>nothing</td>
+<td>a GLM</td>
+</tr>
+<tr class="even">
+<td>independent by group</td>
+<td>a mixed / multilevel model</td>
+</tr>
+<tr class="odd">
+<td>a random walk over time</td>
+<td>a smooth trend</td>
+</tr>
+<tr class="even">
+<td>a random walk over exposure</td>
+<td>a non-linear exposure–response curve</td>
+</tr>
+<tr class="odd">
+<td>neighbours on a map</td>
+<td>ICAR, BYM2, Leroux</td>
+</tr>
+<tr class="even">
+<td>a Matérn field over space</td>
+<td>SPDE / geostatistics</td>
+</tr>
+<tr class="odd">
+<td>space crossed with time</td>
+<td>a spatiotemporal interaction</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Same model with different <span class="math inline">\(f_j\)</span> — which is why one algorithm fits all of them.</li>
+</ul>
+</section>
+<section id="the-latent-field-as-a-multivariate-normal" class="slide level2">
+<h2>The latent field as a multivariate normal</h2>
+<p>The latent field is one vector of length <span class="math inline">\(m \approx 168{,}000\)</span>, with a multivariate normal prior:</p>
+<p><span class="math display">\[
+\boldsymbol{x} \mid \boldsymbol{\theta} \;\sim\; N\big(\boldsymbol{0},\, \boldsymbol{\Sigma}(\boldsymbol{\theta})\big)
+\qquad\text{or}\qquad
+\boldsymbol{x} \mid \boldsymbol{\theta} \;\sim\; N\big(\boldsymbol{0},\, \boldsymbol{Q}(\boldsymbol{\theta})^{-1}\big),
+\]</span></p>
+<p><span class="math display">\[
+\qquad \boldsymbol{Q} = \boldsymbol{\Sigma}^{-1}
+\]</span></p>
+<p>The precision matrix <span class="math inline">\(\boldsymbol{Q}\)</span> often has useful properties (sparse, Markov).</p>
+</section>
+<section id="latent-field-often-has-a-gaussian-markov-random-field-gmrf-prior" class="slide level2 smaller">
+<h2>Latent field often has a Gaussian Markov Random Field (GMRF) prior</h2>
+<svg viewbox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahg" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<g font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">
+<text x="180" y="28">f(county, "bym2")</text>
+<text x="470" y="28">f(week, "rw1")</text>
+<text x="745" y="28">alpha, beta</text></g>
+
+<g stroke="currentColor" stroke-width="1.4" opacity="0.45" fill="none">
+<path d="M110,70 L180,60"></path><path d="M180,60 L250,80"></path><path d="M110,70 L100,140"></path>
+<path d="M180,60 L175,130"></path><path d="M250,80 L245,150"></path><path d="M100,140 L175,130"></path>
+<path d="M175,130 L245,150"></path>
+<path d="M370,105 H590"></path></g>
+
+<g fill="#2980b9" fill-opacity="0.3" stroke="currentColor" stroke-opacity="0.55">
+<circle cx="110" cy="70" r="14"></circle><circle cx="180" cy="60" r="14"></circle><circle cx="250" cy="80" r="14"></circle>
+<circle cx="100" cy="140" r="14"></circle><circle cx="175" cy="130" r="14"></circle><circle cx="245" cy="150" r="14"></circle>
+<circle cx="370" cy="105" r="14"></circle><circle cx="425" cy="105" r="14"></circle><circle cx="480" cy="105" r="14"></circle>
+<circle cx="535" cy="105" r="14"></circle><circle cx="590" cy="105" r="14"></circle>
+<circle cx="700" cy="105" r="14"></circle><circle cx="790" cy="105" r="14"></circle></g>
+
+<g font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">
+<text x="180" y="200">linked to its neighbours</text>
+<text x="470" y="200">linked to the week before</text>
+<text x="745" y="200">linked to nothing</text></g>
+
+<line x1="460" y1="220" x2="460" y2="246" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ahg)"></line>
+<rect x="120" y="252" width="680" height="46" rx="8" fill="#2980b9" fill-opacity="0.2" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="460" y="281" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">one jointly Gaussian vector, every link local</text>
+</svg>
+<ul>
+<li>Each term is Gaussian, so stacking them gives a Gaussian vector. Nothing is lost by treating them as one object.</li>
+<li>Each term is also <strong>local</strong>. A random walk is a Markov chain; an adjacency structure is a Markov random field. Neither has any long-range link written into it. <!-- -   Gaussian *and* Markov is a **GMRF**. Every `f()` in `INLA` is one. --></li>
+</ul>
+</section>
+<section id="what-the-gmrf-structure-allows" class="slide level2">
+<h2>What the GMRF structure allows</h2>
+<svg viewbox="0 0 920 350" style="width:100%;color:inherit" font-family="inherit">
+<text x="40" y="110" font-size="17" font-weight="600" fill="currentColor">Q for this model</text>
+<text x="40" y="140" font-size="15" fill="currentColor" opacity="0.8">168,000 rows and columns</text>
+<text x="40" y="164" font-size="15" fill="currentColor" opacity="0.8">about six entries per row</text>
+<text x="40" y="198" font-size="15" fill="#c0392b">everything else is blank</text>
+
+<rect x="310" y="30" width="280" height="280" fill="none" stroke="currentColor" stroke-opacity="0.4"></rect>
+<line x1="313" y1="33" x2="587" y2="307" stroke="#16a085" stroke-width="6" stroke-linecap="round" opacity="0.5"></line>
+<rect x="310" y="30" width="14" height="14" fill="#16a085" fill-opacity="0.55"></rect>
+<g fill="#16a085" fill-opacity="0.55">
+<rect x="322" y="72" width="6" height="6"></rect><rect x="352" y="42" width="6" height="6"></rect>
+<rect x="352" y="102" width="6" height="6"></rect><rect x="382" y="72" width="6" height="6"></rect>
+<rect x="382" y="132" width="6" height="6"></rect><rect x="412" y="102" width="6" height="6"></rect>
+<rect x="412" y="162" width="6" height="6"></rect><rect x="442" y="132" width="6" height="6"></rect>
+<rect x="442" y="192" width="6" height="6"></rect><rect x="472" y="162" width="6" height="6"></rect>
+<rect x="472" y="222" width="6" height="6"></rect><rect x="502" y="192" width="6" height="6"></rect>
+<rect x="502" y="252" width="6" height="6"></rect><rect x="532" y="222" width="6" height="6"></rect>
+<rect x="327" y="147" width="6" height="6"></rect><rect x="427" y="57" width="6" height="6"></rect>
+<rect x="367" y="207" width="6" height="6"></rect><rect x="487" y="87" width="6" height="6"></rect>
+<rect x="407" y="242" width="6" height="6"></rect><rect x="522" y="127" width="6" height="6"></rect>
+<rect x="337" y="117" width="6" height="6"></rect><rect x="397" y="57" width="6" height="6"></rect>
+<rect x="550" y="277" width="6" height="6"></rect><rect x="557" y="270" width="6" height="6"></rect>
+<rect x="557" y="284" width="6" height="6"></rect><rect x="564" y="277" width="6" height="6"></rect>
+<rect x="564" y="291" width="6" height="6"></rect><rect x="571" y="284" width="6" height="6"></rect>
+<rect x="571" y="298" width="6" height="6"></rect><rect x="578" y="291" width="6" height="6"></rect></g>
+
+<g stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.6" fill="none">
+<path d="M592,37 L622,42"></path><path d="M592,150 L622,150"></path><path d="M592,285 L622,282"></path></g>
+<g font-size="15" fill="currentColor" opacity="0.85">
+<text x="630" y="47">fixed effects</text>
+<text x="630" y="147">county effects:</text>
+<text x="630" y="167">neighbours only</text>
+<text x="630" y="278">weekly trend:</text>
+<text x="630" y="298">the week before</text></g>
+<text x="310" y="338" font-size="15" fill="currentColor" opacity="0.7">shaded = a direct link</text>
+</svg>
+<ul>
+<li><span class="math inline">\(\boldsymbol{Q}\)</span> is almost entirely blank.</li>
+<li>Sparsity of the <span class="math inline">\(\boldsymbol{Q}\)</span> enable large computational gains when making inference (outside scope).</li>
+</ul>
+<!-- . . . -->
+<!-- [Factorising a full matrix of size $m$ costs on the order of $m^3$; a mostly -->
+<!-- blank one, closer to $m^{3/2}$. That is the whole reason a field this large -->
+<!-- stays tractable.]{style="color:#c0392b"} -->
+</section>
+<section id="summmary-of-gmrf" class="slide level2 smaller">
+<h2>Summmary of GMRF</h2>
+<svg viewbox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahs" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<rect x="60" y="24" width="330" height="48" rx="8" fill="#2980b9" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="225" y="54" font-size="17" font-weight="600" text-anchor="middle" fill="currentColor">Gaussian</text>
+<rect x="530" y="24" width="330" height="48" rx="8" fill="#16a085" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="695" y="54" font-size="17" font-weight="600" text-anchor="middle" fill="currentColor">Markov</text>
+
+<path d="M225,74 V110" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"></path>
+<path d="M695,74 V110" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"></path>
+
+<text x="225" y="134" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">a bell shape in 168,000 dimensions</text>
+<text x="225" y="156" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">described by a mean and a precision</text>
+<text x="695" y="134" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">each element linked only to</text>
+<text x="695" y="156" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">its neighbours in space or time</text>
+
+<path d="M225,170 V196 H460" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"></path>
+<path d="M695,170 V196 H460" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"></path>
+<path d="M460,196 V214" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"></path>
+<text x="460" y="240" font-size="17" font-weight="600" text-anchor="middle" fill="#c0392b">a precision matrix that is almost entirely blank</text>
+</svg>
+<ul>
+<li><strong>Gaussian</strong> gives the algebra: means, variances and conditionals all in closed form once <span class="math inline">\(\boldsymbol{Q}\)</span> is known.</li>
+<li><strong>Markov</strong> gives the sparsity: no direct link means a blank entry in <span class="math inline">\(\boldsymbol{Q}\)</span>, and the blanks are almost everything.</li>
+<li>Distant counties are still <strong>correlated</strong> — they share what lies between them. The blanks record the absence of a <em>direct</em> link, not of a relationship.</li>
+</ul>
+</section>
+<section id="laplace-approximation" class="slide level2 smaller">
+<h2>Laplace approximation</h2>
+<p>Take any density <span class="math inline">\(f(x)\)</span>, work on the log scale, and expand about the mode <span class="math inline">\(x^{*}\)</span> via Taylor expansion, where the first derivative vanishes :</p>
+<p><span class="math display">\[
+\log f(x) \;\approx\; \underbrace{\log f(x^{*})}_{\text{height}} \;+\; \underbrace{\tfrac{1}{2} \log f''(x^{*})\,(x - x^{*})^{2}}_{\text{curvature}}
+\]</span></p>
+<div class="fragment">
+<p>Writing <span class="math inline">\(H = -\log f''(x^{*})\)</span> for the negative curvature, exponentiating gives a Gaussian:</p>
+<p><span class="math display">\[
+f(x) \;\approx\; f(x^{*}) \exp\!\left(-\tfrac{1}{2} H (x - x^{*})^{2}\right)
+\qquad\Longrightarrow\qquad
+x \;\sim\; N\!\left(x^{*},\; H^{-1}\right)
+\]</span></p>
+</div>
+<div class="fragment">
+<p>So the whole approximation is <strong>two numbers</strong>: the mode, and the curvature there. In our example <span class="math inline">\(x^{*} = 4\)</span> and <span class="math inline">\(H = 0.25\)</span>, giving <span class="math inline">\(N(4, 2^{2})\)</span>.</p>
+</div>
+<div class="fragment">
+<p>The same expansion also gives the integral in closed form:</p>
+<p><span class="math display">\[
+\int f(x)\, \mathrm{d}x \;\approx\; f(x^{*})\, (2\pi)^{d/2} \, |H|^{-1/2}
+\]</span></p>
 </div>
 </section>
-<section id="what-we-actually-have-to-compute" class="slide level2 smaller">
-<h2>What we actually have to compute</h2>
+<section id="the-laplace-approximation-visually" class="slide level2 smaller">
+<h2>The Laplace approximation visually</h2>
+<svg viewbox="0 0 920 285" style="width:100%;color:inherit" font-family="inherit">
+<path d="M120,245 C230,245 310,100 380,95 C450,90 500,143 570,187 C660,235 730,245 810,245" fill="none" stroke="currentColor" stroke-width="2.2" opacity="0.85"></path>
+<path d="M185,245 C293,245 325,95 380,95 C435,95 467,245 575,245" fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></path>
+<path d="M380,95 V245" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.4" fill="none"></path>
+<circle cx="380" cy="95" r="6" fill="#c0392b"></circle>
+<line x1="620" y1="80" x2="660" y2="80" stroke="currentColor" stroke-width="2.2" opacity="0.85"></line>
+<text x="672" y="85" font-size="15" fill="currentColor" opacity="0.85">the target density</text>
+<line x1="620" y1="110" x2="660" y2="110" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></line>
+<text x="672" y="115" font-size="15" fill="#c0392b">the Gaussian fitted at its mode</text>
+<line x1="100" y1="245" x2="840" y2="245" stroke="currentColor" stroke-width="0.8" opacity="0.4"></line>
+</svg>
+<ul>
+<li>Laplace (1774): approximate an awkward integrand by the Gaussian that matches it at the mode, after which the integral is available in closed form.</li>
+<li>It is reliable when the target is unimodal and not strongly skewed.</li>
+<li><span style="color:#c0392b">With a GMRF prior and the hyperparameters fixed, this gives a deterministic joint Gaussian approximation to the whole latent field.</span></li>
+</ul>
+</section>
+<section id="laplace-approximation-a-worked-example" class="slide level2 smaller">
+<h2>Laplace approximation: a worked example</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>shape <span class="ot">&lt;-</span> <span class="dv">5</span>; rate <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb2-2"><a href=""></a></span>
+<span id="cb2-3"><a href=""></a><span class="co"># log density, up to a constant</span></span>
+<span id="cb2-4"><a href=""></a>lf <span class="ot">&lt;-</span> <span class="cf">function</span>(x) (shape <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="fu">log</span>(x) <span class="sc">-</span> rate <span class="sc">*</span> x</span>
+<span id="cb2-5"><a href=""></a></span>
+<span id="cb2-6"><a href=""></a><span class="co"># 1. the mode</span></span>
+<span id="cb2-7"><a href=""></a>mode <span class="ot">&lt;-</span> <span class="fu">optimise</span>(lf, <span class="fu">c</span>(<span class="fl">1e-6</span>, <span class="dv">50</span>), <span class="at">maximum =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>maximum</span>
+<span id="cb2-8"><a href=""></a></span>
+<span id="cb2-9"><a href=""></a><span class="co"># 2. curvature there:  -f''(x) = (shape - 1) / x^2</span></span>
+<span id="cb2-10"><a href=""></a>prec <span class="ot">&lt;-</span> (shape <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> mode<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb2-11"><a href=""></a>sdev <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(prec)</span>
+<span id="cb2-12"><a href=""></a></span>
+<span id="cb2-13"><a href=""></a><span class="fu">curve</span>(<span class="fu">dgamma</span>(x, shape, rate), <span class="dv">0</span>, <span class="dv">14</span>, <span class="at">n =</span> <span class="dv">400</span>, <span class="at">lwd =</span> <span class="fl">2.5</span>, <span class="at">bty =</span> <span class="st">"n"</span>,</span>
+<span id="cb2-14"><a href=""></a>      <span class="at">xlab =</span> <span class="st">"x"</span>, <span class="at">ylab =</span> <span class="st">"density"</span>)</span>
+<span id="cb2-15"><a href=""></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x, mode, sdev), <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">n =</span> <span class="dv">400</span>, <span class="at">lwd =</span> <span class="fl">2.5</span>,</span>
+<span id="cb2-16"><a href=""></a>      <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"#c0392b"</span>)</span>
+<span id="cb2-17"><a href=""></a><span class="fu">abline</span>(<span class="at">v =</span> mode, <span class="at">lty =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="st">"grey60"</span>)</span>
+<span id="cb2-18"><a href=""></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">bty =</span> <span class="st">"n"</span>, <span class="at">lwd =</span> <span class="fl">2.5</span>, <span class="at">lty =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
+<span id="cb2-19"><a href=""></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"black"</span>, <span class="st">"#c0392b"</span>),</span>
+<span id="cb2-20"><a href=""></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">"Gamma(5, 1)"</span>, <span class="st">"Laplace approximation"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Two numbers do all the work: where the peak is, and how sharply it falls away.</p>
+</section>
+<section id="laplace-approximation-a-worked-example-1" class="slide level2 smaller">
+<h2>Laplace approximation: a worked example</h2>
+
+<img data-src="inla_files/figure-revealjs/laplace-plot-1.png" class="quarto-figure quarto-figure-center r-stretch" width="864"><div class="fragment">
+<p>The peak is matched exactly as per matching at the mode. What it misses is the <strong>skew</strong>: the target leans right, so its mean sits above its mode, and a symmetric curve cannot follow.</p>
+</div>
+</section>
+<section id="integrating-nested-laplace-approximation-a-worked-example" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: a worked example</h2>
+<p>A case with a known exact answer. Let <span class="math inline">\(x \mid \theta \sim N(0, 1/\theta)\)</span> with <span class="math inline">\(\theta \sim \text{Gamma}(2,2)\)</span> — so <span class="math inline">\(\theta\)</span> is a precision, as in our models.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>a <span class="ot">&lt;-</span> <span class="dv">2</span>; b <span class="ot">&lt;-</span> <span class="dv">2</span>; K <span class="ot">&lt;-</span> <span class="dv">7</span></span>
+<span id="cb3-2"><a href=""></a></span>
+<span id="cb3-3"><a href=""></a><span class="co"># 1. scan theta — a grid on the log scale, as INLA does</span></span>
+<span id="cb3-4"><a href=""></a>theta <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">seq</span>(<span class="fu">log</span>(<span class="fl">0.03</span>), <span class="fu">log</span>(<span class="dv">12</span>), <span class="at">length.out =</span> K))</span>
+<span id="cb3-5"><a href=""></a>w     <span class="ot">&lt;-</span> <span class="fu">dgamma</span>(theta, a, b) <span class="sc">*</span> theta      <span class="co"># Jacobian for the log scale</span></span>
+<span id="cb3-6"><a href=""></a>w     <span class="ot">&lt;-</span> w <span class="sc">/</span> <span class="fu">sum</span>(w)                       <span class="co"># plausibility weights</span></span>
+<span id="cb3-7"><a href=""></a></span>
+<span id="cb3-8"><a href=""></a><span class="co"># 2. the conditional for x at each value of theta</span></span>
+<span id="cb3-9"><a href=""></a>x    <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">7</span>, <span class="dv">7</span>, <span class="at">length.out =</span> <span class="dv">400</span>)</span>
+<span id="cb3-10"><a href=""></a>cond <span class="ot">&lt;-</span> <span class="fu">sapply</span>(theta, \(t) <span class="fu">dnorm</span>(x, <span class="dv">0</span>, <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(t)))</span>
+<span id="cb3-11"><a href=""></a></span>
+<span id="cb3-12"><a href=""></a><span class="co"># 3. integrate: the weighted sum</span></span>
+<span id="cb3-13"><a href=""></a>marg <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(cond <span class="sc">%*%</span> w)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Three lines, three stages. Everything INLA does to the 168,000-element field has this shape.</p>
+</section>
+<section id="integrating-nested-laplace-approximation-a-worked-example-1" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: a worked example</h2>
+
+<img data-src="inla_files/figure-revealjs/inla-three-panel-1.png" class="quarto-figure quarto-figure-center r-stretch" width="960"></section>
+<section id="integrating-nested-laplace-approximation-a-worked-example-2" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: a worked example</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>at <span class="math inline">\(x = 0\)</span></th>
+<th>at <span class="math inline">\(x = 3\)</span></th>
+<th>at <span class="math inline">\(x = 6\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>truth</td>
+<td>0.3750</td>
+<td>0.01969</td>
+<td>0.001186</td>
+</tr>
+<tr class="even">
+<td>integrated, 7 points</td>
+<td>0.3759</td>
+<td>0.01974</td>
+<td>0.001167</td>
+</tr>
+<tr class="odd">
+<td>fixed <span class="math inline">\(\theta\)</span> (<code>eb</code>)</td>
+<td>0.2821</td>
+<td>0.02973</td>
+<td>0.000035</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Seven points recover the exact answer to three decimals. Fixing <span class="math inline">\(\theta\)</span> gets the peak wrong and the far tail wrong by a factor of thirty — and the tail is where interval endpoints live.</li>
+</ul>
+</section>
+<section id="integrating-nested-laplace-approximation-more-than-one-hyperparameter" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: more than one hyperparameter</h2>
+<p>We try several combinations, and combine the answers. It can be computationally expensive…</p>
+<svg viewbox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ah2" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<text x="25" y="28" font-size="18" font-weight="600" fill="currentColor">1. Score and place points</text>
+<rect x="25" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="150" cy="142" rx="105" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="150" cy="142" rx="76" ry="51" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="150" cy="142" rx="46" ry="31" fill="#2980b9" fill-opacity="0.11"></ellipse>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="80" cy="107" r="3"></circle><circle cx="115" cy="107" r="3.5"></circle><circle cx="150" cy="107" r="4"></circle>
+<circle cx="185" cy="107" r="3.5"></circle><circle cx="220" cy="107" r="3"></circle>
+<circle cx="80" cy="142" r="3.5"></circle><circle cx="115" cy="142" r="4.5"></circle>
+<circle cx="185" cy="142" r="4.5"></circle><circle cx="220" cy="142" r="3.5"></circle>
+<circle cx="80" cy="177" r="3"></circle><circle cx="115" cy="177" r="3.5"></circle><circle cx="150" cy="177" r="4"></circle>
+<circle cx="185" cy="177" r="3.5"></circle><circle cx="220" cy="177" r="3"></circle></g>
+<circle cx="150" cy="142" r="6.5" fill="#c0392b"></circle>
+<text x="25" y="266" font-size="15" fill="currentColor" opacity="0.75">climb to the mode, measure</text>
+<text x="25" y="286" font-size="15" fill="currentColor" opacity="0.75">curvature, lay down points</text>
+
+<line x1="285" y1="142" x2="320" y2="142" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah2)"></line>
+
+<text x="335" y="28" font-size="18" font-weight="600" fill="currentColor">2. Solve at each point</text>
+<rect x="335" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<g fill="currentColor" fill-opacity="0.04" stroke="currentColor" stroke-opacity="0.35">
+<rect x="395" y="64" width="115" height="112" rx="6"></rect>
+<rect x="382" y="76" width="115" height="112" rx="6"></rect>
+<rect x="369" y="88" width="115" height="112" rx="6"></rect></g>
+<path d="M386,106 H416 V121 H431 V136 H446 V151 H461 V181 H431 V166 H416 V151 H401 V136 H386 Z" fill="#16a085" fill-opacity="0.55"></path>
+<g stroke="currentColor" stroke-opacity="0.25" stroke-width="0.6" fill="none">
+<path d="M386 106V181M401 106V181M416 106V181M431 106V181M446 106V181M461 106V181"></path>
+<path d="M386 106H461M386 121H461M386 136H461M386 151H461M386 166H461M386 181H461"></path></g>
+<text x="335" y="266" font-size="15" fill="currentColor" opacity="0.75">one sparse factorisation each,</text>
+<text x="335" y="286" font-size="15" fill="currentColor" opacity="0.75">independent and parallelisable</text>
+
+<line x1="595" y1="142" x2="630" y2="142" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah2)"></line>
+
+<text x="645" y="28" font-size="18" font-weight="600" fill="currentColor">3. Combine</text>
+<rect x="645" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<g fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.35">
+<path d="M655,212 C689,212 698,148 715,148 C732,148 741,212 775,212"></path>
+<path d="M672,212 C707,212 717,134 734,134 C752,134 762,212 797,212"></path>
+<path d="M700,212 C736,212 747,124 765,124 C783,124 794,212 830,212"></path></g>
+<path d="M665,212 C707,212 719,98 740,98 C761,98 773,212 815,212" fill="none" stroke="#c0392b" stroke-width="2.6"></path>
+<line x1="652" y1="212" x2="888" y2="212" stroke="currentColor" stroke-width="0.6" opacity="0.4"></line>
+<text x="645" y="266" font-size="15" fill="currentColor" opacity="0.75">weighted by plausibility;</text>
+<text x="645" y="286" font-size="15" fill="currentColor" opacity="0.75">the output is a density</text>
+</svg>
+</section>
+<section id="where-to-put-the-combinations" class="slide level2 smaller">
+<h2>Where to put the combinations</h2>
+<svg viewbox="0 0 920 300" style="width:100%;color:inherit" font-family="inherit">
+<text x="30" y="28" font-size="17" font-weight="600" fill="currentColor">grid</text>
+<rect x="30" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="160" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="160" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="160" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="88" cy="84" r="3.4"></circle><circle cx="124" cy="84" r="3.4"></circle><circle cx="160" cy="84" r="3.4"></circle><circle cx="196" cy="84" r="3.4"></circle><circle cx="232" cy="84" r="3.4"></circle>
+<circle cx="88" cy="108" r="3.4"></circle><circle cx="124" cy="108" r="3.4"></circle><circle cx="160" cy="108" r="3.4"></circle><circle cx="196" cy="108" r="3.4"></circle><circle cx="232" cy="108" r="3.4"></circle>
+<circle cx="88" cy="132" r="3.4"></circle><circle cx="124" cy="132" r="3.4"></circle><circle cx="196" cy="132" r="3.4"></circle><circle cx="232" cy="132" r="3.4"></circle>
+<circle cx="88" cy="156" r="3.4"></circle><circle cx="124" cy="156" r="3.4"></circle><circle cx="160" cy="156" r="3.4"></circle><circle cx="196" cy="156" r="3.4"></circle><circle cx="232" cy="156" r="3.4"></circle>
+<circle cx="88" cy="180" r="3.4"></circle><circle cx="124" cy="180" r="3.4"></circle><circle cx="160" cy="180" r="3.4"></circle><circle cx="196" cy="180" r="3.4"></circle><circle cx="232" cy="180" r="3.4"></circle></g>
+<circle cx="160" cy="132" r="6" fill="#c0392b"></circle>
+<text x="30" y="248" font-size="15" fill="currentColor" opacity="0.85">every combination on a lattice</text>
+<text x="30" y="270" font-size="15" fill="currentColor" opacity="0.85">most accurate; count multiplies</text>
+<text x="30" y="292" font-size="15" fill="currentColor" opacity="0.85">with each hyperparameter added</text>
+
+<text x="330" y="28" font-size="17" font-weight="600" fill="currentColor">ccd</text>
+<rect x="330" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="460" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="460" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="460" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="388" cy="132" r="4.2"></circle><circle cx="532" cy="132" r="4.2"></circle>
+<circle cx="460" cy="84" r="4.2"></circle><circle cx="460" cy="180" r="4.2"></circle>
+<circle cx="412" cy="100" r="4.2"></circle><circle cx="508" cy="100" r="4.2"></circle>
+<circle cx="412" cy="164" r="4.2"></circle><circle cx="508" cy="164" r="4.2"></circle></g>
+<circle cx="460" cy="132" r="6" fill="#c0392b"></circle>
+<text x="330" y="248" font-size="15" fill="currentColor" opacity="0.85">a designed scatter around the mode</text>
+<text x="330" y="270" font-size="15" fill="#16a085">the default beyond two</text>
+<text x="330" y="292" font-size="15" fill="currentColor" opacity="0.85">good accuracy, far fewer points</text>
+
+<text x="630" y="28" font-size="17" font-weight="600" fill="currentColor">eb</text>
+<rect x="630" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="760" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="760" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="760" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
+<circle cx="760" cy="132" r="8" fill="#c0392b"></circle>
+<text x="630" y="248" font-size="15" fill="currentColor" opacity="0.85">the best combination only</text>
+<text x="630" y="270" font-size="15" fill="#c0392b">no averaging, so intervals</text>
+<text x="630" y="292" font-size="15" fill="#c0392b">come out slightly too narrow</text>
+</svg>
+<ul>
+<li>The contours are the same in all three — the same posterior over the three hyperparameters. Only the choice of where to evaluate it differs.</li>
+<li>Every point costs one pass through Question 1: mode-finding, sparse factorisation, a joint Gaussian over the field. <!-- -   [Useful habit: `eb` while you iterate on the model, `ccd` for the fit you --> <!-- report.]{style="color:#c0392b"} --></li>
+</ul>
+</section>
+<section id="inla-with-our-previous-example" class="slide level2 smaller">
+<h2>INLA with our previous example</h2>
 <p>We want a posterior for each unknown: the heat coefficient, each county effect, each week. The obstacle is that every one of them depends on the three hyperparameters — and we do not know those either.</p>
 <svg viewbox="0 0 920 300" style="width:100%;color:inherit" font-family="inherit">
 <defs><marker id="ahq" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
@@ -736,343 +958,6 @@ Robbie M. Parks
 <text x="580" y="286">three hyperparameters to vary</text></g>
 </svg>
 </section>
-<section id="why-the-latent-field-has-a-gmrf-prior" class="slide level2 smaller">
-<h2>Why the latent field has a GMRF prior</h2>
-<svg viewbox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
-<defs><marker id="ahg" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
-<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
-
-<g font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">
-<text x="180" y="28">f(county, "bym2")</text>
-<text x="470" y="28">f(week, "rw1")</text>
-<text x="745" y="28">alpha, beta</text></g>
-
-<g stroke="currentColor" stroke-width="1.4" opacity="0.45" fill="none">
-<path d="M110,70 L180,60"></path><path d="M180,60 L250,80"></path><path d="M110,70 L100,140"></path>
-<path d="M180,60 L175,130"></path><path d="M250,80 L245,150"></path><path d="M100,140 L175,130"></path>
-<path d="M175,130 L245,150"></path>
-<path d="M370,105 H590"></path></g>
-
-<g fill="#2980b9" fill-opacity="0.3" stroke="currentColor" stroke-opacity="0.55">
-<circle cx="110" cy="70" r="14"></circle><circle cx="180" cy="60" r="14"></circle><circle cx="250" cy="80" r="14"></circle>
-<circle cx="100" cy="140" r="14"></circle><circle cx="175" cy="130" r="14"></circle><circle cx="245" cy="150" r="14"></circle>
-<circle cx="370" cy="105" r="14"></circle><circle cx="425" cy="105" r="14"></circle><circle cx="480" cy="105" r="14"></circle>
-<circle cx="535" cy="105" r="14"></circle><circle cx="590" cy="105" r="14"></circle>
-<circle cx="700" cy="105" r="14"></circle><circle cx="790" cy="105" r="14"></circle></g>
-
-<g font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">
-<text x="180" y="200">linked to its neighbours</text>
-<text x="470" y="200">linked to the week before</text>
-<text x="745" y="200">linked to nothing</text></g>
-
-<line x1="460" y1="220" x2="460" y2="246" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ahg)"></line>
-<rect x="120" y="252" width="680" height="46" rx="8" fill="#2980b9" fill-opacity="0.2" stroke="currentColor" stroke-opacity="0.45"></rect>
-<text x="460" y="281" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">one jointly Gaussian vector, every link local</text>
-</svg>
-<div>
-<ul>
-<li>Each term is Gaussian, so stacking them gives a Gaussian vector. Nothing is lost by treating them as one object.</li>
-<li>Each term is also <strong>local</strong>. A random walk is a Markov chain; an adjacency structure is a Markov random field. Neither has any long-range link written into it.</li>
-<li>Gaussian <em>and</em> Markov is a <strong>GMRF</strong>. Every <code>f()</code> in <code>INLA</code> is one.</li>
-</ul>
-</div>
-</section>
-<section id="what-the-gmrf-structure-allows" class="slide level2 smaller">
-<h2>What the GMRF structure allows</h2>
-<svg viewbox="0 0 920 350" style="width:100%;color:inherit" font-family="inherit">
-<text x="40" y="110" font-size="17" font-weight="600" fill="currentColor">Q for this model</text>
-<text x="40" y="140" font-size="15" fill="currentColor" opacity="0.8">168,000 rows and columns</text>
-<text x="40" y="164" font-size="15" fill="currentColor" opacity="0.8">about six entries per row</text>
-<text x="40" y="198" font-size="15" fill="#c0392b">everything else is blank</text>
-
-<rect x="310" y="30" width="280" height="280" fill="none" stroke="currentColor" stroke-opacity="0.4"></rect>
-<line x1="313" y1="33" x2="587" y2="307" stroke="#16a085" stroke-width="6" stroke-linecap="round" opacity="0.5"></line>
-<rect x="310" y="30" width="14" height="14" fill="#16a085" fill-opacity="0.55"></rect>
-<g fill="#16a085" fill-opacity="0.55">
-<rect x="322" y="72" width="6" height="6"></rect><rect x="352" y="42" width="6" height="6"></rect>
-<rect x="352" y="102" width="6" height="6"></rect><rect x="382" y="72" width="6" height="6"></rect>
-<rect x="382" y="132" width="6" height="6"></rect><rect x="412" y="102" width="6" height="6"></rect>
-<rect x="412" y="162" width="6" height="6"></rect><rect x="442" y="132" width="6" height="6"></rect>
-<rect x="442" y="192" width="6" height="6"></rect><rect x="472" y="162" width="6" height="6"></rect>
-<rect x="472" y="222" width="6" height="6"></rect><rect x="502" y="192" width="6" height="6"></rect>
-<rect x="502" y="252" width="6" height="6"></rect><rect x="532" y="222" width="6" height="6"></rect>
-<rect x="327" y="147" width="6" height="6"></rect><rect x="427" y="57" width="6" height="6"></rect>
-<rect x="367" y="207" width="6" height="6"></rect><rect x="487" y="87" width="6" height="6"></rect>
-<rect x="407" y="242" width="6" height="6"></rect><rect x="522" y="127" width="6" height="6"></rect>
-<rect x="337" y="117" width="6" height="6"></rect><rect x="397" y="57" width="6" height="6"></rect>
-<rect x="550" y="277" width="6" height="6"></rect><rect x="557" y="270" width="6" height="6"></rect>
-<rect x="557" y="284" width="6" height="6"></rect><rect x="564" y="277" width="6" height="6"></rect>
-<rect x="564" y="291" width="6" height="6"></rect><rect x="571" y="284" width="6" height="6"></rect>
-<rect x="571" y="298" width="6" height="6"></rect><rect x="578" y="291" width="6" height="6"></rect></g>
-
-<g stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.6" fill="none">
-<path d="M592,37 L622,42"></path><path d="M592,150 L622,150"></path><path d="M592,285 L622,282"></path></g>
-<g font-size="15" fill="currentColor" opacity="0.85">
-<text x="630" y="47">fixed effects</text>
-<text x="630" y="147">county effects:</text>
-<text x="630" y="167">neighbours only</text>
-<text x="630" y="278">weekly trend:</text>
-<text x="630" y="298">the week before</text></g>
-<text x="310" y="338" font-size="15" fill="currentColor" opacity="0.7">shaded = a direct link</text>
-</svg>
-<div>
-<ul>
-<li>The same model written as a covariance matrix is completely full. Written as <span class="math inline">\(\boldsymbol{Q}\)</span>, it is almost entirely blank.</li>
-<li>The hyperparameters change the values. Where the blanks sit is fixed by the model, so the solver can plan the factorisation once and reuse it.</li>
-<li>Each observation adds to the diagonal only, so conditioning on the data leaves the blanks where they were.</li>
-</ul>
-</div>
-<div class="fragment">
-<p><span style="color:#c0392b">Factorising a full matrix of size <span class="math inline">\(m\)</span> costs on the order of <span class="math inline">\(m^3\)</span>; a mostly blank one, closer to <span class="math inline">\(m^{3/2}\)</span>. That is the whole reason a field this large stays tractable.</span></p>
-</div>
-</section>
-<section id="question-1-the-field-hyperparameters-fixed" class="slide level2 smaller">
-<h2>Question 1: the field, hyperparameters fixed</h2>
-<p>The goal is a <strong>joint</strong> distribution over all 168,000 latent elements — with the three hyperparameters pinned at chosen values.</p>
-<svg viewbox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
-<defs><marker id="ahl" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
-<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
-
-<rect x="40" y="90" width="210" height="70" rx="8" fill="#2980b9" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
-<text x="145" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the GMRF prior</text>
-<text x="145" y="142" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">acts on all 168,000</text>
-
-<rect x="40" y="180" width="210" height="46" rx="8" fill="#16a085" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
-<text x="145" y="208" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the 161,616 rows of data</text>
-
-<path d="M258,120 H340" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
-<path d="M258,200 H320 C335,200 340,180 340,150" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
-
-<rect x="355" y="90" width="220" height="70" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.2"></rect>
-<text x="465" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">exactly Gaussian,</text>
-<text x="465" y="142" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">then adjusted row by row</text>
-
-<path d="M583,125 H665" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
-
-<rect x="680" y="90" width="200" height="70" rx="8" fill="#c0392b" fill-opacity="0.12" stroke="#c0392b" stroke-opacity="0.6" stroke-width="1.2"></rect>
-<text x="780" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">approximately Gaussian</text>
-<text x="780" y="142" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">still mostly blanks</text>
-
-<text x="355" y="42" font-size="15" fill="currentColor" opacity="0.75">the latent field once the three</text>
-<text x="355" y="62" font-size="15" fill="currentColor" opacity="0.75">hyperparameters are held fixed</text>
-</svg>
-<p>Hold the three hyperparameters fixed and ask what the latent field looks like. Two things act on it, and they act very differently:</p>
-<div>
-<ul>
-<li>The <strong>prior</strong> is Gaussian, exactly, and it acts on all 168,000 elements at once.</li>
-<li>Each <strong>row of data</strong> acts too, but on one element only, and weakly.</li>
-</ul>
-</div>
-</section>
-<section id="the-laplace-approximation" class="slide level2 smaller">
-<h2>The Laplace approximation</h2>
-<svg viewbox="0 0 920 285" style="width:100%;color:inherit" font-family="inherit">
-<path d="M120,245 C230,245 310,100 380,95 C450,90 500,143 570,187 C660,235 730,245 810,245" fill="none" stroke="currentColor" stroke-width="2.2" opacity="0.85"></path>
-<path d="M185,245 C293,245 325,95 380,95 C435,95 467,245 575,245" fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></path>
-<path d="M380,95 V245" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.4" fill="none"></path>
-<circle cx="380" cy="95" r="6" fill="#c0392b"></circle>
-<line x1="620" y1="80" x2="660" y2="80" stroke="currentColor" stroke-width="2.2" opacity="0.85"></line>
-<text x="672" y="85" font-size="15" fill="currentColor" opacity="0.85">the target density</text>
-<line x1="620" y1="110" x2="660" y2="110" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></line>
-<text x="672" y="115" font-size="15" fill="#c0392b">the Gaussian fitted at its mode</text>
-<line x1="100" y1="245" x2="840" y2="245" stroke="currentColor" stroke-width="0.8" opacity="0.4"></line>
-</svg>
-<div>
-<ul>
-<li>Laplace (1774): approximate an awkward integrand by the Gaussian that matches it at the mode, after which the integral is available in closed form.</li>
-<li>It is reliable when the target is unimodal and not strongly skewed.</li>
-<li><span style="color:#c0392b">With a GMRF prior and the hyperparameters fixed, this gives a deterministic joint Gaussian approximation to the whole latent field.</span></li>
-</ul>
-</div>
-</section>
-<section id="question-1-answered" class="slide level2 smaller">
-<h2>Question 1, answered</h2>
-<p>With the three hyperparameters pinned at chosen values, the latent field is handled <strong>deterministically</strong> — no sampling anywhere:</p>
-<div>
-<ul>
-<li>Climb to the mode of the field’s conditional posterior. A few sparse factorisations, each cheap because <span class="math inline">\(\boldsymbol{Q}^{*}\)</span> is mostly blank.</li>
-<li>Take the curvature there. That gives a <strong>joint Gaussian approximation to all 168,000 elements at once</strong> — a mean vector and a sparse <span class="math inline">\(\boldsymbol{Q}^{*}\)</span>.</li>
-</ul>
-</div>
-<p>Two ingredients were needed, and both were needed: the <strong>GMRF</strong> made every factorisation cheap, and the <strong>Laplace approximation</strong> made the Gaussian a good fit.</p>
-<div class="fragment">
-<p><span style="color:#c0392b">But we pinned the hyperparameters, and we do not know them. Stopping here — <code>int.strategy = "eb"</code> — gives intervals that come out slightly too narrow.</span></p>
-</div>
-</section>
-<section id="question-2-averaging-over-hyperparameter-combinations" class="slide level2 smaller">
-<h2>Question 2: averaging over hyperparameter combinations</h2>
-<p>Question 1 is now answered, <em>provided</em> we have a value for each of the three hyperparameters. So we try several combinations, and combine the answers.</p>
-<svg viewbox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
-<defs><marker id="ah2" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
-<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
-
-<text x="25" y="28" font-size="18" font-weight="600" fill="currentColor">1. Score and place points</text>
-<rect x="25" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
-<ellipse cx="150" cy="142" rx="105" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
-<ellipse cx="150" cy="142" rx="76" ry="51" fill="#2980b9" fill-opacity="0.09"></ellipse>
-<ellipse cx="150" cy="142" rx="46" ry="31" fill="#2980b9" fill-opacity="0.11"></ellipse>
-<g fill="currentColor" fill-opacity="0.7">
-<circle cx="80" cy="107" r="3"></circle><circle cx="115" cy="107" r="3.5"></circle><circle cx="150" cy="107" r="4"></circle>
-<circle cx="185" cy="107" r="3.5"></circle><circle cx="220" cy="107" r="3"></circle>
-<circle cx="80" cy="142" r="3.5"></circle><circle cx="115" cy="142" r="4.5"></circle>
-<circle cx="185" cy="142" r="4.5"></circle><circle cx="220" cy="142" r="3.5"></circle>
-<circle cx="80" cy="177" r="3"></circle><circle cx="115" cy="177" r="3.5"></circle><circle cx="150" cy="177" r="4"></circle>
-<circle cx="185" cy="177" r="3.5"></circle><circle cx="220" cy="177" r="3"></circle></g>
-<circle cx="150" cy="142" r="6.5" fill="#c0392b"></circle>
-<text x="25" y="266" font-size="15" fill="currentColor" opacity="0.75">climb to the mode, measure</text>
-<text x="25" y="286" font-size="15" fill="currentColor" opacity="0.75">curvature, lay down points</text>
-
-<line x1="285" y1="142" x2="320" y2="142" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah2)"></line>
-
-<text x="335" y="28" font-size="18" font-weight="600" fill="currentColor">2. Solve at each point</text>
-<rect x="335" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
-<g fill="currentColor" fill-opacity="0.04" stroke="currentColor" stroke-opacity="0.35">
-<rect x="395" y="64" width="115" height="112" rx="6"></rect>
-<rect x="382" y="76" width="115" height="112" rx="6"></rect>
-<rect x="369" y="88" width="115" height="112" rx="6"></rect></g>
-<path d="M386,106 H416 V121 H431 V136 H446 V151 H461 V181 H431 V166 H416 V151 H401 V136 H386 Z" fill="#16a085" fill-opacity="0.55"></path>
-<g stroke="currentColor" stroke-opacity="0.25" stroke-width="0.6" fill="none">
-<path d="M386 106V181M401 106V181M416 106V181M431 106V181M446 106V181M461 106V181"></path>
-<path d="M386 106H461M386 121H461M386 136H461M386 151H461M386 166H461M386 181H461"></path></g>
-<text x="335" y="266" font-size="15" fill="currentColor" opacity="0.75">one sparse factorisation each,</text>
-<text x="335" y="286" font-size="15" fill="currentColor" opacity="0.75">independent and parallelisable</text>
-
-<line x1="595" y1="142" x2="630" y2="142" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah2)"></line>
-
-<text x="645" y="28" font-size="18" font-weight="600" fill="currentColor">3. Combine</text>
-<rect x="645" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
-<g fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.35">
-<path d="M655,212 C689,212 698,148 715,148 C732,148 741,212 775,212"></path>
-<path d="M672,212 C707,212 717,134 734,134 C752,134 762,212 797,212"></path>
-<path d="M700,212 C736,212 747,124 765,124 C783,124 794,212 830,212"></path></g>
-<path d="M665,212 C707,212 719,98 740,98 C761,98 773,212 815,212" fill="none" stroke="#c0392b" stroke-width="2.6"></path>
-<line x1="652" y1="212" x2="888" y2="212" stroke="currentColor" stroke-width="0.6" opacity="0.4"></line>
-<text x="645" y="266" font-size="15" fill="currentColor" opacity="0.75">weighted by plausibility;</text>
-<text x="645" y="286" font-size="15" fill="currentColor" opacity="0.75">the output is a density</text>
-</svg>
-</section>
-<section id="question-2-averaging-over-hyperparameter-combinations-1" class="slide level2 smaller">
-<h2>Question 2: averaging over hyperparameter combinations</h2>
-<p>Step 1 uses <code>int.strategy</code>: <code>grid</code> evaluates every combination and is accurate but limited to two or three hyperparameters; <code>ccd</code> places a small designed scatter and is the default beyond that; <code>eb</code> keeps the mode alone, which is fast but sets aside uncertainty in <span class="math inline">\(\boldsymbol{\theta}\)</span>.</p>
-<p>Step 3 is the same idea as multiple imputation: solve a tractable problem several times and combine, so that uncertainty carried in step 1 reaches the final answer. Step 2, however, was stated loosely — there is a choice inside it.</p>
-</section>
-<section id="where-to-put-the-combinations" class="slide level2 smaller">
-<h2>Where to put the combinations</h2>
-<svg viewbox="0 0 920 300" style="width:100%;color:inherit" font-family="inherit">
-<text x="30" y="28" font-size="17" font-weight="600" fill="currentColor">grid</text>
-<rect x="30" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
-<ellipse cx="160" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
-<ellipse cx="160" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
-<ellipse cx="160" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
-<g fill="currentColor" fill-opacity="0.7">
-<circle cx="88" cy="84" r="3.4"></circle><circle cx="124" cy="84" r="3.4"></circle><circle cx="160" cy="84" r="3.4"></circle><circle cx="196" cy="84" r="3.4"></circle><circle cx="232" cy="84" r="3.4"></circle>
-<circle cx="88" cy="108" r="3.4"></circle><circle cx="124" cy="108" r="3.4"></circle><circle cx="160" cy="108" r="3.4"></circle><circle cx="196" cy="108" r="3.4"></circle><circle cx="232" cy="108" r="3.4"></circle>
-<circle cx="88" cy="132" r="3.4"></circle><circle cx="124" cy="132" r="3.4"></circle><circle cx="196" cy="132" r="3.4"></circle><circle cx="232" cy="132" r="3.4"></circle>
-<circle cx="88" cy="156" r="3.4"></circle><circle cx="124" cy="156" r="3.4"></circle><circle cx="160" cy="156" r="3.4"></circle><circle cx="196" cy="156" r="3.4"></circle><circle cx="232" cy="156" r="3.4"></circle>
-<circle cx="88" cy="180" r="3.4"></circle><circle cx="124" cy="180" r="3.4"></circle><circle cx="160" cy="180" r="3.4"></circle><circle cx="196" cy="180" r="3.4"></circle><circle cx="232" cy="180" r="3.4"></circle></g>
-<circle cx="160" cy="132" r="6" fill="#c0392b"></circle>
-<text x="30" y="248" font-size="15" fill="currentColor" opacity="0.85">every combination on a lattice</text>
-<text x="30" y="270" font-size="15" fill="currentColor" opacity="0.85">most accurate; count multiplies</text>
-<text x="30" y="292" font-size="15" fill="currentColor" opacity="0.85">with each hyperparameter added</text>
-
-<text x="330" y="28" font-size="17" font-weight="600" fill="currentColor">ccd</text>
-<rect x="330" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
-<ellipse cx="460" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
-<ellipse cx="460" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
-<ellipse cx="460" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
-<g fill="currentColor" fill-opacity="0.7">
-<circle cx="388" cy="132" r="4.2"></circle><circle cx="532" cy="132" r="4.2"></circle>
-<circle cx="460" cy="84" r="4.2"></circle><circle cx="460" cy="180" r="4.2"></circle>
-<circle cx="412" cy="100" r="4.2"></circle><circle cx="508" cy="100" r="4.2"></circle>
-<circle cx="412" cy="164" r="4.2"></circle><circle cx="508" cy="164" r="4.2"></circle></g>
-<circle cx="460" cy="132" r="6" fill="#c0392b"></circle>
-<text x="330" y="248" font-size="15" fill="currentColor" opacity="0.85">a designed scatter around the mode</text>
-<text x="330" y="270" font-size="15" fill="#16a085">the default beyond two</text>
-<text x="330" y="292" font-size="15" fill="currentColor" opacity="0.85">good accuracy, far fewer points</text>
-
-<text x="630" y="28" font-size="17" font-weight="600" fill="currentColor">eb</text>
-<rect x="630" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
-<ellipse cx="760" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
-<ellipse cx="760" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
-<ellipse cx="760" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
-<circle cx="760" cy="132" r="8" fill="#c0392b"></circle>
-<text x="630" y="248" font-size="15" fill="currentColor" opacity="0.85">the best combination only</text>
-<text x="630" y="270" font-size="15" fill="#c0392b">no averaging, so intervals</text>
-<text x="630" y="292" font-size="15" fill="#c0392b">come out slightly too narrow</text>
-</svg>
-<div>
-<ul>
-<li>The contours are the same in all three — the same posterior over the three hyperparameters. Only the choice of where to evaluate it differs.</li>
-<li>Every point costs one pass through Question 1: mode-finding, sparse factorisation, a joint Gaussian over the field.</li>
-<li><span style="color:#c0392b">Useful habit: <code>eb</code> while you iterate on the model, <code>ccd</code> for the fit you report.</span></li>
-</ul>
-</div>
-</section>
-<section id="joint-first-then-marginals" class="slide level2 smaller">
-<h2>Joint first, then marginals</h2>
-<p>Each combination gives a joint Gaussian over the whole field. Marginals are <strong>read out</strong> of it — they are not computed one by one.</p>
-<svg viewbox="0 0 920 400" style="width:100%;color:inherit" font-family="inherit">
-<defs><marker id="ahm" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
-<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
-
-<g font-size="15" font-weight="600" fill="currentColor">
-<text x="30" y="24">1. one combination</text>
-<text x="228" y="24">2. one joint approximation</text>
-<text x="500" y="24">3. read out each element</text>
-<text x="742" y="24">4. average</text></g>
-
-<g fill="#8e44ad" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45">
-<rect x="30" y="48" width="120" height="34" rx="6"></rect>
-<rect x="30" y="158" width="120" height="34" rx="6"></rect>
-<rect x="30" y="268" width="120" height="34" rx="6"></rect></g>
-<g font-size="13" text-anchor="middle" fill="currentColor">
-<text x="90" y="70">4.1, 0.70, 20</text>
-<text x="90" y="180">3.6, 0.82, 14</text>
-<text x="90" y="290">5.0, 0.61, 25</text></g>
-
-<g stroke="currentColor" stroke-width="1.3" opacity="0.5" fill="none" marker-end="url(#ahm)">
-<path d="M156,65 H216"></path><path d="M156,175 H216"></path><path d="M156,285 H216"></path></g>
-
-<g fill="#2980b9" fill-opacity="0.18" stroke="currentColor" stroke-opacity="0.5">
-<rect x="222" y="40" width="230" height="52" rx="6"></rect>
-<rect x="222" y="150" width="230" height="52" rx="6"></rect>
-<rect x="222" y="260" width="230" height="52" rx="6"></rect></g>
-<g text-anchor="middle" fill="currentColor">
-<text x="337" y="62" font-size="14" font-weight="600">one Gaussian, all 168,000</text>
-<text x="337" y="82" font-size="13" opacity="0.8">one mean vector, one Q*</text>
-<text x="337" y="172" font-size="14" font-weight="600">one Gaussian, all 168,000</text>
-<text x="337" y="192" font-size="13" opacity="0.8">one mean vector, one Q*</text>
-<text x="337" y="282" font-size="14" font-weight="600">one Gaussian, all 168,000</text>
-<text x="337" y="302" font-size="13" opacity="0.8">one mean vector, one Q*</text></g>
-
-<g stroke="currentColor" stroke-width="1.1" opacity="0.45" fill="none" marker-end="url(#ahm)">
-<path d="M458,58 C480,58 486,48 502,46"></path><path d="M458,66 H502"></path><path d="M458,74 C480,74 486,84 502,86"></path>
-<path d="M458,168 C480,168 486,158 502,156"></path><path d="M458,176 H502"></path><path d="M458,184 C480,184 486,194 502,196"></path>
-<path d="M458,278 C480,278 486,268 502,266"></path><path d="M458,286 H502"></path><path d="M458,294 C480,294 486,304 502,306"></path></g>
-
-<g fill="#16a085" fill-opacity="0.2" stroke="currentColor" stroke-opacity="0.45">
-<rect x="508" y="34" width="150" height="24" rx="4"></rect><rect x="508" y="56" width="150" height="24" rx="4"></rect><rect x="508" y="78" width="150" height="24" rx="4"></rect>
-<rect x="508" y="144" width="150" height="24" rx="4"></rect><rect x="508" y="166" width="150" height="24" rx="4"></rect><rect x="508" y="188" width="150" height="24" rx="4"></rect>
-<rect x="508" y="254" width="150" height="24" rx="4"></rect><rect x="508" y="276" width="150" height="24" rx="4"></rect><rect x="508" y="298" width="150" height="24" rx="4"></rect></g>
-<g font-size="13" text-anchor="middle" fill="currentColor" opacity="0.9">
-<text x="583" y="51">heat coefficient</text><text x="583" y="73">county 1</text><text x="583" y="95">week 1</text>
-<text x="583" y="161">heat coefficient</text><text x="583" y="183">county 1</text><text x="583" y="205">week 1</text>
-<text x="583" y="271">heat coefficient</text><text x="583" y="293">county 1</text><text x="583" y="315">week 1</text></g>
-
-<g stroke="#c0392b" stroke-width="1.2" opacity="0.65" fill="none" marker-end="url(#ahm)">
-<path d="M664,46 C700,46 706,120 726,128"></path>
-<path d="M664,156 C700,156 706,132 726,132"></path>
-<path d="M664,266 C700,266 706,146 726,140"></path></g>
-
-<rect x="732" y="110" width="160" height="48" rx="6" fill="#c0392b" fill-opacity="0.14" stroke="#c0392b" stroke-opacity="0.55" stroke-width="1.2"></rect>
-<text x="812" y="130" font-size="13" text-anchor="middle" fill="#c0392b">final marginal for</text>
-<text x="812" y="148" font-size="13" font-weight="600" text-anchor="middle" fill="#c0392b">the heat coefficient</text>
-
-<text x="30" y="352" font-size="15" fill="currentColor" opacity="0.85">Steps 1–3 are repeated per combination. The joint object is formed once each time,</text>
-<text x="30" y="374" font-size="15" fill="currentColor" opacity="0.85">and every element’s marginal is read out of it — not computed separately.</text>
-<text x="30" y="396" font-size="15" fill="#c0392b">Step 4 is the only per-element step: element i mixes only with itself.</text>
-</svg>
-</section>
 <section id="three-strategies-for-the-latent-marginals" class="slide level2 smaller">
 <h2>Three strategies for the latent marginals</h2>
 <p>Set by <code>strategy</code> in <code>control.inla</code>:</p>
@@ -1116,8 +1001,7 @@ Robbie M. Parks
 </section>
 <section id="what-each-question-needed" class="slide level2 smaller">
 <h2>What each question needed</h2>
-<p>Look back at what made each half work.</p>
-<table>
+<table class="caption-top">
 <colgroup>
 <col style="width: 33%">
 <col style="width: 33%">
@@ -1150,17 +1034,15 @@ Robbie M. Parks
 </table>
 <div class="fragment">
 <p>So the method carries <strong>two conditions</strong>, one from each half:</p>
-<div>
 <ol type="1">
 <li>The latent field has a Gaussian prior, and its links are local.</li>
 <li>The hyperparameters are few.</li>
 </ol>
 </div>
-</div>
 </section>
 <section id="what-fits-and-what-doesnt" class="slide level2 smaller">
 <h2>What fits and what doesn’t</h2>
-<table>
+<table class="caption-top">
 <colgroup>
 <col style="width: 50%">
 <col style="width: 50%">
@@ -1206,8 +1088,8 @@ Robbie M. Parks
 <p>Every entry on the right fails <strong>condition 1</strong> or <strong>condition 2</strong> — nothing else. And the left-hand column is most of what we fit in environmental epidemiology.</p>
 </div>
 </section>
-<section id="the-whole-argument-in-one-picture" class="slide level2 smaller">
-<h2>The whole argument, in one picture</h2>
+<section id="summary-of-the-entire-inla-process" class="slide level2 smaller">
+<h2>Summary of the entire INLA process</h2>
 <svg viewbox="0 0 920 560" style="width:100%;color:inherit" font-family="inherit">
 <defs><marker id="ahf" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
 <path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
@@ -1273,10 +1155,10 @@ Robbie M. Parks
 <ul>
 <li><strong>The hyperparameter grid grows geometrically.</strong> The cost of integrating over <span class="math inline">\(\boldsymbol{\theta}\)</span> scales roughly as <span class="math inline">\(O(g^{\dim(\boldsymbol{\theta})})\)</span>. This is the wall you hit — not <span class="math inline">\(n\)</span>, not <span class="math inline">\(m\)</span>.</li>
 <li><strong>Finding the mode of <span class="math inline">\(p(\boldsymbol{\theta} \mid \boldsymbol{y})\)</span> is an optimisation</strong>, and every function evaluation is a full sparse factorisation with numerical gradients on top.</li>
-<li><strong>Sparse is not the same as cheap.</strong> Cholesky <strong>fill-in</strong> depends on the graph structure, not just the number of zeros. Type IV space–time interactions and densely-connected adjacency graphs fill in badly.</li>
+<li><strong>Sparse is not the same as cheap.</strong> Depends on the graph structure, not just the number of zeros. Type IV space–time interactions and densely-connected adjacency graphs fill in badly.</li>
 <li><strong>Accuracy costs.</strong> <code>strategy = "laplace"</code> is far more expensive than the default <code>"simplified.laplace"</code>, which in turn costs more than <code>"gaussian"</code>.</li>
-<li><strong>SPDE meshes.</strong> Every extra mesh node enlarges the latent field. An over-refined mesh is the single most common reason a spatial model crawls.</li>
-<li><strong>Memory is often the binding constraint, not time.</strong> The Cholesky factor <span class="math inline">\(\boldsymbol{L}\)</span> can be much denser than <span class="math inline">\(\boldsymbol{Q}\)</span> itself.</li>
+<li><strong>SPDE meshes.</strong> Every extra mesh node enlarges the latent field. An over-refined mesh is the single most common reason a spatial model crawls (outside scope).</li>
+<li><strong>Memory is often the binding constraint, not time.</strong> A lot held in memory for this.</li>
 </ul>
 <!-- . . . -->
 <!-- [INLA is fast because of the *asymmetry* between the two objects. Break the -->
@@ -1324,7 +1206,7 @@ Robbie M. Parks
 <section id="the-number-of-hyperparameters-is-the-limiting-factor-1" class="slide level2 smaller">
 <h2>The number of hyperparameters is the limiting factor</h2>
 <p>Add a dial and the points do not increase — they <strong>multiply</strong>. Taking five per dial for illustration:</p>
-<table>
+<table class="caption-top">
 <thead>
 <tr class="header">
 <th>Hyperparameters</th>
@@ -1361,88 +1243,14 @@ Robbie M. Parks
 </tbody>
 </table>
 </section>
-<section id="making-a-slow-fit-faster" class="slide level2 smaller">
-<h2>Making a slow fit faster</h2>
-<p>In rough order of how much they usually buy you:</p>
-<table>
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Lever</th>
-<th>Code</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Develop with cheap options, switch back for the final run</td>
-<td><code>control.inla = list(strategy = "gaussian", int.strategy = "eb")</code></td>
-</tr>
-<tr class="even">
-<td>Use empirical Bayes — modal <span class="math inline">\(\boldsymbol{\theta}\)</span> only, one configuration</td>
-<td><code>int.strategy = "eb"</code></td>
-</tr>
-<tr class="odd">
-<td>Warm-start from a previous fit’s hyperparameters</td>
-<td><code>control.mode = list(theta = fit$mode$theta, restart = FALSE)</code></td>
-</tr>
-<tr class="even">
-<td>Install the PARDISO solver (free academic licence)</td>
-<td><code>inla.pardiso()</code></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="making-a-slow-fit-faster-1" class="slide level2 smaller">
-<h2>Making a slow fit faster</h2>
-<p>In rough order of how much they usually buy you:</p>
-<table>
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Lever</th>
-<th>Code</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Set threads: outer over configurations, inner within factorisation</td>
-<td><code>num.threads = "4:2"</code></td>
-</tr>
-<tr class="even">
-<td>Coarsen the mesh — always check <code>mesh$n</code> before fitting</td>
-<td><code>max.edge</code>, <code>cutoff</code></td>
-</tr>
-<tr class="odd">
-<td>Turn off diagnostics you are not reading</td>
-<td><code>control.compute = list(dic = FALSE, waic = FALSE, cpo = FALSE)</code></td>
-</tr>
-<tr class="even">
-<td>Store the full configuration <strong>only</strong> when you need posterior sampling</td>
-<td><code>config = TRUE</code></td>
-</tr>
-</tbody>
-</table>
-<div class="fragment">
-<p>Two habits worth forming: <strong>scale your covariates</strong>, because a badly conditioned latent field makes the <span class="math inline">\(\boldsymbol{\theta}\)</span> optimisation wander; and <strong>use PC priors</strong>, which keep the hyperparameters on a sensible scale and tend to make the mode easier to find.</p>
-<!-- . . . -->
-<!-- [If none of this helps, the model is probably not a good LGM. Check -->
-<!-- $\dim(\boldsymbol{\theta})$ first.]{style="color:#c0392b"} -->
-</div>
-</section>
 <section id="how-accurate-is-it" class="slide level2 smaller">
 <h2>How accurate is it?</h2>
 <ul>
 <li>For latent Gaussian models with well-behaved likelihoods, INLA and long MCMC runs typically agree to two or three decimal places on posterior means and quantiles.</li>
 <li>Accuracy degrades when:
 <ul>
-<li>the number of observations per latent parameter is very small (e.g.&nbsp;binary data with one observation per random effect),</li>
-<li>the likelihood is far from Gaussian and weakly informative,</li>
+<li>the number of observations per latent parameter is very small (e.g.&nbsp;binary data with one observation per random effect).</li>
+<li>the likelihood is far from Gaussian and weakly informative.</li>
 <li>the posterior is genuinely multimodal.</li>
 </ul></li>
 <li>Check with <code>inla(..., control.compute = list(config = TRUE))</code> and compare against a short MCMC run when it matters.</li>
@@ -1464,20 +1272,18 @@ Robbie M. Parks
 </section>
 <section id="installation" class="slide level2">
 <h2>Installation</h2>
-<div>
 <ul>
 <li><code>INLA</code> is not on CRAN. Install from the project repository:</li>
 </ul>
-</div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">install.packages</span>(</span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="st">"INLA"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3"></a>  <span class="at">repos =</span> <span class="fu">c</span>(<span class="fu">getOption</span>(<span class="st">"repos"</span>),</span>
-<span id="cb2-4"><a href="#cb2-4"></a>            <span class="at">INLA =</span> <span class="st">"https://inla.r-inla-download.org/R/stable"</span>),</span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="at">dep =</span> <span class="cn">TRUE</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a>)</span>
-<span id="cb2-7"><a href="#cb2-7"></a></span>
-<span id="cb2-8"><a href="#cb2-8"></a><span class="fu">library</span>(INLA)</span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="fu">inla.version</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">install.packages</span>(</span>
+<span id="cb4-2"><a href=""></a>  <span class="st">"INLA"</span>,</span>
+<span id="cb4-3"><a href=""></a>  <span class="at">repos =</span> <span class="fu">c</span>(<span class="fu">getOption</span>(<span class="st">"repos"</span>),</span>
+<span id="cb4-4"><a href=""></a>            <span class="at">INLA =</span> <span class="st">"https://inla.r-inla-download.org/R/stable"</span>),</span>
+<span id="cb4-5"><a href=""></a>  <span class="at">dep =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-6"><a href=""></a>)</span>
+<span id="cb4-7"><a href=""></a></span>
+<span id="cb4-8"><a href=""></a><span class="fu">library</span>(INLA)</span>
+<span id="cb4-9"><a href=""></a><span class="fu">inla.version</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Use <code>testing</code> instead of <code>stable</code> for the development version.</li>
 <li><code>inla.upgrade()</code> to update in place.</li>
@@ -1485,18 +1291,18 @@ Robbie M. Parks
 </section>
 <section id="the-central-function-inla" class="slide level2">
 <h2>The central function: <code>inla()</code></h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>formula <span class="ot">&lt;-</span> y <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> <span class="fu">f</span>(area, <span class="at">model =</span> <span class="st">"iid"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2"></a></span>
-<span id="cb3-3"><a href="#cb3-3"></a>m <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb3-4"><a href="#cb3-4"></a>  formula,</span>
-<span id="cb3-5"><a href="#cb3-5"></a>  <span class="at">family            =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb3-6"><a href="#cb3-6"></a>  <span class="at">data              =</span> data,</span>
-<span id="cb3-7"><a href="#cb3-7"></a>  <span class="at">E                 =</span> data<span class="sc">$</span>expected,</span>
-<span id="cb3-8"><a href="#cb3-8"></a>  <span class="at">control.compute   =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb3-9"><a href="#cb3-9"></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">compute =</span> <span class="cn">TRUE</span>, <span class="at">link =</span> <span class="dv">1</span>)</span>
-<span id="cb3-10"><a href="#cb3-10"></a>)</span>
-<span id="cb3-11"><a href="#cb3-11"></a></span>
-<span id="cb3-12"><a href="#cb3-12"></a><span class="fu">summary</span>(m)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>formula <span class="ot">&lt;-</span> y <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> <span class="fu">f</span>(area, <span class="at">model =</span> <span class="st">"iid"</span>)</span>
+<span id="cb5-2"><a href=""></a></span>
+<span id="cb5-3"><a href=""></a>m <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb5-4"><a href=""></a>  formula,</span>
+<span id="cb5-5"><a href=""></a>  <span class="at">family            =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb5-6"><a href=""></a>  <span class="at">data              =</span> data,</span>
+<span id="cb5-7"><a href=""></a>  <span class="at">E                 =</span> data<span class="sc">$</span>expected,</span>
+<span id="cb5-8"><a href=""></a>  <span class="at">control.compute   =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-9"><a href=""></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">compute =</span> <span class="cn">TRUE</span>, <span class="at">link =</span> <span class="dv">1</span>)</span>
+<span id="cb5-10"><a href=""></a>)</span>
+<span id="cb5-11"><a href=""></a></span>
+<span id="cb5-12"><a href=""></a><span class="fu">summary</span>(m)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="what-the-formula-means" class="slide level2">
 <h2>What the formula means</h2>
@@ -1510,14 +1316,14 @@ Robbie M. Parks
 </section>
 <section id="the-f-function" class="slide level2">
 <h2>The <code>f()</code> function</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">f</span>(index,</span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="at">model      =</span> <span class="st">"iid"</span>,       <span class="co"># latent model class</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a>  <span class="at">hyper      =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>,</span>
-<span id="cb4-4"><a href="#cb4-4"></a>                               <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>))),</span>
-<span id="cb4-5"><a href="#cb4-5"></a>  <span class="at">constr     =</span> <span class="cn">TRUE</span>,        <span class="co"># sum-to-zero constraint</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a>  <span class="at">graph      =</span> <span class="st">"map.adj"</span>,   <span class="co"># for spatial models</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a>  <span class="at">replicate  =</span> id,          <span class="co"># independent copies</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a>  <span class="at">group      =</span> time)        <span class="co"># grouped/interaction structure</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href=""></a><span class="fu">f</span>(index,</span>
+<span id="cb6-2"><a href=""></a>  <span class="at">model      =</span> <span class="st">"iid"</span>,       <span class="co"># latent model class</span></span>
+<span id="cb6-3"><a href=""></a>  <span class="at">hyper      =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>,</span>
+<span id="cb6-4"><a href=""></a>                               <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>))),</span>
+<span id="cb6-5"><a href=""></a>  <span class="at">constr     =</span> <span class="cn">TRUE</span>,        <span class="co"># sum-to-zero constraint</span></span>
+<span id="cb6-6"><a href=""></a>  <span class="at">graph      =</span> <span class="st">"map.adj"</span>,   <span class="co"># for spatial models</span></span>
+<span id="cb6-7"><a href=""></a>  <span class="at">replicate  =</span> id,          <span class="co"># independent copies</span></span>
+<span id="cb6-8"><a href=""></a>  <span class="at">group      =</span> time)        <span class="co"># grouped/interaction structure</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>index</code> <strong>must</strong> be an integer or factor indexing the latent component — not the covariate value itself.</li>
 <li>Each <code>f()</code> term adds hyperparameters to <span class="math inline">\(\boldsymbol{\theta}\)</span>.</li>
@@ -1525,7 +1331,7 @@ Robbie M. Parks
 </section>
 <section id="some-latent-models-available" class="slide level2 smaller">
 <h2>Some latent models available</h2>
-<table>
+<table class="caption-top">
 <colgroup>
 <col style="width: 33%">
 <col style="width: 33%">
@@ -1587,13 +1393,13 @@ y_i &amp;\sim \text{Pois}(\mu_i) \quad i = 1,\ldots,N \\
 \log(\mu_i) &amp;= \log(E_i) + \alpha
 \end{split}
 \]</span></p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>m_pooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb5-2"><a href="#cb5-2"></a>  deaths <span class="sc">~</span> <span class="dv">1</span>,</span>
-<span id="cb5-3"><a href="#cb5-3"></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb5-4"><a href="#cb5-4"></a>  <span class="at">E      =</span> expected,</span>
-<span id="cb5-5"><a href="#cb5-5"></a>  <span class="at">data   =</span> data,</span>
-<span id="cb5-6"><a href="#cb5-6"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb5-7"><a href="#cb5-7"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>m_pooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb7-2"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb7-3"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb7-4"><a href=""></a>  <span class="at">E      =</span> expected,</span>
+<span id="cb7-5"><a href=""></a>  <span class="at">data   =</span> data,</span>
+<span id="cb7-6"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-7"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>One intercept, shared by every province. No <code>f()</code> term, so <span class="math inline">\(\boldsymbol{\theta}\)</span> is empty.</li>
 </ul>
@@ -1606,14 +1412,14 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 \log(\mu_i) &amp;= \log(E_i) + \alpha_{j[i]}
 \end{split}
 \]</span></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>m_unpooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb6-2"><a href="#cb6-2"></a>  deaths <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> <span class="fu">factor</span>(province),</span>
-<span id="cb6-3"><a href="#cb6-3"></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb6-4"><a href="#cb6-4"></a>  <span class="at">E      =</span> expected,</span>
-<span id="cb6-5"><a href="#cb6-5"></a>  <span class="at">data   =</span> data,</span>
-<span id="cb6-6"><a href="#cb6-6"></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="dv">1</span>),   <span class="co"># N(0, 1) on each alpha_j</span></span>
-<span id="cb6-7"><a href="#cb6-7"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb6-8"><a href="#cb6-8"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>m_unpooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb8-2"><a href=""></a>  deaths <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> <span class="fu">factor</span>(province),</span>
+<span id="cb8-3"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb8-4"><a href=""></a>  <span class="at">E      =</span> expected,</span>
+<span id="cb8-5"><a href=""></a>  <span class="at">data   =</span> data,</span>
+<span id="cb8-6"><a href=""></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="dv">1</span>),   <span class="co"># N(0, 1) on each alpha_j</span></span>
+<span id="cb8-7"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-8"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Province enters as a <strong>fixed effect</strong>: independent parameters, no borrowing of strength.</li>
 <li><code>-1</code> drops the global intercept so each level is estimated directly.</li>
@@ -1627,24 +1433,24 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 \theta_j \sim N(0, \sigma^2_p)
 \end{split}
 \]</span></p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>data<span class="sc">$</span>province_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(data<span class="sc">$</span>province))</span>
-<span id="cb7-2"><a href="#cb7-2"></a></span>
-<span id="cb7-3"><a href="#cb7-3"></a>m_partial <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb7-4"><a href="#cb7-4"></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(province_id, <span class="at">model =</span> <span class="st">"iid"</span>,</span>
-<span id="cb7-5"><a href="#cb7-5"></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(</span>
-<span id="cb7-6"><a href="#cb7-6"></a>                   <span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))),</span>
-<span id="cb7-7"><a href="#cb7-7"></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb7-8"><a href="#cb7-8"></a>  <span class="at">E      =</span> expected,</span>
-<span id="cb7-9"><a href="#cb7-9"></a>  <span class="at">data   =</span> data,</span>
-<span id="cb7-10"><a href="#cb7-10"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-11"><a href="#cb7-11"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>data<span class="sc">$</span>province_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(data<span class="sc">$</span>province))</span>
+<span id="cb9-2"><a href=""></a></span>
+<span id="cb9-3"><a href=""></a>m_partial <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb9-4"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(province_id, <span class="at">model =</span> <span class="st">"iid"</span>,</span>
+<span id="cb9-5"><a href=""></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(</span>
+<span id="cb9-6"><a href=""></a>                   <span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))),</span>
+<span id="cb9-7"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb9-8"><a href=""></a>  <span class="at">E      =</span> expected,</span>
+<span id="cb9-9"><a href=""></a>  <span class="at">data   =</span> data,</span>
+<span id="cb9-10"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-11"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>One line of difference from the pooled model.</li>
 </ul>
 </section>
 <section id="reading-the-output-fixed-effects" class="slide level2">
 <h2>Reading the output: fixed effects</h2>
-<div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>m_partial<span class="sc">$</span>summary.fixed</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a>m_partial<span class="sc">$</span>summary.fixed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Columns: <code>mean</code>, <code>sd</code>, <code>0.025quant</code>, <code>0.5quant</code>, <code>0.975quant</code>, <code>mode</code>, <code>kld</code>.</li>
 <li><code>kld</code> is the Kullback-Leibler divergence between the Gaussian and the simplified Laplace marginal. <span style="color:red">Values much above <span class="math inline">\(\sim 0.01\)</span> suggest the approximation is straining.</span></li>
@@ -1653,26 +1459,26 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 </section>
 <section id="reading-the-output-hyperparameters" class="slide level2">
 <h2>Reading the output: hyperparameters</h2>
-<div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>m_partial<span class="sc">$</span>summary.hyperpar</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href=""></a>m_partial<span class="sc">$</span>summary.hyperpar</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>INLA</code> reports <strong>precisions</strong>, not standard deviations: <span class="math inline">\(\tau = 1/\sigma^2\)</span>.</li>
 <li>A posterior mean of a precision is <em>not</em> the reciprocal of the posterior mean of a variance. Transform the whole marginal:</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>sd_marg <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(<span class="cf">function</span>(x) <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(x),</span>
-<span id="cb10-2"><a href="#cb10-2"></a>                          m_partial<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Precision for province_id</span><span class="st">`</span>)</span>
-<span id="cb10-3"><a href="#cb10-3"></a></span>
-<span id="cb10-4"><a href="#cb10-4"></a><span class="fu">inla.zmarginal</span>(sd_marg)</span>
-<span id="cb10-5"><a href="#cb10-5"></a><span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, sd_marg)   <span class="co"># posterior mean of sigma</span></span>
-<span id="cb10-6"><a href="#cb10-6"></a><span class="fu">inla.hpdmarginal</span>(<span class="fl">0.95</span>, sd_marg)          <span class="co"># HPD interval</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href=""></a>sd_marg <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(<span class="cf">function</span>(x) <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(x),</span>
+<span id="cb12-2"><a href=""></a>                          m_partial<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Precision for province_id</span><span class="st">`</span>)</span>
+<span id="cb12-3"><a href=""></a></span>
+<span id="cb12-4"><a href=""></a><span class="fu">inla.zmarginal</span>(sd_marg)</span>
+<span id="cb12-5"><a href=""></a><span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, sd_marg)   <span class="co"># posterior mean of sigma</span></span>
+<span id="cb12-6"><a href=""></a><span class="fu">inla.hpdmarginal</span>(<span class="fl">0.95</span>, sd_marg)          <span class="co"># HPD interval</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="random-effects-and-shrinkage" class="slide level2">
 <h2>Random effects and shrinkage</h2>
-<div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>re <span class="ot">&lt;-</span> m_partial<span class="sc">$</span>summary.random<span class="sc">$</span>province_id</span>
-<span id="cb11-2"><a href="#cb11-2"></a></span>
-<span id="cb11-3"><a href="#cb11-3"></a><span class="fu">ggplot</span>(re, <span class="fu">aes</span>(<span class="at">x =</span> ID, <span class="at">y =</span> mean)) <span class="sc">+</span></span>
-<span id="cb11-4"><a href="#cb11-4"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb11-5"><a href="#cb11-5"></a>  <span class="fu">geom_pointrange</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> <span class="st">`</span><span class="at">0.025quant</span><span class="st">`</span>, <span class="at">ymax =</span> <span class="st">`</span><span class="at">0.975quant</span><span class="st">`</span>)) <span class="sc">+</span></span>
-<span id="cb11-6"><a href="#cb11-6"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Province"</span>, <span class="at">y =</span> <span class="fu">expression</span>(theta[j]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a>re <span class="ot">&lt;-</span> m_partial<span class="sc">$</span>summary.random<span class="sc">$</span>province_id</span>
+<span id="cb13-2"><a href=""></a></span>
+<span id="cb13-3"><a href=""></a><span class="fu">ggplot</span>(re, <span class="fu">aes</span>(<span class="at">x =</span> ID, <span class="at">y =</span> mean)) <span class="sc">+</span></span>
+<span id="cb13-4"><a href=""></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb13-5"><a href=""></a>  <span class="fu">geom_pointrange</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> <span class="st">`</span><span class="at">0.025quant</span><span class="st">`</span>, <span class="at">ymax =</span> <span class="st">`</span><span class="at">0.975quant</span><span class="st">`</span>)) <span class="sc">+</span></span>
+<span id="cb13-6"><a href=""></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Province"</span>, <span class="at">y =</span> <span class="fu">expression</span>(theta[j]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Compare the spread of these to the unpooled <code>factor(province)</code> estimates: the hierarchical ones are pulled toward zero.</li>
 <li>Provinces with small expected counts shrink most — adaptive regularisation, estimated from the data.</li>
@@ -1690,7 +1496,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <section id="pc-priors" class="slide level2">
 <h2>PC priors</h2>
 <p><strong>Penalised complexity</strong> priors (Simpson et al., 2017) shrink toward a simpler <em>base model</em> — here, <span class="math inline">\(\sigma = 0\)</span> — with an exponential penalty on the distance from it.</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>hyper <span class="ot">=</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(U, alpha)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a>hyper <span class="ot">=</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(U, alpha)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Read as <span class="math inline">\(P(\sigma &gt; U) = \alpha\)</span>.</li>
 <li><code>param = c(1, 0.01)</code>: “we think it is unlikely (1% chance) that the between-group SD exceeds 1 on the log scale”.</li>
@@ -1700,15 +1506,15 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 </section>
 <section id="model-comparison-dic-waic-cpo" class="slide level2">
 <h2>Model comparison: DIC, WAIC, CPO</h2>
-<div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>dic<span class="sc">$</span>dic)</span>
-<span id="cb13-2"><a href="#cb13-2"></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>waic<span class="sc">$</span>waic)</span>
-<span id="cb13-3"><a href="#cb13-3"></a></span>
-<span id="cb13-4"><a href="#cb13-4"></a></span>
-<span id="cb13-5"><a href="#cb13-5"></a><span class="co"># Leave-one-out log score (lower is better)</span></span>
-<span id="cb13-6"><a href="#cb13-6"></a><span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>cpo), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-7"><a href="#cb13-7"></a></span>
-<span id="cb13-8"><a href="#cb13-8"></a><span class="co"># Check the CPO computation is trustworthy</span></span>
-<span id="cb13-9"><a href="#cb13-9"></a><span class="fu">sum</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>failure <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href=""></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>dic<span class="sc">$</span>dic)</span>
+<span id="cb15-2"><a href=""></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>waic<span class="sc">$</span>waic)</span>
+<span id="cb15-3"><a href=""></a></span>
+<span id="cb15-4"><a href=""></a></span>
+<span id="cb15-5"><a href=""></a><span class="co"># Leave-one-out log score (lower is better)</span></span>
+<span id="cb15-6"><a href=""></a><span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>cpo), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-7"><a href=""></a></span>
+<span id="cb15-8"><a href=""></a><span class="co"># Check the CPO computation is trustworthy</span></span>
+<span id="cb15-9"><a href=""></a><span class="fu">sum</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>failure <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>dic$p.eff</code> and <code>waic$p.eff</code>: effective number of parameters, a nice numerical read on how much shrinkage is happening.</li>
 <li>PIT values (<code>m$cpo$pit</code>) should be roughly uniform if the model is calibrated.</li>
@@ -1720,37 +1526,37 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <p><span class="math display">\[
 \log(\mu_{ijt}) = \log(E_{ijt}) + \alpha + \beta x_{ijt} + \theta_j + \gamma_{jt}
 \]</span></p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>d<span class="sc">$</span>city_id     <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(d<span class="sc">$</span>city))</span>
-<span id="cb14-2"><a href="#cb14-2"></a>d<span class="sc">$</span>cityyear_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(<span class="fu">paste</span>(d<span class="sc">$</span>city, d<span class="sc">$</span>year)))</span>
-<span id="cb14-3"><a href="#cb14-3"></a></span>
-<span id="cb14-4"><a href="#cb14-4"></a>pc <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))</span>
-<span id="cb14-5"><a href="#cb14-5"></a></span>
-<span id="cb14-6"><a href="#cb14-6"></a>m2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb14-7"><a href="#cb14-7"></a>  admissions <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> pm25 <span class="sc">+</span></span>
-<span id="cb14-8"><a href="#cb14-8"></a>    <span class="fu">f</span>(city_id,     <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc) <span class="sc">+</span></span>
-<span id="cb14-9"><a href="#cb14-9"></a>    <span class="fu">f</span>(cityyear_id, <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc),</span>
-<span id="cb14-10"><a href="#cb14-10"></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> d,</span>
-<span id="cb14-11"><a href="#cb14-11"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb14-12"><a href="#cb14-12"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href=""></a>d<span class="sc">$</span>city_id     <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(d<span class="sc">$</span>city))</span>
+<span id="cb16-2"><a href=""></a>d<span class="sc">$</span>cityyear_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(<span class="fu">paste</span>(d<span class="sc">$</span>city, d<span class="sc">$</span>year)))</span>
+<span id="cb16-3"><a href=""></a></span>
+<span id="cb16-4"><a href=""></a>pc <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))</span>
+<span id="cb16-5"><a href=""></a></span>
+<span id="cb16-6"><a href=""></a>m2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb16-7"><a href=""></a>  admissions <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> pm25 <span class="sc">+</span></span>
+<span id="cb16-8"><a href=""></a>    <span class="fu">f</span>(city_id,     <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc) <span class="sc">+</span></span>
+<span id="cb16-9"><a href=""></a>    <span class="fu">f</span>(cityyear_id, <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc),</span>
+<span id="cb16-10"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> d,</span>
+<span id="cb16-11"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-12"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Two hyperparameters. Two <code>f()</code> terms.</li>
 </ul>
 </section>
 <section id="spatial-extension-bym2" class="slide level2 smaller">
 <h2>Spatial extension: BYM2</h2>
-<div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(shp)</span>
-<span id="cb15-2"><a href="#cb15-2"></a><span class="fu">nb2INLA</span>(<span class="st">"map.adj"</span>, nb)</span>
-<span id="cb15-3"><a href="#cb15-3"></a>g <span class="ot">&lt;-</span> <span class="fu">inla.read.graph</span>(<span class="st">"map.adj"</span>)</span>
-<span id="cb15-4"><a href="#cb15-4"></a></span>
-<span id="cb15-5"><a href="#cb15-5"></a>m_bym2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb15-6"><a href="#cb15-6"></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(area_id, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g,</span>
-<span id="cb15-7"><a href="#cb15-7"></a>                 <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb15-8"><a href="#cb15-8"></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(</span>
-<span id="cb15-9"><a href="#cb15-9"></a>                   <span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
-<span id="cb15-10"><a href="#cb15-10"></a>                   <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)))),</span>
-<span id="cb15-11"><a href="#cb15-11"></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> shp,</span>
-<span id="cb15-12"><a href="#cb15-12"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb15-13"><a href="#cb15-13"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href=""></a>nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(shp)</span>
+<span id="cb17-2"><a href=""></a><span class="fu">nb2INLA</span>(<span class="st">"map.adj"</span>, nb)</span>
+<span id="cb17-3"><a href=""></a>g <span class="ot">&lt;-</span> <span class="fu">inla.read.graph</span>(<span class="st">"map.adj"</span>)</span>
+<span id="cb17-4"><a href=""></a></span>
+<span id="cb17-5"><a href=""></a>m_bym2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb17-6"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(area_id, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g,</span>
+<span id="cb17-7"><a href=""></a>                 <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb17-8"><a href=""></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(</span>
+<span id="cb17-9"><a href=""></a>                   <span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
+<span id="cb17-10"><a href=""></a>                   <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)))),</span>
+<span id="cb17-11"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> shp,</span>
+<span id="cb17-12"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-13"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>bym2</code> separates total SD from the <strong>mixing parameter</strong> <span class="math inline">\(\phi\)</span>: the proportion of variance that is spatially structured.</li>
 <li><code>scale.model = TRUE</code> makes the precision comparable across maps — essential for the prior to mean anything.</li>
@@ -1774,7 +1580,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 </section>
 <section id="inla-vs-nimble" class="slide level2 smaller">
 <h2>INLA vs NIMBLE</h2>
-<table>
+<table class="caption-top">
 <colgroup>
 <col style="width: 33%">
 <col style="width: 33%">
@@ -1823,6 +1629,56 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <ul>
 <li>We will see models in <code>INLA</code> going forward</li>
 </ul>
+</section>
+<section id="an-illustrative-example-again" class="slide level2 smaller">
+<h2>An illustrative example (again)</h2>
+<p>Example: weekly death counts by county, with a heat term, a spatial term and a temporal trend.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href=""></a>code <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
+<span id="cb18-2"><a href=""></a></span>
+<span id="cb18-3"><a href=""></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb18-4"><a href=""></a>  beta  <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb18-5"><a href=""></a>  tau_b <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb18-6"><a href=""></a>  tau_g <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb18-7"><a href=""></a>  phi   <span class="sc">~</span> <span class="fu">dbeta</span>(<span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb18-8"><a href=""></a></span>
+<span id="cb18-9"><a href=""></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N) {</span>
+<span id="cb18-10"><a href=""></a>    deaths[i] <span class="sc">~</span> <span class="fu">dpois</span>(mu[i])</span>
+<span id="cb18-11"><a href=""></a>    <span class="fu">log</span>(mu[i]) <span class="ot">&lt;-</span> <span class="fu">log</span>(E[i]) <span class="sc">+</span> alpha <span class="sc">+</span> beta <span class="sc">*</span> heat[i] <span class="sc">+</span></span>
+<span id="cb18-12"><a href=""></a>                    b[county[i]] <span class="sc">+</span> gamma[week[i]]</span>
+<span id="cb18-13"><a href=""></a>  }</span>
+<span id="cb18-14"><a href=""></a></span>
+<span id="cb18-15"><a href=""></a>  s[<span class="dv">1</span><span class="sc">:</span>M] <span class="sc">~</span> <span class="fu">dcar_normal</span>(adj[<span class="dv">1</span><span class="sc">:</span>L], w[<span class="dv">1</span><span class="sc">:</span>L], num[<span class="dv">1</span><span class="sc">:</span>M], <span class="dv">1</span>, <span class="at">zero_mean =</span> <span class="dv">1</span>)</span>
+<span id="cb18-16"><a href=""></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>M) {</span>
+<span id="cb18-17"><a href=""></a>    theta[j] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb18-18"><a href=""></a>    b[j] <span class="ot">&lt;-</span> (<span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> phi) <span class="sc">*</span> theta[j] <span class="sc">+</span> <span class="fu">sqrt</span>(phi <span class="sc">/</span> scl) <span class="sc">*</span> s[j]) <span class="sc">/</span> <span class="fu">sqrt</span>(tau_b)</span>
+<span id="cb18-19"><a href=""></a>  }</span>
+<span id="cb18-20"><a href=""></a></span>
+<span id="cb18-21"><a href=""></a>  gamma[<span class="dv">1</span>] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb18-22"><a href=""></a>  <span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>Tw) {</span>
+<span id="cb18-23"><a href=""></a>    gamma[t] <span class="sc">~</span> <span class="fu">dnorm</span>(gamma[t <span class="sc">-</span> <span class="dv">1</span>], tau_g)</span>
+<span id="cb18-24"><a href=""></a>  }</span>
+<span id="cb18-25"><a href=""></a></span>
+<span id="cb18-26"><a href=""></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="the-more-or-less-same-model-in-r-inla" class="slide level2 smaller">
+<h2>The (more or less) same model in <code>R-INLA</code></h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href=""></a>formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> heat <span class="sc">+</span></span>
+<span id="cb19-2"><a href=""></a>  <span class="fu">f</span>(county, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> <span class="st">"counties.adj"</span>,</span>
+<span id="cb19-3"><a href=""></a>    <span class="at">scale.model =</span> <span class="cn">TRUE</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-4"><a href=""></a>    <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
+<span id="cb19-5"><a href=""></a>                 <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)))) <span class="sc">+</span></span>
+<span id="cb19-6"><a href=""></a>  <span class="fu">f</span>(week, <span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-7"><a href=""></a>    <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>))))</span>
+<span id="cb19-8"><a href=""></a></span>
+<span id="cb19-9"><a href=""></a>fit <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb19-10"><a href=""></a>  formula,</span>
+<span id="cb19-11"><a href=""></a>  <span class="at">family            =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb19-12"><a href=""></a>  <span class="at">data              =</span> data,</span>
+<span id="cb19-13"><a href=""></a>  <span class="at">E                 =</span> data<span class="sc">$</span>expected,</span>
+<span id="cb19-14"><a href=""></a>  <span class="at">control.compute   =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb19-15"><a href=""></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">compute =</span> <span class="cn">TRUE</span>, <span class="at">link =</span> <span class="dv">1</span>)</span>
+<span id="cb19-16"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Twelve lines against twenty-five, and everything in the NIMBLE version below the priors has gone.</p>
 </section></section>
 <section>
 <section id="getting-ready-for-the-lab" class="title-slide slide level1 center">
@@ -1845,12 +1701,74 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <section id="questions" class="title-slide slide level1 center">
 <h1>Questions?</h1>
 
-<img src="assets/bmeh_normal.png" class="slide-logo r-stretch"><div class="footer footer-default">
+</section>
 
+<section>
+<section id="appendix" class="title-slide slide level1 center">
+<h1>Appendix</h1>
+
+</section>
+<section id="question-1-the-field-hyperparameters-fixed" class="slide level2 smaller">
+<h2>Question 1: the field, hyperparameters fixed</h2>
+<p>The goal is a <strong>joint</strong> distribution over all 168,000 latent elements — with the three hyperparameters pinned at chosen values.</p>
+<svg viewbox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahl" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<rect x="40" y="90" width="210" height="70" rx="8" fill="#2980b9" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="145" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the GMRF prior</text>
+<text x="145" y="142" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">acts on all 168,000</text>
+
+<rect x="40" y="180" width="210" height="46" rx="8" fill="#16a085" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="145" y="208" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the 161,616 rows of data</text>
+
+<path d="M258,120 H340" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
+<path d="M258,200 H320 C335,200 340,180 340,150" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
+
+<rect x="355" y="90" width="220" height="70" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.2"></rect>
+<text x="465" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">exactly Gaussian,</text>
+<text x="465" y="142" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">then adjusted row by row</text>
+
+<path d="M583,125 H665" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
+
+<rect x="680" y="90" width="200" height="70" rx="8" fill="#c0392b" fill-opacity="0.12" stroke="#c0392b" stroke-opacity="0.6" stroke-width="1.2"></rect>
+<text x="780" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">approximately Gaussian</text>
+<text x="780" y="142" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">still mostly blanks</text>
+
+<text x="355" y="42" font-size="15" fill="currentColor" opacity="0.75">the latent field once the three</text>
+<text x="355" y="62" font-size="15" fill="currentColor" opacity="0.75">hyperparameters are held fixed</text>
+</svg>
+<p>Hold the three hyperparameters fixed and ask what the latent field looks like. Two things act on it, and they act very differently:</p>
+<ul>
+<li>The <strong>prior</strong> is Gaussian, exactly, and it acts on all 168,000 elements at once.</li>
+<li>Each <strong>row of data</strong> acts too, but on one element only, and weakly.</li>
+</ul>
+</section>
+<section id="question-1-answered" class="slide level2 smaller">
+<h2>Question 1, answered</h2>
+<p>With the three hyperparameters pinned at chosen values, the latent field is handled <strong>deterministically</strong> — no sampling anywhere:</p>
+<ul>
+<li>Climb to the mode of the field’s conditional posterior. A few sparse factorisations, each cheap because <span class="math inline">\(\boldsymbol{Q}^{*}\)</span> is mostly blank.</li>
+<li>Take the curvature there. That gives a <strong>joint Gaussian approximation to all 168,000 elements at once</strong> — a mean vector and a sparse <span class="math inline">\(\boldsymbol{Q}^{*}\)</span>.</li>
+</ul>
+<p>Two ingredients were needed, and both were needed: the <strong>GMRF</strong> made every factorisation cheap, and the <strong>Laplace approximation</strong> made the Gaussian a good fit.</p>
+<div class="fragment">
+<p><span style="color:#c0392b">But we pinned the hyperparameters, and we do not know them. Stopping here — <code>int.strategy = "eb"</code> — gives intervals that come out slightly too narrow.</span></p>
 </div>
 </section>
+<section id="question-2-averaging-over-hyperparameter-combinations" class="slide level2 smaller">
+<h2>Question 2: averaging over hyperparameter combinations</h2>
+<p>Step 1 uses <code>int.strategy</code>: <code>grid</code> evaluates every combination and is accurate but limited to two or three hyperparameters; <code>ccd</code> places a small designed scatter and is the default beyond that; <code>eb</code> keeps the mode alone, which is fast but sets aside uncertainty in <span class="math inline">\(\boldsymbol{\theta}\)</span>.</p>
+<p>Step 3 is the same idea as multiple imputation: solve a tractable problem several times and combine, so that uncertainty carried in step 1 reaches the final answer. Step 2, however, was stated loosely — there is a choice inside it.</p>
+
+</section></section>
     </div>
-  </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<p><img src="assets/bmeh_normal.png" class="slide-logo"></p>
+<div class="footer footer-default">
+
+</div>
+</div></div>
 
   <script>window.backupDefine = window.define; window.define = undefined;</script>
   <script src="inla_files/libs/revealjs/dist/reveal.js"></script>
@@ -1876,12 +1794,12 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
 'autoAnimateUnmatched': true,
-'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleChalkboard(event)\"><kbd>b</kbd> Toggle Chalkboard</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleNotesCanvas(event)\"><kbd>c</kbd> Toggle Notes Canvas</a></li>\n<li class=\"slide-tool-item\" data-item=\"6\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.downloadDrawings(event)\"><kbd>d</kbd> Download Drawings</a></li>\n<li class=\"slide-tool-item\" data-item=\"7\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleChalkboard(event)\"><kbd>b</kbd> Toggle Chalkboard</a></li>\n<li class=\"slide-tool-item\" data-item=\"6\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleNotesCanvas(event)\"><kbd>c</kbd> Toggle Notes Canvas</a></li>\n<li class=\"slide-tool-item\" data-item=\"7\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.downloadDrawings(event)\"><kbd>d</kbd> Download Drawings</a></li>\n<li class=\"slide-tool-item\" data-item=\"8\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
 'chalkboard': {"buttons":false,"preview-links":"auto"},
 'smaller': false,
  
@@ -2036,7 +1954,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
         margin: 0.1,
 
         math: {
-          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
           config: 'TeX-AMS_HTML-full',
           tex2jax: {
             inlineMath: [['\\(','\\)']],
@@ -2101,40 +2019,55 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
     </script>
 
     <script id="quarto-html-after-body" type="application/javascript">
-    window.document.addEventListener("DOMContentLoaded", function (event) {
-      const toggleBodyColorMode = (bsSheetEl) => {
-        const mode = bsSheetEl.getAttribute("data-mode");
-        const bodyEl = window.document.querySelector("body");
-        if (mode === "dark") {
-          bodyEl.classList.add("quarto-dark");
-          bodyEl.classList.remove("quarto-light");
-        } else {
-          bodyEl.classList.add("quarto-light");
-          bodyEl.classList.remove("quarto-dark");
-        }
-      }
-      const toggleBodyColorPrimary = () => {
-        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
-        if (bsSheetEl) {
-          toggleBodyColorMode(bsSheetEl);
-        }
-      }
-      toggleBodyColorPrimary();  
-      const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
-      tabsets.forEach(function(tabset) {
-        const tabby = new Tabby('#' + tabset.id);
-      });
-      const isCodeAnnotation = (el) => {
-        for (const clz of el.classList) {
-          if (clz.startsWith('code-annotation-')) {                     
-            return true;
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
           }
+          return false;
         }
-        return false;
-      }
-      const clipboard = new window.ClipboardJS('.code-copy-button', {
-        text: function(trigger) {
-          const codeEl = trigger.previousElementSibling.cloneNode(true);
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
           for (const childEl of codeEl.children) {
             if (isCodeAnnotation(childEl)) {
               childEl.remove();
@@ -2142,110 +2075,117 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
           }
           return codeEl.innerText;
         }
-      });
-      clipboard.on('success', function(e) {
-        // button target
-        const button = e.trigger;
-        // don't keep focus
-        button.blur();
-        // flash "checked"
-        button.classList.add('code-copy-button-checked');
-        var currentTitle = button.getAttribute("title");
-        button.setAttribute("title", "Copied!");
-        let tooltip;
-        if (window.bootstrap) {
-          button.setAttribute("data-bs-toggle", "tooltip");
-          button.setAttribute("data-bs-placement", "left");
-          button.setAttribute("data-bs-title", "Copied!");
-          tooltip = new bootstrap.Tooltip(button, 
-            { trigger: "manual", 
-              customClass: "code-copy-button-tooltip",
-              offset: [0, -8]});
-          tooltip.show();    
-        }
-        setTimeout(function() {
-          if (tooltip) {
-            tooltip.hide();
-            button.removeAttribute("data-bs-title");
-            button.removeAttribute("data-bs-toggle");
-            button.removeAttribute("data-bs-placement");
-          }
-          button.setAttribute("title", currentTitle);
-          button.classList.remove('code-copy-button-checked');
-        }, 1000);
-        // clear code selection
-        e.clearSelection();
-      });
-      function tippyHover(el, contentFn) {
-        const config = {
-          allowHTML: true,
-          content: contentFn,
-          maxWidth: 500,
-          delay: 100,
-          arrow: false,
-          appendTo: function(el) {
-              return el.closest('section.slide') || el.parentElement;
-          },
-          interactive: true,
-          interactiveBorder: 10,
-          theme: 'light-border',
-          placement: 'bottom-start'
-        };
-          config['offset'] = [0,0];
-          config['maxWidth'] = 700;
-        window.tippy(el, config); 
-      }
-      const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
-      for (var i=0; i<noterefs.length; i++) {
-        const ref = noterefs[i];
-        tippyHover(ref, function() {
-          // use id or data attribute instead here
-          let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
-          try { href = new URL(href).hash; } catch {}
-          const id = href.replace(/^#\/?/, "");
-          const note = window.document.getElementById(id);
-          return note.innerHTML;
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
         });
-      }
-      const findCites = (el) => {
-        const parentEl = el.parentElement;
-        if (parentEl) {
-          const cites = parentEl.dataset.cites;
-          if (cites) {
-            return {
-              el,
-              cites: cites.split(' ')
-            };
-          } else {
-            return findCites(el.parentElement)
-          }
-        } else {
-          return undefined;
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
         }
-      };
-      var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-      for (var i=0; i<bibliorefs.length; i++) {
-        const ref = bibliorefs[i];
-        const citeInfo = findCites(ref);
-        if (citeInfo) {
-          tippyHover(citeInfo.el, function() {
-            var popup = window.document.createElement('div');
-            citeInfo.cites.forEach(function(cite) {
-              var citeDiv = window.document.createElement('div');
-              citeDiv.classList.add('hanging-indent');
-              citeDiv.classList.add('csl-entry');
-              var biblioDiv = window.document.getElementById('ref-' + cite);
-              if (biblioDiv) {
-                citeDiv.innerHTML = biblioDiv.innerHTML;
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
               }
-              popup.appendChild(citeDiv);
-            });
-            return popup.innerHTML;
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
           });
         }
-      }
-    });
-    </script>
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
     
 
 </body></html>
