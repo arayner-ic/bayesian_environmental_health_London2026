@@ -993,6 +993,46 @@ data.frame(
   theme_bw()
 ```
 
+## Back to categorical
+
+```{r}
+#| echo: false
+#| eval: true
+#| fig-align: "center"
+#| fig-height: 6
+#| message: false
+#| warning: false
+
+set.seed(11)
+x <- rnorm(n = 1000)
+y <- 0.5 * x * x + rnorm(1000, sd = 0.3)
+
+data.frame(
+  x = x,
+  y = y,
+  x_cat = INLA::inla.group(x, n = 20) %>% factor()
+) -> dat_cat
+
+
+lm(y ~ x_cat, data = dat_cat) -> mod
+coefs <- c(coef(mod)[1], coef(mod)[1] + coef(mod)[-1])
+LL <- c(confint(mod)[1, 1], confint(mod)[1, 1] + confint(mod)[-1, 1])
+UL <- c(confint(mod)[1, 2], confint(mod)[1, 2] + confint(mod)[-1, 2])
+
+data.frame(
+  mean = coefs,
+  LL = LL,
+  UL = UL,
+  X = levels(dat_cat$x_cat) %>% as.character() %>% as.numeric()
+) %>%
+  ggplot() +
+  geom_point(data = data.frame(x = x, y = y), aes(x = x, y = y), alpha = 0.5) +
+  geom_point(aes(x = X, y = mean), col = "red", cex = 2) +
+  geom_errorbar(aes(x = X, ymin = LL, ymax = UL), col = "red", linewidth = 1, width = 0.3) +
+  theme_bw()
+```
+
+
 ## Example: Mortality and temperature in Italy
 
 ::::: columns
