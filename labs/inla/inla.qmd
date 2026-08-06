@@ -770,6 +770,9 @@ priors:
 - the `loggamma` default.
 
 ```{r}
+#| fig-width: 10
+#| fig-height: 4.5
+#| out-width: "100%"
 fit_partial <- function(hyper) {
   inla(
     deaths ~ 1 + f(provincia_id, model = "iid", hyper = hyper),
@@ -795,6 +798,8 @@ sens <- bind_rows(
   as.data.frame(sd_of(m_pc_tight)) |> mutate(prior = "PC, U = 0.1"),
   as.data.frame(sd_of(m_lgamma))   |> mutate(prior = "loggamma default")
 )
+
+
 
 p_a <- ggplot(sens, aes(x = x, y = y, colour = prior)) +
   geom_line(linewidth = 0.9) +
