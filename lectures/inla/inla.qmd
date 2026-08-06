@@ -44,9 +44,9 @@ set.seed(2)
 ## Outline {.smaller}
 
 -   Recap: where Bayesian inference gets expensive
--   What INLA is trading away, and what it buys
--   Latent Gaussian models
--   Gaussian Markov random fields and sparsity
+-   What we actually need from a posterior
+-   Latent Gaussian models: structure and limits
+-   Sparsity, and why the largest layer is the cheap one
 -   The Laplace approximation
 -   The three steps of the INLA algorithm
 -   Accuracy, speed, and limits
@@ -56,42 +56,19 @@ set.seed(2)
 
 ## Recap: Bayesian inference
 
--   We have data $y$, parameters $x$, and Bayes' theorem:
+$$P(\theta|y) \propto P(y|\theta) P(\theta)$$
 
-$$
-p(x \mid y) = \frac{p(y \mid x)\, p(x)}{p(y)}
-$$
-
--   The numerator is easy: it is just the likelihood times the prior.
--   The denominator $p(y) = \int p(y \mid x) p(x)\, dx$ is the problem.
--   For anything beyond conjugate toy examples, that integral has no
-    closed form.
-
-## Non-closed solutions 
-
--   In a hierarchical model, $x$ is not one parameter but thousands:
-    intercepts, coefficients, one random effect per area, per year, per
-    city-year...
--   The normalising constant is then a *very* high-dimensional integral.
-
-## Non-closed solutions 
-
--   And we rarely want the joint posterior anyway — we want **marginals**:
-
-$$
-p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
-$$
-
--   Which requires integrating out everything else. [Also
-    intractable.]{style="color:red"}
+- $P(\theta)$ is the `prior` (known or estimated a priori).
+- $P(y|\theta)$ is the `likelihood` (probability of data given parameters of interest).
+- $P(\theta|y)$ is the `posterior` (parameters of interest given data).
 
 ## The usual answer: MCMC
 
 -   Do not compute the integral. **Sample** from the posterior instead.
 -   Gibbs, Metropolis-Hastings, HMC/NUTS (`NIMBLE`, `Stan`, `JAGS`).
 -   Guaranteed to be correct *in the limit* of infinite samples.
--   Extremely general: works for essentially any model you can write down.
--   This is what we did last session with `NIMBLE`.
+-   General: works for essentially any model you can write down.
+-   This is what we did basically until now with `NIMBLE`.
 
 ## What MCMC costs
 
@@ -99,309 +76,985 @@ $$
     $>$ 160,000 latent parameters to sample.
 -   **Convergence diagnostics.** Trace plots, $\hat{R}$, effective sample
     size, burn-in, thinning — all need testing and re-testing.
+-   **Autocorrelation.** Strongly correlated latent fields mix badly;
+    effective sample size can be a small fraction of the nominal one.
+-   **Iteration cost.** Every time you change a prior or add a covariate,
+    you wait again.
     
 ## What MCMC costs
 
--   **Autocorrelation.** Strongly correlated latent fields mix badly;
-    effective sample size can be a tiny fraction of the nominal one.
--   **Iteration cost.** Every time you change a prior or add a covariate,
-    you wait again.
--   Model *development* is where the pain really is: you may fit a model
+-   Model development is where the pain really is: you may fit a model
     thirty times before you fit it once for real.
+-   When models are complex, particularly with hierarchical structures or 
+    with massive datasets, MCMC can become unfeasible.
 
-## Where MCMC starts to hurt
+## Where MCMC starts to become strained
 
 -   Disease mapping: one random effect per small area, spatially
     correlated by construction.
--   Space-time interactions: $N_{\text{area}} \times T$ parameters, often
-    weakly identified.
--   Cross-validation: refitting the model $n$ times is simply not
+-   Space-time interactions: $N_{\text{area}} \times T$ parameters.
+-   Cross-validation: refitting the model $n$ times often not
     feasible.
 -   Sensitivity analysis over priors: same problem again.
--   These are exactly the models that climate-and-health work keeps
-    reaching for.
 
-## `INLA` 
+<!-- ## Which joint do we need? {.smaller} -->
 
--   **I**ntegrated **N**ested **L**aplace **A**pproximation
-    (Rue, Martino & Chopin, 2009).
--   We usually only want **posterior marginals**, not the
-    joint posterior.
--   A huge share of the models we actually fit belong
-    to one restricted class — **latent Gaussian models**.
--   Within that class, marginals can be *approximated deterministically*,
-    accurately, and very fast.
--   No chains. No burn-in. No $\hat{R}$. Same answer every time you run it.
+<!-- ```{=html} -->
+<!-- <svg viewBox="0 0 920 360" style="width:100%;color:inherit" font-family="inherit"> -->
+<!-- <rect x="60" y="90" width="440" height="220" rx="8" fill="none" -->
+<!--       stroke="currentColor" stroke-opacity="0.45" stroke-width="1.2"/> -->
+<!-- <g transform="rotate(-25 280 200)"> -->
+<!-- <ellipse cx="280" cy="200" rx="130" ry="70" fill="#2980b9" fill-opacity="0.10" -->
+<!--          stroke="#2980b9" stroke-opacity="0.5" stroke-width="1.2"/> -->
+<!-- <ellipse cx="280" cy="200" rx="95" ry="50" fill="#2980b9" fill-opacity="0.16" -->
+<!--          stroke="#2980b9" stroke-opacity="0.6" stroke-width="1.2"/> -->
+<!-- <ellipse cx="280" cy="200" rx="58" ry="30" fill="#2980b9" fill-opacity="0.26" -->
+<!--          stroke="#2980b9" stroke-opacity="0.7" stroke-width="1.2"/> -->
+<!-- </g> -->
+<!-- <text x="280" y="338" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a latent element</text> -->
+<!-- <text x="42" y="205" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a hyperparameter</text> -->
 
-## `MCMC` and `INLA` {.smaller}
+<!-- <path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82 Z" -->
+<!--       fill="#c0392b" fill-opacity="0.14" stroke="none"/> -->
+<!-- <path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82" -->
+<!--       fill="none" stroke="#c0392b" stroke-width="2.8"/> -->
+<!-- <path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90 Z" -->
+<!--       fill="#c0392b" fill-opacity="0.14" stroke="none"/> -->
+<!-- <path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90" -->
+<!--       fill="none" stroke="#c0392b" stroke-width="2.8"/> -->
 
-| | `MCMC` | `INLA` |
-|---|---|---|
-| Approach | Stochastic sampling | Deterministic approximation |
-| Model class | Almost anything | Latent Gaussian models only |
-| Error | Monte Carlo error, $\to 0$ with time | Approximation error, fixed |
-| Runtime | Good! But can be challenge to scale | Potentially accelerated |
-| Reproducible | Up to the seed | Exactly |
-| Diagnostics needed | Many | Few |
+<!-- <text x="620" y="128" font-size="17" font-weight="600" fill="currentColor">The all-at-once joint</text> -->
+<!-- <text x="620" y="152" font-size="15" fill="currentColor" opacity="0.8">field and hyperparameters together</text> -->
+<!-- <text x="620" y="216" font-size="17" font-weight="600" fill="#c0392b">What we report</text> -->
+<!-- <text x="620" y="240" font-size="15" fill="#c0392b" opacity="0.9">one marginal at a time</text> -->
+<!-- <path d="M612,210 L568,202" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="4 3" -->
+<!--       opacity="0.75" fill="none"/> -->
+<!-- </svg> -->
+<!-- ``` -->
 
-# Latent Gaussian models
+<!-- ::: {.nonincremental} -->
+<!-- -   MCMC draws from the joint posterior over **everything at once** — the -->
+<!--     latent field and the hyperparameters together. -->
+<!-- -   Almost everything we publish is **marginal**: a mean and interval per -->
+<!--     coefficient, a relative risk per area, an exposure–response curve with a -->
+<!--     band. -->
+<!-- -   We never need that all-at-once joint. So the two need not be handled -->
+<!--     together. -->
+<!-- ::: -->
 
-## The three-stage hierarchy {.smaller}
 
-Every model INLA can fit has this shape:
+## Building blocks of inference {.smaller}
 
-$$
-\begin{split}
-\textbf{Stage 1:} \quad & y_i \mid x, \boldsymbol{\theta} \sim \prod_{i=1}^{n} p(y_i \mid x_i, \boldsymbol{\theta}) \\
-\textbf{Stage 2:} \quad & \boldsymbol{x} \mid \boldsymbol{\theta} \sim N\big(\boldsymbol{0}, \boldsymbol{Q}(\boldsymbol{\theta})^{-1}\big) \\
-\textbf{Stage 3:} \quad & \boldsymbol{\theta} \sim p(\boldsymbol{\theta})
-\end{split}
-$$
+```{=html}
+<svg viewBox="0 0 920 340" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ah1" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
 
--   Stage 1: the likelihood — observations conditionally independent given
-    the latent field.
--   Stage 2: the **latent field** $\boldsymbol{x}$, jointly Gaussian.
--   Stage 3: a **small** number of hyperparameters $\boldsymbol{\theta}$.
+<rect x="330" y="30" width="200" height="52" rx="8" fill="#8e44ad" fill-opacity="0.10"
+      stroke="currentColor" stroke-opacity="0.35"/>
+<text x="430" y="52" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">hyperparameters</text>
+<path d="M370,68 H490" stroke="currentColor" stroke-width="8" stroke-linecap="round"
+      stroke-dasharray="0.1 40" opacity="0.6" fill="none"/>
+<text x="555" y="49" font-size="15" fill="currentColor" opacity="0.8">a handful of them</text>
+<text x="555" y="71" font-size="15" fill="currentColor" opacity="0.8">not Gaussian</text>
 
-## Stage 1: the likelihood {.smaller}
+<line x1="430" y1="86" x2="430" y2="116" stroke="currentColor" stroke-width="1.6"
+      opacity="0.55" marker-end="url(#ah1)"/>
 
--   Given the latent field, observations are independent:
+<rect x="150" y="122" width="560" height="94" rx="8" fill="#2980b9" fill-opacity="0.10"
+      stroke="currentColor" stroke-opacity="0.35"/>
+<text x="170" y="147" font-size="16" font-weight="600" fill="currentColor">latent field</text>
+<g stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-dasharray="0.1 14"
+   opacity="0.5" fill="none">
+<path d="M175,172 H685"/><path d="M175,190 H685"/><path d="M175,208 H685"/></g>
+<text x="740" y="158" font-size="15" fill="currentColor" opacity="0.8">very many</text>
+<text x="740" y="180" font-size="15" fill="currentColor" opacity="0.8">jointly Gaussian</text>
 
-$$
-p(\boldsymbol{y} \mid \boldsymbol{x}, \boldsymbol{\theta}) = \prod_{i=1}^{n} p(y_i \mid \eta_i, \boldsymbol{\theta})
-$$
+<line x1="430" y1="220" x2="430" y2="250" stroke="currentColor" stroke-width="1.6"
+      opacity="0.55" marker-end="url(#ah1)"/>
 
--   Each observation depends on the latent field through **one** element:
-    its linear predictor $\eta_i$.
--   The likelihood itself need **not** be Gaussian: Poisson, binomial,
-    negative binomial, gamma, Weibull, zero-inflated, survival families,
-    etc.
--   This is the same conditional independence assumption we always make in
-    hierarchical models.
+<rect x="280" y="256" width="300" height="52" rx="8" fill="#16a085" fill-opacity="0.10"
+      stroke="currentColor" stroke-opacity="0.35"/>
+<text x="300" y="288" font-size="16" font-weight="600" fill="currentColor">data</text>
+<path d="M400,282 H560" stroke="currentColor" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="0.1 20" opacity="0.6" fill="none"/>
+<text x="620" y="288" font-size="15" fill="currentColor" opacity="0.8">n observations</text>
 
-## Stage 2: the latent Gaussian field {.smaller}
+<path d="M110,284 V56" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="5 5"
+      opacity="0.8" fill="none" marker-end="url(#ah1)"/>
+<text x="30" y="40" font-size="15" fill="#c0392b">inference</text>
+</svg>
+```
 
--   The latent field collects **everything** in the linear predictor:
+- Data generation runs top to bottom.
+- Inference recovers bottom to top.
+- The large layer is Gaussian; the layer that is not Gaussian is small.
 
-$$
-\eta_i = \alpha + \sum_{k} \beta_k z_{ki} + \sum_{j} f_j(u_{ji})
-$$
+## An illustrative example {.smaller}
 
--   $\boldsymbol{x} = \{\boldsymbol{\eta}, \alpha, \boldsymbol{\beta}, \boldsymbol{f}\}$
--   Intercept, fixed effects, random effects, smooth functions, spatial
-    fields, temporal trends — all of it.
--   All assigned a **joint Gaussian prior** with precision matrix
-    $\boldsymbol{Q}(\boldsymbol{\theta})$.
--   Note: fixed effects get vague Gaussian priors, so they are Gaussian
-    too. Nothing is excluded.
+Example: weekly death counts by county, with a heat term, a spatial
+term and a temporal trend.
 
-## Stage 3: the hyperparameters {.smaller}
+```{.r}
+code <- nimbleCode({
 
--   $\boldsymbol{\theta}$ contains everything **not** Gaussian:
-    -   precisions (inverse variances) of random effects,
-    -   correlation and range parameters,
-    -   overdispersion, mixing weights, likelihood-specific parameters.
--   These enter $\boldsymbol{Q}(\boldsymbol{\theta})$ and the likelihood.
--   Crucially, $\dim(\boldsymbol{\theta})$ must be **small** — typically
-    1 to 6, rarely more than 10.
--   [The latent field can be enormous; the hyperparameter space cannot
-    be.]{style="color:red"}
+  alpha ~ dnorm(0, sd = 10)
+  beta  ~ dnorm(0, sd = 10)
+  tau_b ~ dgamma(1, 0.01)
+  tau_g ~ dgamma(1, 0.01)
+  phi   ~ dbeta(1, 1)
 
-## What counts as a latent Gaussian model? {.smaller}
+  for (i in 1:N) {
+    deaths[i] ~ dpois(mu[i])
+    log(mu[i]) <- log(E[i]) + alpha + beta * heat[i] +
+                    b[county[i]] + gamma[week[i]]
+  }
 
-Almost everything we fit in this course:
+  s[1:M] ~ dcar_normal(adj[1:L], w[1:L], num[1:M], 1, zero_mean = 1)
+  for (j in 1:M) {
+    theta[j] ~ dnorm(0, 1)
+    b[j] <- (sqrt(1 - phi) * theta[j] + sqrt(phi / scl) * s[j]) / sqrt(tau_b)
+  }
 
--   Linear and generalised linear models
--   Mixed / multilevel models (IID random effects)
--   Temporal models: RW1, RW2, AR(p), seasonal
--   Smoothing splines and non-linear exposure-response (`rw2`, `crossbasis`-style)
--   Spatial models: ICAR, BYM, BYM2, Leroux, SPDE/Matérn
--   Spatiotemporal models, including interaction types I-IV
--   Measurement error, missing covariates, survival models
+  gamma[1] ~ dnorm(0, sd = 10)
+  for (t in 2:Tw) {
+    gamma[t] ~ dnorm(gamma[t - 1], tau_g)
+  }
 
-Two conditions must hold: the latent field is **Gaussian and sparse**, and
-$\boldsymbol{\theta}$ is **low-dimensional**.
+})
+```
 
-## Gaussian Markov random fields {.smaller}
+## The data {.smaller}
 
--   A GMRF is a Gaussian vector whose **precision matrix**
-    $\boldsymbol{Q} = \boldsymbol{\Sigma}^{-1}$ is sparse.
--   The Markov property:
+```{=html}
+<svg viewBox="0 0 920 220" style="width:100%;color:inherit" font-family="inherit">
+<rect x="290" y="20" width="180" height="44" rx="8" fill="#8e44ad" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"/>
+<g fill="currentColor" fill-opacity="0.18">
+<circle cx="340" cy="42" r="4.5"/><circle cx="380" cy="42" r="4.5"/><circle cx="420" cy="42" r="4.5"/></g>
+<text x="660" y="38" font-size="16" fill="currentColor" opacity="0.3">hyperparameters</text>
+<rect x="120" y="82" width="520" height="54" rx="8" fill="#2980b9" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"/>
+<g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 12" opacity="0.18" fill="none">
+<path d="M140,100 H620"/><path d="M140,118 H620"/></g>
+<text x="660" y="105" font-size="16" fill="currentColor" opacity="0.3">latent field</text>
+<rect x="210" y="154" width="340" height="44" rx="8" fill="#16a085" fill-opacity="0.18" stroke="currentColor" stroke-opacity="0.45"/>
+<path d="M240,176 H530" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 18" opacity="0.7" fill="none"/>
+<text x="660" y="172" font-size="16" font-weight="600" fill="currentColor">data</text>
+<text x="660" y="192" font-size="15" fill="currentColor" opacity="0.75">161,616 rows</text>
+</svg>
+```
 
-$$
-Q_{ij} = 0 \iff x_i \perp x_j \mid \boldsymbol{x}_{-ij}
-$$
-
--   Conditional independence $\Rightarrow$ zeros in $\boldsymbol{Q}$.
--   Neighbours-only spatial models (ICAR) and random walks are GMRFs by
-    construction.
--   Sparsity is important: factorising a sparse $\boldsymbol{Q}$ is
-    $O(n^{3/2})$ in 2D rather than $O(n^3)$, so a 10,000-area field costs
-    a fraction of a second, not hours.
-
-# How INLA works (briefly)
-
-## What we want {.smaller}
-
-Two sets of marginals:
-
-$$
-p(x_i \mid \boldsymbol{y}) = \int p(x_i \mid \boldsymbol{\theta}, \boldsymbol{y})\, p(\boldsymbol{\theta} \mid \boldsymbol{y})\, d\boldsymbol{\theta}
-$$
-
-$$
-p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y})\, d\boldsymbol{\theta}_{-j}
-$$
-
--   Note the **nesting**: the latent marginal is an average of conditional
-    marginals, weighted by the hyperparameter posterior.
--   So we need three things: $p(\boldsymbol{\theta} \mid \boldsymbol{y})$,
-    $p(x_i \mid \boldsymbol{\theta}, \boldsymbol{y})$, and a way to
-    integrate.
--   That is the "integrated nested" part of the name.
-
-## The Laplace approximation
-
--   Old idea (Laplace, 1774): approximate an integral by fitting a Gaussian at the mode of the integrand.
--   Take logs, expand to second order around the mode
-    $\boldsymbol{x}^{*}$:
-
-$$
-\log f(\boldsymbol{x}) \approx \log f(\boldsymbol{x}^{*}) - \tfrac{1}{2}(\boldsymbol{x}-\boldsymbol{x}^{*})^{\top}\boldsymbol{H}(\boldsymbol{x}-\boldsymbol{x}^{*})
-$$
-
--   The result is Gaussian, so the integral is available in closed form.
--   It works well when the target is unimodal and reasonably symmetric —
-    which posteriors of latent Gaussian fields usually are.
-
-## Laplace approximation, formally
-
-$$
-\int f(\boldsymbol{x})\, d\boldsymbol{x} \approx f(\boldsymbol{x}^{*}) \, (2\pi)^{d/2} \, |\boldsymbol{H}|^{-1/2}
-$$
-
--   $\boldsymbol{x}^{*}$: the mode, found by Newton-Raphson.
--   $\boldsymbol{H}$: the negative Hessian at the mode.
--   [The Gaussian prior on $\boldsymbol{x}$ helps enormously: the target
-    is already "nearly Gaussian" before we start.]{style="color:red"}
-
-## The three steps, in words {.smaller}
-
-Think of it as: **if I knew the variances, the rest would be easy.**
-
-::: nonincremental
-1.  **Get a posterior for the few hyperparameters** $\boldsymbol{\theta}$
-    (the variances, correlations).
-2.  **Pick a handful of plausible values of** $\boldsymbol{\theta}$ to
-    stand in for the whole distribution.
-3.  **Fit the latent field at each one**, then average the answers,
-    weighting each by how plausible that $\boldsymbol{\theta}$ was.
+::: {.nonincremental}
+-   3,108 counties over 52 weeks.
+-   Each row reaches the model through **one** number — its own linear
+    predictor.
 :::
 
--   Step 3 is cheap because, with $\boldsymbol{\theta}$ held fixed, the
-    latent field is nearly Gaussian.
--   Steps 1-2 are cheap because $\boldsymbol{\theta}$ has only a few
-    entries.
+## The latent field {.smaller}
 
-## Step 1: a posterior for the hyperparameters {.smaller}
+```{=html}
+<svg viewBox="0 0 920 220" style="width:100%;color:inherit" font-family="inherit">
+<rect x="290" y="20" width="180" height="44" rx="8" fill="#8e44ad" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"/>
+<g fill="currentColor" fill-opacity="0.18">
+<circle cx="340" cy="42" r="4.5"/><circle cx="380" cy="42" r="4.5"/><circle cx="420" cy="42" r="4.5"/></g>
+<text x="660" y="38" font-size="16" fill="currentColor" opacity="0.3">hyperparameters</text>
+<rect x="120" y="82" width="520" height="54" rx="8" fill="#2980b9" fill-opacity="0.18" stroke="currentColor" stroke-opacity="0.45"/>
+<g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 12" opacity="0.7" fill="none">
+<path d="M140,100 H620"/><path d="M140,118 H620"/></g>
+<text x="660" y="105" font-size="16" font-weight="600" fill="currentColor">latent field</text>
+<text x="660" y="125" font-size="15" fill="currentColor" opacity="0.75">about 168,000 elements</text>
+<rect x="210" y="154" width="340" height="44" rx="8" fill="#16a085" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"/>
+<path d="M240,176 H530" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 18" opacity="0.18" fill="none"/>
+<text x="660" y="172" font-size="16" fill="currentColor" opacity="0.3">data</text>
+</svg>
+```
 
-We want $p(\boldsymbol{\theta} \mid \boldsymbol{y})$: how plausible is
-each set of variances, given the data?
+Everything unobserved, stacked into one vector:
 
--   We can write down the **joint** $p(\boldsymbol{x}, \boldsymbol{\theta}, \boldsymbol{y})$
-    exactly — it is just likelihood $\times$ priors.
--   Divide the joint by $p(\boldsymbol{x} \mid \boldsymbol{\theta}, \boldsymbol{y})$
-    and the latent field cancels out, leaving what we want.
--   Problem: that denominator is the thing we cannot compute.
--   Solution: **swap it for a Gaussian approximation** — which is a
-    reasonable stand-in, because a latent Gaussian field with
-    $\boldsymbol{\theta}$ fixed really is close to Gaussian.
+| Piece | Elements |
+|---|---|
+| intercept | 1 |
+| coefficient on `heat` | 1 |
+| `bym2` county effects | 6,216 |
+| `rw1` weekly trend | 52 |
+| the linear predictors | 161,616 |
 
-## Step 1: the same thing in symbols {.smaller}
+## The hyperparameters {.smaller}
 
-$$
-\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y}) \;\propto\;
-\left. \frac{\overbrace{p(\boldsymbol{y} \mid \boldsymbol{x}, \boldsymbol{\theta})\, p(\boldsymbol{x} \mid \boldsymbol{\theta})\, p(\boldsymbol{\theta})}^{\text{joint: we know this exactly}}}{\underbrace{\tilde{p}_G(\boldsymbol{x} \mid \boldsymbol{\theta}, \boldsymbol{y})}_{\text{Gaussian stand-in}}} \right|_{\boldsymbol{x} \,=\, \boldsymbol{x}^{*}(\boldsymbol{\theta})}
-$$
+```{=html}
+<svg viewBox="0 0 920 220" style="width:100%;color:inherit" font-family="inherit">
+<rect x="290" y="20" width="180" height="44" rx="8" fill="#8e44ad" fill-opacity="0.18" stroke="currentColor" stroke-opacity="0.45"/>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="340" cy="42" r="4.5"/><circle cx="380" cy="42" r="4.5"/><circle cx="420" cy="42" r="4.5"/></g>
+<text x="660" y="38" font-size="16" font-weight="600" fill="currentColor">hyperparameters</text>
+<text x="660" y="58" font-size="15" fill="currentColor" opacity="0.75">3 of them</text>
+<rect x="120" y="82" width="520" height="54" rx="8" fill="#2980b9" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"/>
+<g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 12" opacity="0.18" fill="none">
+<path d="M140,100 H620"/><path d="M140,118 H620"/></g>
+<text x="660" y="105" font-size="16" fill="currentColor" opacity="0.3">latent field</text>
+<rect x="210" y="154" width="340" height="44" rx="8" fill="#16a085" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"/>
+<path d="M240,176 H530" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 18" opacity="0.18" fill="none"/>
+<text x="660" y="172" font-size="16" fill="currentColor" opacity="0.3">data</text>
+</svg>
+```
 
--   The identity holds for **any** value of $\boldsymbol{x}$, so we are
-    free to choose one — and we choose the mode
-    $\boldsymbol{x}^{*}(\boldsymbol{\theta})$, where the Gaussian
-    stand-in is most accurate.
--   This is exactly the Laplace approximation from two slides ago,
-    applied to the latent field.
--   Output: a function we can **evaluate** at any $\boldsymbol{\theta}$,
-    though we have no formula for it.
+Not part of what the model predicts, but quantities that govern the shape of
+the latent field:
 
-## Step 2: where to evaluate $\boldsymbol{\theta}$ {.smaller}
-
-We can only evaluate $\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y})$
-point by point, so we need to choose good points.
-
--   Climb to the **top** of the surface (Newton-Raphson).
--   Measure the **curvature** at the top (the Hessian) — this tells us
-    how wide the distribution is in each direction.
--   Use that to rescale the axes, so the surface is roughly round rather
-    than a long thin ridge.
--   Then lay down evaluation points on the rescaled, well-behaved
-    surface.
-
-## Step 2: how many points? {.smaller}
-
-| `int.strategy` | What it does | Trade-off |
-|---|---|---|
-| `"grid"` | Dense grid over $\boldsymbol{\theta}$ | Most accurate; cost explodes beyond 2-3 hyperparameters |
-| `"ccd"` | A clever scatter of points around the mode | **Default** when $\dim(\boldsymbol{\theta}) > 2$; good accuracy, few points |
-| `"eb"` | The mode only | Fastest; [ignores uncertainty in $\boldsymbol{\theta}$]{style="color:red"} |
-
--   Each chosen point $\boldsymbol{\theta}^{(k)}$ comes with a weight: how
-    plausible it is.
--   Useful during model development: run `"eb"` while you iterate, then
-    `"ccd"` for the final fit.
-
-## Step 3: averaging over the hyperparameters {.smaller}
-
-For each $\boldsymbol{\theta}^{(k)}$ we fit the latent field, then take a
-**weighted average** of the results:
-
-$$
-\underbrace{\tilde{p}(x_i \mid \boldsymbol{y})}_{\text{what we report}} \approx \sum_{k} \underbrace{\tilde{p}(x_i \mid \boldsymbol{\theta}^{(k)}, \boldsymbol{y})}_{\text{answer if }\boldsymbol{\theta}=\boldsymbol{\theta}^{(k)}} \times \underbrace{\tilde{p}(\boldsymbol{\theta}^{(k)} \mid \boldsymbol{y})\, \Delta_k}_{\text{how much it counts}}
-$$
-
--   Same spirit as multiple imputation: solve the easy problem several
-    times, then average, so uncertainty in $\boldsymbol{\theta}$ is
-    carried through.
--   The result is a **density**, not a set of samples.
--   One thing still missing: how to get each
-    $\tilde{p}(x_i \mid \boldsymbol{\theta}^{(k)}, \boldsymbol{y})$.
-
-## Three strategies for the latent marginals 
-
--   **Gaussian** (`strategy = "gaussian"`): read the marginal straight off
-    the Gaussian approximation. Fastest; can be poor in the tails and miss
-    skewness.
--   **Laplace** (`strategy = "laplace"`): a full nested Laplace
-    approximation for each $x_i$. Most accurate, most expensive.
--   **Simplified Laplace** (`strategy = "simplified.laplace"`): a
-    third-order Taylor correction to the Gaussian, capturing location and
-    skewness. [The default, and almost always the right
-    choice.]{style="color:red"}
-
-## The algorithm in one slide
-
-::: nonincremental
-1.  Find the mode of $\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y})$
-    via Newton-Raphson.
-2.  Compute the Hessian; build the standardised $z$-space.
-3.  Place integration points (grid or CCD) and evaluate
-    $\tilde{p}(\boldsymbol{\theta}^{(k)} \mid \boldsymbol{y})$.
-4.  At each point, compute
-    $\tilde{p}(x_i \mid \boldsymbol{\theta}^{(k)}, \boldsymbol{y})$ for
-    all $i$.
-5.  Sum over $k$ with weights to get $\tilde{p}(x_i \mid \boldsymbol{y})$.
-6.  Marginalise $\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y})$ for
-    each $\theta_j$.
+::: {.nonincremental}
+-   the `bym2` precision — how much the county effects vary.
+-   the `bym2` mixing proportion $\phi$ — how much of that is spatial rather
+    than unstructured.
+-   the `rw1` precision — how smooth the weekly trend is.
 :::
+
+## What is in each layer {.smaller}
+
+**The latent field** collects everything unobserved that enters the linear
+predictor:
+
+::: {.nonincremental}
+-   the intercept and every regression coefficient,
+-   every random effect, smooth curve, spatial field and time trend,
+-   and the linear predictors themselves.
+:::
+
+It is usually **larger than the dataset**, because the linear predictors sit
+inside it. Fixed effects belong to it too, since a vague Gaussian prior is
+still a Gaussian prior.
+
+**The hyperparameters** are what remains — the precisions of random effects,
+correlation and range parameters, mixing proportions such as the BYM2 $\phi$,
+and likelihood-specific quantities such as negative binomial dispersion.
+
+They govern the shape of the latent field. There are far fewer of them than
+there are elements in the field. This model has three.
+
+## The class of latent Gaussian models
+
+Every latent Gaussian model has a linear predictor of this form:
+
+$$
+\eta_i \;=\; \underbrace{\alpha}_{\text{intercept}} \;+\; \underbrace{\sum_{k} \beta_k z_{ki}}_{\text{linear terms}} \;+\; \underbrace{\sum_{j} f_j(u_{ji})}_{\text{structured terms}}
+$$
+
+with a Gaussian prior on everything in it, and a short list of hyperparameters governing the $f_j$.
+
+## The class of latent Gaussian models {.smaller}
+
+The whole class comes from choosing what the $f_j$ are:
+
+| Choose $f_j$ to be | and you have |
+|---|---|
+| nothing | a GLM |
+| independent by group | a mixed / multilevel model |
+| a random walk over time | a smooth trend |
+| a random walk over exposure | a non-linear exposure–response curve |
+| neighbours on a map | ICAR, BYM2, Leroux |
+| a Matérn field over space | SPDE / geostatistics |
+| space crossed with time | a spatiotemporal interaction |
+
+- Same model with different $f_j$ — which is why one algorithm fits all of them.
+
+
+## The latent field as a multivariate normal
+
+The latent field is one vector of length $m \approx 168{,}000$, with a
+multivariate normal prior:
+
+$$
+\boldsymbol{x} \mid \boldsymbol{\theta} \;\sim\; N\big(\boldsymbol{0},\, \boldsymbol{\Sigma}(\boldsymbol{\theta})\big)
+\qquad\text{or}\qquad
+\boldsymbol{x} \mid \boldsymbol{\theta} \;\sim\; N\big(\boldsymbol{0},\, \boldsymbol{Q}(\boldsymbol{\theta})^{-1}\big),
+$$
+
+$$
+\qquad \boldsymbol{Q} = \boldsymbol{\Sigma}^{-1}
+$$
+
+The precision matrix $\boldsymbol{Q}$ often has useful properties (sparse, Markov).
+
+## Latent field often has a Gaussian Markov Random Field (GMRF) prior {.smaller}
+
+```{=html}
+<svg viewBox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahg" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
+
+<g font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">
+<text x="180" y="28">f(county, "bym2")</text>
+<text x="470" y="28">f(week, "rw1")</text>
+<text x="745" y="28">alpha, beta</text></g>
+
+<g stroke="currentColor" stroke-width="1.4" opacity="0.45" fill="none">
+<path d="M110,70 L180,60"/><path d="M180,60 L250,80"/><path d="M110,70 L100,140"/>
+<path d="M180,60 L175,130"/><path d="M250,80 L245,150"/><path d="M100,140 L175,130"/>
+<path d="M175,130 L245,150"/>
+<path d="M370,105 H590"/></g>
+
+<g fill="#2980b9" fill-opacity="0.3" stroke="currentColor" stroke-opacity="0.55">
+<circle cx="110" cy="70" r="14"/><circle cx="180" cy="60" r="14"/><circle cx="250" cy="80" r="14"/>
+<circle cx="100" cy="140" r="14"/><circle cx="175" cy="130" r="14"/><circle cx="245" cy="150" r="14"/>
+<circle cx="370" cy="105" r="14"/><circle cx="425" cy="105" r="14"/><circle cx="480" cy="105" r="14"/>
+<circle cx="535" cy="105" r="14"/><circle cx="590" cy="105" r="14"/>
+<circle cx="700" cy="105" r="14"/><circle cx="790" cy="105" r="14"/></g>
+
+<g font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">
+<text x="180" y="200">linked to its neighbours</text>
+<text x="470" y="200">linked to the week before</text>
+<text x="745" y="200">linked to nothing</text></g>
+
+<line x1="460" y1="220" x2="460" y2="246" stroke="currentColor" stroke-width="1.6"
+      opacity="0.55" marker-end="url(#ahg)"/>
+<rect x="120" y="252" width="680" height="46" rx="8" fill="#2980b9" fill-opacity="0.2"
+      stroke="currentColor" stroke-opacity="0.45"/>
+<text x="460" y="281" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">one jointly Gaussian vector, every link local</text>
+</svg>
+```
+
+::: {.nonincremental}
+-   Each term is Gaussian, so stacking them gives a Gaussian vector. Nothing
+    is lost by treating them as one object.
+-   Each term is also **local**. A random walk is a Markov chain; an
+    adjacency structure is a Markov random field. Neither has any long-range
+    link written into it.
+<!-- -   Gaussian *and* Markov is a **GMRF**. Every `f()` in `INLA` is one. -->
+:::
+
+## What the GMRF structure allows
+
+```{=html}
+<svg viewBox="0 0 920 350" style="width:100%;color:inherit" font-family="inherit">
+<text x="40" y="110" font-size="17" font-weight="600" fill="currentColor">Q for this model</text>
+<text x="40" y="140" font-size="15" fill="currentColor" opacity="0.8">168,000 rows and columns</text>
+<text x="40" y="164" font-size="15" fill="currentColor" opacity="0.8">about six entries per row</text>
+<text x="40" y="198" font-size="15" fill="#c0392b">everything else is blank</text>
+
+<rect x="310" y="30" width="280" height="280" fill="none" stroke="currentColor" stroke-opacity="0.4"/>
+<line x1="313" y1="33" x2="587" y2="307" stroke="#16a085" stroke-width="6"
+      stroke-linecap="round" opacity="0.5"/>
+<rect x="310" y="30" width="14" height="14" fill="#16a085" fill-opacity="0.55"/>
+<g fill="#16a085" fill-opacity="0.55">
+<rect x="322" y="72" width="6" height="6"/><rect x="352" y="42" width="6" height="6"/>
+<rect x="352" y="102" width="6" height="6"/><rect x="382" y="72" width="6" height="6"/>
+<rect x="382" y="132" width="6" height="6"/><rect x="412" y="102" width="6" height="6"/>
+<rect x="412" y="162" width="6" height="6"/><rect x="442" y="132" width="6" height="6"/>
+<rect x="442" y="192" width="6" height="6"/><rect x="472" y="162" width="6" height="6"/>
+<rect x="472" y="222" width="6" height="6"/><rect x="502" y="192" width="6" height="6"/>
+<rect x="502" y="252" width="6" height="6"/><rect x="532" y="222" width="6" height="6"/>
+<rect x="327" y="147" width="6" height="6"/><rect x="427" y="57" width="6" height="6"/>
+<rect x="367" y="207" width="6" height="6"/><rect x="487" y="87" width="6" height="6"/>
+<rect x="407" y="242" width="6" height="6"/><rect x="522" y="127" width="6" height="6"/>
+<rect x="337" y="117" width="6" height="6"/><rect x="397" y="57" width="6" height="6"/>
+<rect x="550" y="277" width="6" height="6"/><rect x="557" y="270" width="6" height="6"/>
+<rect x="557" y="284" width="6" height="6"/><rect x="564" y="277" width="6" height="6"/>
+<rect x="564" y="291" width="6" height="6"/><rect x="571" y="284" width="6" height="6"/>
+<rect x="571" y="298" width="6" height="6"/><rect x="578" y="291" width="6" height="6"/></g>
+
+<g stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.6" fill="none">
+<path d="M592,37 L622,42"/><path d="M592,150 L622,150"/><path d="M592,285 L622,282"/></g>
+<g font-size="15" fill="currentColor" opacity="0.85">
+<text x="630" y="47">fixed effects</text>
+<text x="630" y="147">county effects:</text>
+<text x="630" y="167">neighbours only</text>
+<text x="630" y="278">weekly trend:</text>
+<text x="630" y="298">the week before</text></g>
+<text x="310" y="338" font-size="15" fill="currentColor" opacity="0.7">shaded = a direct link</text>
+</svg>
+```
+
+::: {.nonincremental}
+-   $\boldsymbol{Q}$ is almost entirely blank.
+-   Sparsity of the $\boldsymbol{Q}$ enable large computational gains when making inference (outside scope).
+:::
+
+<!-- . . . -->
+
+<!-- [Factorising a full matrix of size $m$ costs on the order of $m^3$; a mostly -->
+<!-- blank one, closer to $m^{3/2}$. That is the whole reason a field this large -->
+<!-- stays tractable.]{style="color:#c0392b"} -->
+
+## Summmary of GMRF {.smaller}
+
+```{=html}
+<svg viewBox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahs" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
+
+<rect x="60" y="24" width="330" height="48" rx="8" fill="#2980b9" fill-opacity="0.16"
+      stroke="currentColor" stroke-opacity="0.45"/>
+<text x="225" y="54" font-size="17" font-weight="600" text-anchor="middle" fill="currentColor">Gaussian</text>
+<rect x="530" y="24" width="330" height="48" rx="8" fill="#16a085" fill-opacity="0.16"
+      stroke="currentColor" stroke-opacity="0.45"/>
+<text x="695" y="54" font-size="17" font-weight="600" text-anchor="middle" fill="currentColor">Markov</text>
+
+<path d="M225,74 V110" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"/>
+<path d="M695,74 V110" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"/>
+
+<text x="225" y="134" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">a bell shape in 168,000 dimensions</text>
+<text x="225" y="156" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">described by a mean and a precision</text>
+<text x="695" y="134" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">each element linked only to</text>
+<text x="695" y="156" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">its neighbours in space or time</text>
+
+<path d="M225,170 V196 H460" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"/>
+<path d="M695,170 V196 H460" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"/>
+<path d="M460,196 V214" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"/>
+<text x="460" y="240" font-size="17" font-weight="600" text-anchor="middle" fill="#c0392b">a precision matrix that is almost entirely blank</text>
+</svg>
+```
+
+::: {.nonincremental}
+-   **Gaussian** gives the algebra: means, variances and conditionals all in
+    closed form once $\boldsymbol{Q}$ is known.
+-   **Markov** gives the sparsity: no direct link means a blank entry in
+    $\boldsymbol{Q}$, and the blanks are almost everything.
+-   Distant counties are still **correlated** — they share what lies between
+    them. The blanks record the absence of a *direct* link, not of a
+    relationship.
+:::
+
+## Laplace approximation {.smaller}
+
+Take any density $f(x)$, work on the log scale, and expand about the mode
+$x^{*}$ via Taylor expansion, where the first derivative vanishes :
+
+$$
+\log f(x) \;\approx\; \underbrace{\log f(x^{*})}_{\text{height}} \;+\; \underbrace{\tfrac{1}{2} \log f''(x^{*})\,(x - x^{*})^{2}}_{\text{curvature}}
+$$
+
+. . .
+
+Writing $H = -\log f''(x^{*})$ for the negative curvature, exponentiating
+gives a Gaussian:
+
+$$
+f(x) \;\approx\; f(x^{*}) \exp\!\left(-\tfrac{1}{2} H (x - x^{*})^{2}\right)
+\qquad\Longrightarrow\qquad
+x \;\sim\; N\!\left(x^{*},\; H^{-1}\right)
+$$
+
+. . .
+
+So the whole approximation is **two numbers**: the mode, and the curvature
+there. In our example $x^{*} = 4$ and $H = 0.25$, giving $N(4, 2^{2})$.
+
+. . .
+
+The same expansion also gives the integral in closed form:
+
+$$
+\int f(x)\, \mathrm{d}x \;\approx\; f(x^{*})\, (2\pi)^{d/2} \, |H|^{-1/2}
+$$
+
+## The Laplace approximation visually {.smaller}
+
+```{=html}
+<svg viewBox="0 0 920 285" style="width:100%;color:inherit" font-family="inherit">
+<path d="M120,245 C230,245 310,100 380,95 C450,90 500,143 570,187 C660,235 730,245 810,245"
+      fill="none" stroke="currentColor" stroke-width="2.2" opacity="0.85"/>
+<path d="M185,245 C293,245 325,95 380,95 C435,95 467,245 575,245"
+      fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"/>
+<path d="M380,95 V245" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4"
+      opacity="0.4" fill="none"/>
+<circle cx="380" cy="95" r="6" fill="#c0392b"/>
+<line x1="620" y1="80" x2="660" y2="80" stroke="currentColor" stroke-width="2.2" opacity="0.85"/>
+<text x="672" y="85" font-size="15" fill="currentColor" opacity="0.85">the target density</text>
+<line x1="620" y1="110" x2="660" y2="110" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"/>
+<text x="672" y="115" font-size="15" fill="#c0392b">the Gaussian fitted at its mode</text>
+<line x1="100" y1="245" x2="840" y2="245" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+</svg>
+```
+
+::: {.nonincremental}
+-   Laplace (1774): approximate an awkward integrand by the Gaussian that
+    matches it at the mode, after which the integral is available in closed
+    form.
+-   It is reliable when the target is unimodal and not strongly skewed.
+-   [With a GMRF prior and the hyperparameters fixed, this gives a
+    deterministic joint Gaussian approximation to the whole latent
+    field.]{style="color:#c0392b"}
+:::
+
+
+
+
+
+
+
+
+## Laplace approximation: a worked example {.smaller}
+
+```{r}
+#| label: laplace-setup
+#| echo: true
+#| eval: false
+shape <- 5; rate <- 1
+
+# log density, up to a constant
+lf <- function(x) (shape - 1) * log(x) - rate * x
+
+# 1. the mode
+mode <- optimise(lf, c(1e-6, 50), maximum = TRUE)$maximum
+
+# 2. curvature there:  -f''(x) = (shape - 1) / x^2
+prec <- (shape - 1) / mode^2
+sdev <- 1 / sqrt(prec)
+
+curve(dgamma(x, shape, rate), 0, 14, n = 400, lwd = 2.5, bty = "n",
+      xlab = "x", ylab = "density")
+curve(dnorm(x, mode, sdev), add = TRUE, n = 400, lwd = 2.5,
+      lty = 2, col = "#c0392b")
+abline(v = mode, lty = 3, col = "grey60")
+legend("topright", bty = "n", lwd = 2.5, lty = c(1, 2),
+       col = c("black", "#c0392b"),
+       legend = c("Gamma(5, 1)", "Laplace approximation"))
+```
+
+Two numbers do all the work: where the peak is, and how sharply it falls away.
+
+## Laplace approximation: a worked example {.smaller}
+
+```{r}
+#| label: laplace-plot
+#| echo: false
+#| fig-width: 9
+#| fig-height: 4.2
+#| fig-align: center
+shape <- 5; rate <- 1
+lf <- function(x) (shape - 1) * log(x) - rate * x
+mode <- optimise(lf, c(1e-6, 50), maximum = TRUE)$maximum
+prec <- (shape - 1) / mode^2
+sdev <- 1 / sqrt(prec)
+
+par(mar = c(4, 4, 1, 1))
+curve(dgamma(x, shape, rate), 0, 14, n = 400, lwd = 2.5, bty = "n",
+      xlab = "x", ylab = "density")
+curve(dnorm(x, mode, sdev), add = TRUE, n = 400, lwd = 2.5,
+      lty = 2, col = "#c0392b")
+abline(v = mode, lty = 3, col = "grey60")
+legend("topright", bty = "n", lwd = 2.5, lty = c(1, 2),
+       col = c("black", "#c0392b"),
+       legend = c("Gamma(5, 1)", "Laplace approximation"))
+```
+
+. . .
+
+The peak is matched exactly as per matching at the mode. What it misses is
+the **skew**: the target leans right, so its mean sits above its mode, and a
+symmetric curve cannot follow. 
+
+
+
+## Integrating nested Laplace Approximation: a worked example {.smaller}
+
+A case with a known exact answer. Let $x \mid \theta \sim N(0, 1/\theta)$ with
+$\theta \sim \text{Gamma}(2,2)$ — so $\theta$ is a precision, as in our models.
+
+```{r}
+#| echo: true
+#| eval: false
+a <- 2; b <- 2; K <- 7
+
+# 1. scan theta — a grid on the log scale, as INLA does
+theta <- exp(seq(log(0.03), log(12), length.out = K))
+w     <- dgamma(theta, a, b) * theta      # Jacobian for the log scale
+w     <- w / sum(w)                       # plausibility weights
+
+# 2. the conditional for x at each value of theta
+x    <- seq(-7, 7, length.out = 400)
+cond <- sapply(theta, \(t) dnorm(x, 0, 1 / sqrt(t)))
+
+# 3. integrate: the weighted sum
+marg <- as.vector(cond %*% w)
+```
+
+Three lines, three stages. Everything INLA does to the 168,000-element field
+has this shape.
+
+## Integrating nested Laplace Approximation: a worked example {.smaller}
+
+```{r}
+#| label: inla-three-panel
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+#| fig-align: center
+a <- 2; b <- 2; K <- 7
+theta <- exp(seq(log(0.03), log(12), length.out = K))
+w <- dgamma(theta, a, b) * theta; w <- w / sum(w)
+x <- seq(-7, 7, length.out = 400)
+cond <- sapply(theta, \(t) dnorm(x, 0, 1 / sqrt(t)))
+marg <- as.vector(cond %*% w)
+
+par(mfrow = c(1, 3), mar = c(4, 4, 3, 1), cex = 0.95)
+
+tt <- exp(seq(log(0.03), log(12), length.out = 300))
+plot(tt, dgamma(tt, a, b), type = "l", log = "x", lwd = 2.5, bty = "n",
+     xlab = expression(theta), ylab = "density", main = "1. scan the hyperparameter")
+points(theta, dgamma(theta, a, b), pch = 19, col = "#c0392b", cex = 0.5 + 4 * w)
+
+matplot(x, cond, type = "l", lty = 1, bty = "n", lwd = 1 + 7 * w,
+        col = adjustcolor("#2980b9", alpha.f = 0.75),
+        xlab = "x", ylab = "density", main = "2. one conditional each")
+
+plot(x, dt(x, 4), type = "l", lwd = 4, col = "grey65", bty = "n",
+     xlab = "x", ylab = "density", main = "3. the weighted sum")
+lines(x, marg, lwd = 2, lty = 2, col = "#16a085")
+lines(x, dnorm(x, 0, 1 / sqrt((a - 1) / b)), lwd = 2, lty = 3, col = "#c0392b")
+legend("topright", bty = "n", lwd = c(4, 2, 2), lty = c(1, 2, 3), cex = 0.9,
+       col = c("grey65", "#16a085", "#c0392b"),
+       legend = c("truth", "integrated", "fixed theta"))
+```
+
+## Integrating nested Laplace Approximation: a worked example {.smaller}
+
+| | at $x = 0$ | at $x = 3$ | at $x = 6$ |
+|---|---|---|---|
+| truth | 0.3750 | 0.01969 | 0.001186 |
+| integrated, 7 points | 0.3759 | 0.01974 | 0.001167 |
+| fixed $\theta$ (`eb`) | 0.2821 | 0.02973 | 0.000035 |
+
+- Seven points recover the exact answer to three decimals. Fixing $\theta$ gets
+the peak wrong and the far tail wrong by a factor of thirty — and the tail is
+where interval endpoints live.
+
+## Integrating nested Laplace Approximation: more than one hyperparameter {.smaller}
+
+We try several combinations, and combine the answers. It can be computationally expensive...
+
+```{=html}
+<svg viewBox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ah2" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
+
+<text x="25" y="28" font-size="18" font-weight="600" fill="currentColor">1. Score and place points</text>
+<rect x="25" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"/>
+<ellipse cx="150" cy="142" rx="105" ry="70" fill="#2980b9" fill-opacity="0.07"/>
+<ellipse cx="150" cy="142" rx="76" ry="51" fill="#2980b9" fill-opacity="0.09"/>
+<ellipse cx="150" cy="142" rx="46" ry="31" fill="#2980b9" fill-opacity="0.11"/>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="80" cy="107" r="3"/><circle cx="115" cy="107" r="3.5"/><circle cx="150" cy="107" r="4"/>
+<circle cx="185" cy="107" r="3.5"/><circle cx="220" cy="107" r="3"/>
+<circle cx="80" cy="142" r="3.5"/><circle cx="115" cy="142" r="4.5"/>
+<circle cx="185" cy="142" r="4.5"/><circle cx="220" cy="142" r="3.5"/>
+<circle cx="80" cy="177" r="3"/><circle cx="115" cy="177" r="3.5"/><circle cx="150" cy="177" r="4"/>
+<circle cx="185" cy="177" r="3.5"/><circle cx="220" cy="177" r="3"/></g>
+<circle cx="150" cy="142" r="6.5" fill="#c0392b"/>
+<text x="25" y="266" font-size="15" fill="currentColor" opacity="0.75">climb to the mode, measure</text>
+<text x="25" y="286" font-size="15" fill="currentColor" opacity="0.75">curvature, lay down points</text>
+
+<line x1="285" y1="142" x2="320" y2="142" stroke="currentColor" stroke-width="1.6"
+      opacity="0.55" marker-end="url(#ah2)"/>
+
+<text x="335" y="28" font-size="18" font-weight="600" fill="currentColor">2. Solve at each point</text>
+<rect x="335" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"/>
+<g fill="currentColor" fill-opacity="0.04" stroke="currentColor" stroke-opacity="0.35">
+<rect x="395" y="64" width="115" height="112" rx="6"/>
+<rect x="382" y="76" width="115" height="112" rx="6"/>
+<rect x="369" y="88" width="115" height="112" rx="6"/></g>
+<path d="M386,106 H416 V121 H431 V136 H446 V151 H461 V181 H431 V166 H416 V151 H401 V136 H386 Z"
+      fill="#16a085" fill-opacity="0.55"/>
+<g stroke="currentColor" stroke-opacity="0.25" stroke-width="0.6" fill="none">
+<path d="M386 106V181M401 106V181M416 106V181M431 106V181M446 106V181M461 106V181"/>
+<path d="M386 106H461M386 121H461M386 136H461M386 151H461M386 166H461M386 181H461"/></g>
+<text x="335" y="266" font-size="15" fill="currentColor" opacity="0.75">one sparse factorisation each,</text>
+<text x="335" y="286" font-size="15" fill="currentColor" opacity="0.75">independent and parallelisable</text>
+
+<line x1="595" y1="142" x2="630" y2="142" stroke="currentColor" stroke-width="1.6"
+      opacity="0.55" marker-end="url(#ah2)"/>
+
+<text x="645" y="28" font-size="18" font-weight="600" fill="currentColor">3. Combine</text>
+<rect x="645" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"/>
+<g fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.35">
+<path d="M655,212 C689,212 698,148 715,148 C732,148 741,212 775,212"/>
+<path d="M672,212 C707,212 717,134 734,134 C752,134 762,212 797,212"/>
+<path d="M700,212 C736,212 747,124 765,124 C783,124 794,212 830,212"/></g>
+<path d="M665,212 C707,212 719,98 740,98 C761,98 773,212 815,212"
+      fill="none" stroke="#c0392b" stroke-width="2.6"/>
+<line x1="652" y1="212" x2="888" y2="212" stroke="currentColor" stroke-width="0.6" opacity="0.4"/>
+<text x="645" y="266" font-size="15" fill="currentColor" opacity="0.75">weighted by plausibility;</text>
+<text x="645" y="286" font-size="15" fill="currentColor" opacity="0.75">the output is a density</text>
+</svg>
+```
+
+
+## Where to put the combinations {.smaller}
+
+```{=html}
+<svg viewBox="0 0 920 300" style="width:100%;color:inherit" font-family="inherit">
+<text x="30" y="28" font-size="17" font-weight="600" fill="currentColor">grid</text>
+<rect x="30" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"/>
+<ellipse cx="160" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"/>
+<ellipse cx="160" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"/>
+<ellipse cx="160" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"/>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="88" cy="84" r="3.4"/><circle cx="124" cy="84" r="3.4"/><circle cx="160" cy="84" r="3.4"/><circle cx="196" cy="84" r="3.4"/><circle cx="232" cy="84" r="3.4"/>
+<circle cx="88" cy="108" r="3.4"/><circle cx="124" cy="108" r="3.4"/><circle cx="160" cy="108" r="3.4"/><circle cx="196" cy="108" r="3.4"/><circle cx="232" cy="108" r="3.4"/>
+<circle cx="88" cy="132" r="3.4"/><circle cx="124" cy="132" r="3.4"/><circle cx="196" cy="132" r="3.4"/><circle cx="232" cy="132" r="3.4"/>
+<circle cx="88" cy="156" r="3.4"/><circle cx="124" cy="156" r="3.4"/><circle cx="160" cy="156" r="3.4"/><circle cx="196" cy="156" r="3.4"/><circle cx="232" cy="156" r="3.4"/>
+<circle cx="88" cy="180" r="3.4"/><circle cx="124" cy="180" r="3.4"/><circle cx="160" cy="180" r="3.4"/><circle cx="196" cy="180" r="3.4"/><circle cx="232" cy="180" r="3.4"/></g>
+<circle cx="160" cy="132" r="6" fill="#c0392b"/>
+<text x="30" y="248" font-size="15" fill="currentColor" opacity="0.85">every combination on a lattice</text>
+<text x="30" y="270" font-size="15" fill="currentColor" opacity="0.85">most accurate; count multiplies</text>
+<text x="30" y="292" font-size="15" fill="currentColor" opacity="0.85">with each hyperparameter added</text>
+
+<text x="330" y="28" font-size="17" font-weight="600" fill="currentColor">ccd</text>
+<rect x="330" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"/>
+<ellipse cx="460" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"/>
+<ellipse cx="460" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"/>
+<ellipse cx="460" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"/>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="388" cy="132" r="4.2"/><circle cx="532" cy="132" r="4.2"/>
+<circle cx="460" cy="84" r="4.2"/><circle cx="460" cy="180" r="4.2"/>
+<circle cx="412" cy="100" r="4.2"/><circle cx="508" cy="100" r="4.2"/>
+<circle cx="412" cy="164" r="4.2"/><circle cx="508" cy="164" r="4.2"/></g>
+<circle cx="460" cy="132" r="6" fill="#c0392b"/>
+<text x="330" y="248" font-size="15" fill="currentColor" opacity="0.85">a designed scatter around the mode</text>
+<text x="330" y="270" font-size="15" fill="#16a085">the default beyond two</text>
+<text x="330" y="292" font-size="15" fill="currentColor" opacity="0.85">good accuracy, far fewer points</text>
+
+<text x="630" y="28" font-size="17" font-weight="600" fill="currentColor">eb</text>
+<rect x="630" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"/>
+<ellipse cx="760" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"/>
+<ellipse cx="760" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"/>
+<ellipse cx="760" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"/>
+<circle cx="760" cy="132" r="8" fill="#c0392b"/>
+<text x="630" y="248" font-size="15" fill="currentColor" opacity="0.85">the best combination only</text>
+<text x="630" y="270" font-size="15" fill="#c0392b">no averaging, so intervals</text>
+<text x="630" y="292" font-size="15" fill="#c0392b">come out slightly too narrow</text>
+</svg>
+```
+
+::: {.nonincremental}
+-   The contours are the same in all three — the same posterior over the three
+    hyperparameters. Only the choice of where to evaluate it differs.
+-   Every point costs one pass through Question 1: mode-finding, sparse
+    factorisation, a joint Gaussian over the field.
+<!-- -   [Useful habit: `eb` while you iterate on the model, `ccd` for the fit you -->
+    <!-- report.]{style="color:#c0392b"} -->
+:::
+
+
+
+## INLA with our previous example {.smaller}
+
+We want a posterior for each unknown: the heat coefficient, each county
+effect, each week. The obstacle is that every one of them depends on the
+three hyperparameters — and we do not know those either.
+
+```{=html}
+<svg viewBox="0 0 920 300" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahq" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
+
+<text x="40" y="24" font-size="16" font-weight="600" fill="currentColor">Step 1: pick hyperparameter values, solve the field</text>
+<text x="580" y="24" font-size="16" font-weight="600" fill="currentColor">Step 2: average the answers</text>
+<text x="115" y="46" font-size="13" text-anchor="middle" fill="currentColor" opacity="0.6">bym2 prec, &#966;, rw1 prec</text>
+
+<g fill="#8e44ad" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45">
+<rect x="40" y="56" width="150" height="38" rx="6"/>
+<rect x="40" y="104" width="150" height="38" rx="6"/>
+<rect x="40" y="152" width="150" height="38" rx="6"/>
+<rect x="40" y="200" width="150" height="38" rx="6"/></g>
+<g font-size="14" text-anchor="middle" fill="currentColor">
+<text x="115" y="80">4.1, 0.70, 20</text>
+<text x="115" y="128">3.6, 0.82, 14</text>
+<text x="115" y="176">5.0, 0.61, 25</text>
+<text x="115" y="224">4.4, 0.75, 18</text></g>
+
+<g stroke="currentColor" stroke-width="1.4" opacity="0.5" fill="none" marker-end="url(#ahq)">
+<path d="M196,75 H224"/><path d="M196,123 H224"/>
+<path d="M196,171 H224"/><path d="M196,219 H224"/></g>
+
+<g fill="#2980b9" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45">
+<rect x="230" y="56" width="290" height="38" rx="6"/>
+<rect x="230" y="104" width="290" height="38" rx="6"/>
+<rect x="230" y="152" width="290" height="38" rx="6"/>
+<rect x="230" y="200" width="290" height="38" rx="6"/></g>
+<g font-size="15" text-anchor="middle" fill="currentColor">
+<text x="375" y="80">a full answer for all 168,000 latent Gaussians</text>
+<text x="375" y="128">a full answer for all 168,000 latent Gaussians</text>
+<text x="375" y="176">a full answer for all 168,000 latent Gaussians</text>
+<text x="375" y="224">a full answer for all 168,000 latent Gaussians</text></g>
+
+<g stroke="currentColor" stroke-width="1.4" opacity="0.5" fill="none" marker-end="url(#ahq)">
+<path d="M526,75 C552,75 556,116 574,134"/>
+<path d="M526,123 C552,123 558,136 574,142"/>
+<path d="M526,171 C552,171 558,158 574,150"/>
+<path d="M526,219 C552,219 556,178 574,158"/></g>
+
+<rect x="580" y="76" width="300" height="142" rx="8" fill="#c0392b" fill-opacity="0.12"
+      stroke="#c0392b" stroke-opacity="0.55" stroke-width="1.2"/>
+<g font-size="15" text-anchor="middle" fill="#c0392b">
+<text x="730" y="126">combine the answers,</text>
+<text x="730" y="151">weighting each by how</text>
+<text x="730" y="176">plausible that combination was</text></g>
+
+<g font-size="15" fill="currentColor" opacity="0.75">
+<text x="40" y="266">each row is one combination</text>
+<text x="40" y="286">of the three hyperparameter values</text>
+<text x="580" y="266">cheap because there are only</text>
+<text x="580" y="286">three hyperparameters to vary</text></g>
+</svg>
+```
+
+
+
+
+
+
+## Three strategies for the latent marginals {.smaller}
+
+Set by `strategy` in `control.inla`:
+
+-   **Gaussian** (`"gaussian"`): read the marginal straight off the Gaussian
+    approximation. Fastest; can be poor in the tails and misses skewness.
+-   **Simplified Laplace** (`"simplified.laplace"`): a third-order correction
+    to the Gaussian, capturing location and skewness. [The default, and
+    almost always the right choice.]{style="color:#c0392b"}
+-   **Laplace** (`"laplace"`): a full nested Laplace approximation for each
+    $x_i$. Most accurate, and considerably more expensive.
+
+. . .
+
+The middle option exists because the Gaussian is usually close, and a cheap
+correction for asymmetry recovers most of what a full recomputation would
+give. Note where the cost sits: it scales with the number of hyperparameters
+and the sparsity of $\boldsymbol{Q}$, not with the size of the latent field —
+which is the shape that made these models slow to sample in the first place.
+
+
+## Three strategies for the latent marginals {.smaller}
+
+```{=html}
+<svg viewBox="0 0 920 290" style="width:100%;color:inherit" font-family="inherit">
+<text x="30" y="26" font-size="17" font-weight="600" fill="currentColor">gaussian</text>
+<path d="M40,200 C88,200 112,86 152,80 C192,74 214,132 254,162 C280,182 292,196 300,200"
+      fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"/>
+<path d="M62,200 C104,200 118,80 152,80 C186,80 200,200 242,200"
+      fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"/>
+<line x1="35" y1="200" x2="305" y2="200" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+<text x="30" y="230" font-size="15" fill="currentColor" opacity="0.85">symmetric by construction</text>
+<text x="30" y="252" font-size="15" fill="currentColor" opacity="0.85">misses the tail entirely</text>
+<text x="30" y="278" font-size="15" fill="currentColor" opacity="0.7">fastest</text>
+
+<text x="330" y="26" font-size="17" font-weight="600" fill="currentColor">simplified.laplace</text>
+<path d="M340,200 C388,200 412,86 452,80 C492,74 514,132 554,162 C580,182 592,196 600,200"
+      fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"/>
+<path d="M356,200 C400,200 416,84 454,82 C492,80 508,146 548,172 C572,188 586,197 596,200"
+      fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"/>
+<line x1="335" y1="200" x2="605" y2="200" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+<text x="330" y="230" font-size="15" fill="currentColor" opacity="0.85">shifted and allowed to lean</text>
+<text x="330" y="252" font-size="15" fill="currentColor" opacity="0.85">catches most of the skew</text>
+<text x="330" y="278" font-size="15" fill="#c0392b">the default</text>
+
+<text x="630" y="26" font-size="17" font-weight="600" fill="currentColor">laplace</text>
+<path d="M640,200 C688,200 712,86 752,80 C792,74 814,132 854,162 C880,182 892,196 900,200"
+      fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"/>
+<path d="M641,200 C689,200 713,88 752,82 C791,76 813,133 853,163 C879,183 891,196 899,200"
+      fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"/>
+<line x1="635" y1="200" x2="905" y2="200" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+<text x="630" y="230" font-size="15" fill="currentColor" opacity="0.85">recomputed for each element</text>
+<text x="630" y="252" font-size="15" fill="currentColor" opacity="0.85">essentially exact</text>
+<text x="630" y="278" font-size="15" fill="currentColor" opacity="0.7">much more expensive</text>
+</svg>
+```
+
+Solid line: the true marginal for one element. Dashed: what each strategy
+returns. Set by `strategy` in `control.inla`.
+
+## What each question needed {.smaller}
+
+|  | Question 1: the field | Question 2: the hyperparameters |
+|---|---|---|
+| What we did | sparse solves, then one joint Gaussian over the field | try a few combinations, then average |
+| What made it possible | Gaussian prior, and $\boldsymbol{Q}$ mostly blank | there are only three hyperparameters |
+| What would break it | a field that is not Gaussian, or not blank | too many hyperparameters |
+
+. . .
+
+So the method carries **two conditions**, one from each half:
+
+::: {.nonincremental}
+1.  The latent field has a Gaussian prior, and its links are local.
+2.  The hyperparameters are few.
+:::
+
+## What fits and what doesn't {.smaller}
+
+| Fits | Does not fit |
+|---|---|
+| Linear and generalised linear models | Finite mixtures with many components |
+| Mixed and multilevel models | Models with hundreds of variance components |
+| RW1, RW2, AR($p$), seasonal terms | Dirichlet process and non-parametric priors |
+| Splines and non-linear exposure–response | Heavy-tailed or latent $t$ fields |
+| ICAR, BYM, BYM2, Leroux, SPDE | Likelihoods depending non-linearly on many latent elements |
+| Space–time interactions, types I–IV | |
+| Measurement error, survival models | |
+
+. . .
+
+Every entry on the right fails **condition 1** or **condition 2** — nothing
+else. And the left-hand column is most of what we fit in environmental
+epidemiology.
+
+## Summary of the entire INLA process {.smaller}
+
+```{=html}
+<svg viewBox="0 0 920 560" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahf" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
+
+<rect x="330" y="20" width="260" height="46" rx="8" fill="#16a085" fill-opacity="0.16"
+      stroke="currentColor" stroke-opacity="0.5"/>
+<text x="460" y="49" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">a latent Gaussian model</text>
+
+<path d="M460,66 V92" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"/>
+<path d="M225,92 H695" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"/>
+<path d="M225,92 V130" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahf)"/>
+<path d="M695,92 V130" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahf)"/>
+
+<g fill="#2980b9" fill-opacity="0.14" stroke="currentColor" stroke-opacity="0.45">
+<rect x="55" y="136" width="340" height="54" rx="8"/>
+<rect x="55" y="222" width="340" height="54" rx="8"/>
+<rect x="55" y="308" width="340" height="54" rx="8"/></g>
+<g text-anchor="middle" fill="currentColor">
+<text x="225" y="160" font-size="16" font-weight="600">the latent field</text>
+<text x="225" y="180" font-size="15" opacity="0.85">large, Gaussian, links only local</text>
+<text x="225" y="246" font-size="16" font-weight="600">so Q is mostly blank</text>
+<text x="225" y="266" font-size="15" opacity="0.85">one solve is cheap, however large</text>
+<text x="225" y="332" font-size="16" font-weight="600">Laplace gives a joint Gaussian</text>
+<text x="225" y="352" font-size="15" opacity="0.85">over all 168,000, deterministically</text></g>
+
+<g fill="#8e44ad" fill-opacity="0.14" stroke="currentColor" stroke-opacity="0.45">
+<rect x="525" y="136" width="340" height="54" rx="8"/>
+<rect x="525" y="222" width="340" height="54" rx="8"/>
+<rect x="525" y="308" width="340" height="54" rx="8"/></g>
+<g text-anchor="middle" fill="currentColor">
+<text x="695" y="160" font-size="16" font-weight="600">the hyperparameters</text>
+<text x="695" y="180" font-size="15" opacity="0.85">three of them in this model</text>
+<text x="695" y="246" font-size="16" font-weight="600">so the space is small</text>
+<text x="695" y="266" font-size="15" opacity="0.85">a handful of combinations covers it</text>
+<text x="695" y="332" font-size="16" font-weight="600">one joint per combination</text>
+<text x="695" y="352" font-size="15" opacity="0.85">weighted by plausibility</text></g>
+
+<g stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none">
+<path d="M225,190 V222" marker-end="url(#ahf)"/><path d="M225,276 V308" marker-end="url(#ahf)"/>
+<path d="M695,190 V222" marker-end="url(#ahf)"/><path d="M695,276 V308" marker-end="url(#ahf)"/>
+<path d="M225,362 V394 H460"/><path d="M695,362 V394 H460"/>
+<path d="M460,394 V422" marker-end="url(#ahf)"/></g>
+
+<rect x="230" y="428" width="460" height="54" rx="8" fill="#c0392b" fill-opacity="0.12"
+      stroke="#c0392b" stroke-opacity="0.55" stroke-width="1.2"/>
+<text x="460" y="452" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">marginals read out, then averaged</text>
+<text x="460" y="472" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">no chains, no burn-in, same answer every run</text>
+
+<path d="M460,482 V506" stroke="currentColor" stroke-width="1.5" opacity="0.55"
+      fill="none" marker-end="url(#ahf)"/>
+<text x="460" y="530" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">and most models we fit have exactly this shape</text>
+<text x="460" y="552" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">GLMs · mixed models · splines · ICAR, BYM2, SPDE · space-time · survival</text>
+</svg>
+```
+
 
 ## Why it is fast
 
@@ -412,6 +1065,82 @@ $$
     small — **not** with the size of the latent field, which is large.
 -   Everything at a given $\boldsymbol{\theta}^{(k)}$ is parallel (`num.threads`).
 
+## Why it's not instant {.smaller}
+
+-   **The hyperparameter grid grows geometrically.** The cost of integrating
+    over $\boldsymbol{\theta}$ scales roughly as $O(g^{\dim(\boldsymbol{\theta})})$.
+    This is the wall you hit — not $n$, not $m$.
+-   **Finding the mode of $p(\boldsymbol{\theta} \mid \boldsymbol{y})$ is an
+    optimisation**, and every function evaluation is a full sparse
+    factorisation with numerical gradients on top.
+-   **Sparse is not the same as cheap.** Depends on the
+    graph structure, not just the number of zeros. Type IV space–time
+    interactions and densely-connected adjacency graphs fill in badly.
+-   **Accuracy costs.** `strategy = "laplace"` is far more expensive than the
+    default `"simplified.laplace"`, which in turn costs more than `"gaussian"`.
+-   **SPDE meshes.** Every extra mesh node enlarges the latent field. An
+    over-refined mesh is the single most common reason a spatial model crawls (outside scope).
+-   **Memory is often the binding constraint, not time.** A lot held in memory for this.
+
+<!-- . . . -->
+
+<!-- [INLA is fast because of the *asymmetry* between the two objects. Break the -->
+<!-- asymmetry — many hyperparameters, or a latent field whose sparsity is only -->
+<!-- nominal — and the advantage disappears.]{style="color:#c0392b"} -->
+
+## The number of hyperparameters is the limiting factor {.smaller}
+
+```{=html}
+<svg viewBox="0 0 920 290" style="width:100%;color:inherit" font-family="inherit">
+<text x="60" y="30" font-size="16" font-weight="600" fill="currentColor">1 hyperparameter</text>
+<line x1="60" y1="130" x2="260" y2="130" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+<g fill="#c0392b" fill-opacity="0.8">
+<circle cx="70" cy="130" r="5"/><circle cx="108" cy="130" r="5"/><circle cx="146" cy="130" r="5"/>
+<circle cx="184" cy="130" r="5"/><circle cx="222" cy="130" r="5"/><circle cx="255" cy="130" r="5"/></g>
+<text x="60" y="196" font-size="15" fill="currentColor" opacity="0.85">points along a line</text>
+
+<text x="360" y="30" font-size="16" font-weight="600" fill="currentColor">2 hyperparameters</text>
+<rect x="360" y="52" width="170" height="156" fill="none" stroke="currentColor" stroke-opacity="0.45"/>
+<g fill="#c0392b" fill-opacity="0.8">
+<circle cx="378" cy="70" r="4"/><circle cx="412" cy="70" r="4"/><circle cx="446" cy="70" r="4"/><circle cx="480" cy="70" r="4"/><circle cx="514" cy="70" r="4"/>
+<circle cx="378" cy="104" r="4"/><circle cx="412" cy="104" r="4"/><circle cx="446" cy="104" r="4"/><circle cx="480" cy="104" r="4"/><circle cx="514" cy="104" r="4"/>
+<circle cx="378" cy="138" r="4"/><circle cx="412" cy="138" r="4"/><circle cx="446" cy="138" r="4"/><circle cx="480" cy="138" r="4"/><circle cx="514" cy="138" r="4"/>
+<circle cx="378" cy="172" r="4"/><circle cx="412" cy="172" r="4"/><circle cx="446" cy="172" r="4"/><circle cx="480" cy="172" r="4"/><circle cx="514" cy="172" r="4"/></g>
+<text x="360" y="240" font-size="15" fill="currentColor" opacity="0.85">points filling a square</text>
+
+<text x="650" y="30" font-size="16" font-weight="600" fill="currentColor">3 hyperparameters</text>
+<g fill="none" stroke="currentColor" stroke-opacity="0.45">
+<rect x="650" y="72" width="150" height="136"/>
+<path d="M650,72 L694,40 H844 V176 L800,208"/><path d="M800,72 L844,40"/><path d="M800,208 V72"/></g>
+<g fill="#c0392b" fill-opacity="0.75">
+<circle cx="668" cy="90" r="3.5"/><circle cx="702" cy="90" r="3.5"/><circle cx="736" cy="90" r="3.5"/><circle cx="770" cy="90" r="3.5"/>
+<circle cx="668" cy="124" r="3.5"/><circle cx="702" cy="124" r="3.5"/><circle cx="736" cy="124" r="3.5"/><circle cx="770" cy="124" r="3.5"/>
+<circle cx="668" cy="158" r="3.5"/><circle cx="702" cy="158" r="3.5"/><circle cx="736" cy="158" r="3.5"/><circle cx="770" cy="158" r="3.5"/>
+<circle cx="668" cy="192" r="3.5"/><circle cx="702" cy="192" r="3.5"/><circle cx="736" cy="192" r="3.5"/><circle cx="770" cy="192" r="3.5"/></g>
+<g fill="#c0392b" fill-opacity="0.35">
+<circle cx="712" cy="58" r="3.5"/><circle cx="746" cy="58" r="3.5"/><circle cx="780" cy="58" r="3.5"/><circle cx="814" cy="58" r="3.5"/>
+<circle cx="712" cy="92" r="3.5"/><circle cx="746" cy="92" r="3.5"/><circle cx="780" cy="92" r="3.5"/><circle cx="814" cy="92" r="3.5"/>
+<circle cx="712" cy="126" r="3.5"/><circle cx="746" cy="126" r="3.5"/><circle cx="780" cy="126" r="3.5"/><circle cx="814" cy="126" r="3.5"/>
+<circle cx="712" cy="160" r="3.5"/><circle cx="746" cy="160" r="3.5"/><circle cx="780" cy="160" r="3.5"/><circle cx="814" cy="160" r="3.5"/></g>
+<text x="650" y="240" font-size="15" fill="currentColor" opacity="0.85">points filling a cube</text>
+
+<text x="60" y="278" font-size="16" fill="currentColor" opacity="0.85">Every point is a full sparse solve over the entire 168,000-element field.</text>
+</svg>
+```
+
+## The number of hyperparameters is the limiting factor {.smaller}
+
+Add a dial and the points do not increase — they **multiply**. Taking five
+per dial for illustration:
+
+| Hyperparameters | Grid points | At 0.5 s each |
+|---|---|---|
+| 2 | 25 | 12 seconds |
+| 4 | 625 | 5 minutes |
+| 6 | 15,625 | 2 hours |
+| 8 | 390,625 | 2 days |
+| 10 | 9,765,625 | 7 weeks |
+
 ## How accurate is it? {.smaller}
 
 -   For latent Gaussian models with well-behaved likelihoods, INLA and
@@ -419,21 +1148,19 @@ $$
     posterior means and quantiles.
 -   Accuracy degrades when:
     -   the number of observations per latent parameter is very small
-        (e.g. binary data with one observation per random effect),
-    -   the likelihood is far from Gaussian and weakly informative,
+        (e.g. binary data with one observation per random effect).
+    -   the likelihood is far from Gaussian and weakly informative.
     -   the posterior is genuinely multimodal.
 -   Check with `inla(..., control.compute = list(config = TRUE))` and
     compare against a short MCMC run when it matters.
 
 ## When not to use `INLA`
 
--   The latent field is **not** Gaussian (e.g. discrete mixture
-    components, changepoint indicators).
--   $\dim(\boldsymbol{\theta})$ is large — say more than 10-15.
+-   Beyond the two conditions already covered, three practical cases:
 -   You need the **joint** posterior over many latent parameters, not
     marginals. (Partly recoverable via `inla.posterior.sample()`.)
 -   Genuinely multimodal posteriors.
--   Novel likelihoods with no `INLA` implementation — though `rgeneric`
+-   (Potentially): Novel likelihoods with no `INLA` implementation — though `rgeneric`
     and `cgeneric` let you write your own.
 
 # Using R-INLA
@@ -672,6 +1399,7 @@ hyper = list(prec = list(prior = "pc.prec", param = c(U, alpha)))
 map_dbl(list(m_pooled, m_unpooled, m_partial), ~ .x$dic$dic)
 map_dbl(list(m_pooled, m_unpooled, m_partial), ~ .x$waic$waic)
 
+
 # Leave-one-out log score (lower is better)
 -mean(log(m_partial$cpo$cpo), na.rm = TRUE)
 
@@ -732,7 +1460,7 @@ m_bym2 <- inla(
 -   `scale.model = TRUE` makes the precision comparable across maps —
     essential for the prior to mean anything.
 
-## Practical tips and common errors {.smaller}
+## Practical tips and common errors
 
 -   *"Index for f() must be integer or factor"* — you passed a covariate
     value. Create an explicit `1:n` index.
@@ -741,6 +1469,9 @@ m_bym2 <- inla(
 -   Model does not converge: try
     `control.inla = list(strategy = "gaussian", int.strategy = "eb")`
     first to check the model runs, then tighten.
+    
+## Practical tips and common errors
+
 -   `control.inla = list(h = 0.01)` if the numerical Hessian misbehaves.
 -   Centre and scale continuous covariates: it helps the optimiser and
     makes priors interpretable.
@@ -757,7 +1488,67 @@ m_bym2 <- inla(
 | Diagnostics | $\hat{R}$, ESS, traces | `kld`, CPO failures, PIT |
 | Best for | Bespoke, non-standard models | Standard hierarchical/spatial models, model development |
 
+
 - We will see models in `INLA` going forward 
+
+## An illustrative example (again){.smaller}
+
+Example: weekly death counts by county, with a heat term, a spatial
+term and a temporal trend.
+
+```{.r}
+code <- nimbleCode({
+
+  alpha ~ dnorm(0, sd = 10)
+  beta  ~ dnorm(0, sd = 10)
+  tau_b ~ dgamma(1, 0.01)
+  tau_g ~ dgamma(1, 0.01)
+  phi   ~ dbeta(1, 1)
+
+  for (i in 1:N) {
+    deaths[i] ~ dpois(mu[i])
+    log(mu[i]) <- log(E[i]) + alpha + beta * heat[i] +
+                    b[county[i]] + gamma[week[i]]
+  }
+
+  s[1:M] ~ dcar_normal(adj[1:L], w[1:L], num[1:M], 1, zero_mean = 1)
+  for (j in 1:M) {
+    theta[j] ~ dnorm(0, 1)
+    b[j] <- (sqrt(1 - phi) * theta[j] + sqrt(phi / scl) * s[j]) / sqrt(tau_b)
+  }
+
+  gamma[1] ~ dnorm(0, sd = 10)
+  for (t in 2:Tw) {
+    gamma[t] ~ dnorm(gamma[t - 1], tau_g)
+  }
+
+})
+```
+
+
+## The (more or less) same model in `R-INLA` {.smaller}
+
+```{.r}
+formula <- deaths ~ 1 + heat +
+  f(county, model = "bym2", graph = "counties.adj",
+    scale.model = TRUE, constr = TRUE,
+    hyper = list(prec = list(prior = "pc.prec", param = c(1, 0.01)),
+                 phi  = list(prior = "pc",      param = c(0.5, 0.5)))) +
+  f(week, model = "rw1", constr = TRUE, scale.model = TRUE,
+    hyper = list(prec = list(prior = "pc.prec", param = c(1, 0.01))))
+
+fit <- inla(
+  formula,
+  family            = "poisson",
+  data              = data,
+  E                 = data$expected,
+  control.compute   = list(dic = TRUE, waic = TRUE),
+  control.predictor = list(compute = TRUE, link = 1)
+)
+```
+
+Twelve lines against twenty-five, and everything in the NIMBLE version below
+the priors has gone.
 
 # Getting ready for the lab
 
@@ -774,3 +1565,93 @@ m_bym2 <- inla(
   4.  Extend the model to a spatially structured `bym2`.
 
 # Questions?
+
+
+# Appendix 
+
+## Question 1: the field, hyperparameters fixed {.smaller}
+
+The goal is a **joint** distribution over all 168,000 latent elements — with
+the three hyperparameters pinned at chosen values.
+
+```{=html}
+<svg viewBox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahl" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
+
+<rect x="40" y="90" width="210" height="70" rx="8" fill="#2980b9" fill-opacity="0.16"
+      stroke="currentColor" stroke-opacity="0.45"/>
+<text x="145" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the GMRF prior</text>
+<text x="145" y="142" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">acts on all 168,000</text>
+
+<rect x="40" y="180" width="210" height="46" rx="8" fill="#16a085" fill-opacity="0.16"
+      stroke="currentColor" stroke-opacity="0.45"/>
+<text x="145" y="208" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the 161,616 rows of data</text>
+
+<path d="M258,120 H340" stroke="currentColor" stroke-width="1.5" opacity="0.55"
+      fill="none" marker-end="url(#ahl)"/>
+<path d="M258,200 H320 C335,200 340,180 340,150" stroke="currentColor" stroke-width="1.5"
+      opacity="0.55" fill="none" marker-end="url(#ahl)"/>
+
+<rect x="355" y="90" width="220" height="70" rx="8" fill="none"
+      stroke="currentColor" stroke-opacity="0.5" stroke-width="1.2"/>
+<text x="465" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">exactly Gaussian,</text>
+<text x="465" y="142" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">then adjusted row by row</text>
+
+<path d="M583,125 H665" stroke="currentColor" stroke-width="1.5" opacity="0.55"
+      fill="none" marker-end="url(#ahl)"/>
+
+<rect x="680" y="90" width="200" height="70" rx="8" fill="#c0392b" fill-opacity="0.12"
+      stroke="#c0392b" stroke-opacity="0.6" stroke-width="1.2"/>
+<text x="780" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">approximately Gaussian</text>
+<text x="780" y="142" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">still mostly blanks</text>
+
+<text x="355" y="42" font-size="15" fill="currentColor" opacity="0.75">the latent field once the three</text>
+<text x="355" y="62" font-size="15" fill="currentColor" opacity="0.75">hyperparameters are held fixed</text>
+</svg>
+```
+
+Hold the three hyperparameters fixed and ask what the latent field looks
+like. Two things act on it, and they act very differently:
+
+::: {.nonincremental}
+-   The **prior** is Gaussian, exactly, and it acts on all 168,000 elements
+    at once.
+-   Each **row of data** acts too, but on one element only, and weakly.
+:::
+
+## Question 1, answered {.smaller}
+
+With the three hyperparameters pinned at chosen values, the latent field is
+handled **deterministically** — no sampling anywhere:
+
+::: {.nonincremental}
+-   Climb to the mode of the field's conditional posterior. A few sparse
+    factorisations, each cheap because $\boldsymbol{Q}^{*}$ is mostly blank.
+-   Take the curvature there. That gives a **joint Gaussian approximation to
+    all 168,000 elements at once** — a mean vector and a sparse
+    $\boldsymbol{Q}^{*}$.
+:::
+
+Two ingredients were needed, and both were needed: the **GMRF** made every
+factorisation cheap, and the **Laplace approximation** made the Gaussian a
+good fit.
+
+. . .
+
+[But we pinned the hyperparameters, and we do not know them. Stopping here —
+`int.strategy = "eb"` — gives intervals that come out slightly too
+narrow.]{style="color:#c0392b"}
+
+## Question 2: averaging over hyperparameter combinations {.smaller}
+
+Step 1 uses `int.strategy`: `grid` evaluates every combination and is
+accurate but limited to two or three hyperparameters; `ccd` places a small
+designed scatter and is the default beyond that; `eb` keeps the mode alone,
+which is fast but sets aside uncertainty in $\boldsymbol{\theta}$.
+
+Step 3 is the same idea as multiple imputation: solve a tractable problem
+several times and combine, so that uncertainty carried in step 1 reaches the
+final answer. Step 2, however, was stated loosely — there is a choice inside
+it.
+

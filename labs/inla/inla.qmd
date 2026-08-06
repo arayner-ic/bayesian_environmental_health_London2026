@@ -17,6 +17,7 @@ library(spdep)
 library(hrbrthemes)
 library(colorspace)
 library(patchwork)
+library(knitr)
 
 extrafont::loadfonts()
 theme_set(theme_ipsum())
@@ -26,23 +27,44 @@ set.seed(2)
 
 ## Goal of this computing lab session
 
-The goal of this lab is to fit the pooling models from the hierarchical modelling session using `R-INLA` instead of `NIMBLE`, comparing speed and results between the two approaches, and covering some practical details specific to `INLA` (priors on precisions, working with posterior marginals).
+The lecture made two claims that this lab puts your hands on. First, that a
+Laplace approximation is nothing more than a mode and a curvature. Second,
+that INLA works by scanning a small number of hyperparameter combinations,
+solving the latent field at each, and taking a weighted sum.
+
+We will build both of those from scratch in a few lines of R, then watch
+`R-INLA` do the same thing on the Italian mortality data from the
+hierarchical modelling session.
 
 ## What's going to happen in this lab session?
 
-During this lab session, we will:
-
-1. Refit the full pooling, no pooling and partial pooling models for the Italian mortality data in `INLA`;
-2. Compare estimates and runtimes against the `NIMBLE` output from the hierarchical modelling session;
-3. Transform posterior marginals of precisions into interpretable standard deviations;
-4. Explore how sensitive the results are to the prior on the variance component; and
-5. Extend the model to a spatially structured `bym2` specification.
+1. Build a Laplace approximation by hand, and see where it breaks;
+2. Build the *integrated* version by hand, and see what integrating buys;
+3. Refit the full pooling, no pooling and partial pooling models in `INLA`;
+4. Look inside the fitted object at the hyperparameter combinations `INLA`
+   actually used;
+5. Vary `int.strategy` and `strategy` and watch the accuracy–speed trade-off;
+6. Inspect the precision matrix $\boldsymbol{Q}$ and its blanks;
+7. Extend to a spatially structured `bym2` model, then a spatiotemporal one;
+8. Compare against `NIMBLE`.
 
 ## Introduction
 
-In the hierarchical modelling session we estimated the standardised mortality ratio (SMR) for the provinces of Italy in September 2018 using three models — full pooling, no pooling and partial pooling — fitted with MCMC in `NIMBLE`. That workflow required initial values, burn-in, convergence checks, trace plots and $\hat{R}$.
+In the hierarchical modelling session we estimated the standardised mortality
+ratio (SMR) for the provinces of Italy in September 2018 using three models
+(full pooling, no pooling and partial pooling), fitted with MCMC in `NIMBLE`.
+That workflow required initial values, burn-in, convergence checks, trace
+plots and $\hat{R}$.
 
-All three of those models are **latent Gaussian models**: a Poisson likelihood, a Gaussian latent field (the intercept, fixed effects and IID province effects), and at most one hyperparameter (the precision of the province effects). That means we can fit them with `INLA`, which replaces sampling with a deterministic approximation to the posterior marginals, so no convergence diagnostics are needed and results are reproducible without setting a seed.
+All three are **latent Gaussian models**, and they satisfy the two conditions
+from the lecture:
+
+1. the latent field (intercept, fixed effects, province effects) is Gaussian,
+   and its links are local;
+2. there are at most **one** hyperparameter, the precision of the province
+   effects.
+
+That is why `INLA` can fit them deterministically.
 
 ::: aside
 `INLA` is not on CRAN. If you have not installed it yet:
@@ -57,17 +79,176 @@ install.packages(
 ```
 :::
 
-## Exploratory data analysis
+# Part 1: the two approximations, by hand
 
-Let's load in the data, exactly as before.
+Before touching any data, we build the two approximations ourselves.
+
+## The Laplace approximation
+
+Recall from the lecture: expand $\log f(x)$ about its mode, where the first
+derivative vanishes, and keep the quadratic term. Exponentiating gives a
+Gaussian. The whole approximation is **two numbers**: the mode $x^{*}$, and
+the curvature $H = -\log f''(x^{*})$.
+
+We will approximate a $\text{Gamma}(5, 1)$, which is skewed but has a known answer to check against.
+
+```{r}
+shape <- 5; rate <- 1
+
+# log density, up to a constant
+lf <- function(x) (shape - 1) * log(x) - rate * x
+
+# 1. the mode
+mode <- optimise(lf, c(1e-6, 50), maximum = TRUE)$maximum
+
+# 2. the curvature there:  -f''(x) = (shape - 1) / x^2
+prec <- (shape - 1) / mode^2
+sdev <- 1 / sqrt(prec)
+
+tibble(
+  quantity = c("mode x*", "curvature H", "implied sd", "true mean", "true sd"),
+  value    = c(mode, prec, sdev, shape / rate, sqrt(shape) / rate)
+) |> kable(digits = 3)
+```
+
+The approximation is $N(4, 2^2)$. Plot it against the truth:
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: center
+par(mar = c(4, 4, 1, 1))
+curve(dgamma(x, shape, rate), -2, 14, n = 400, lwd = 2.5, bty = "n",
+      xlab = "x", ylab = "density")
+curve(dnorm(x, mode, sdev), add = TRUE, n = 400, lwd = 2.5,
+      lty = 2, col = "#c0392b")
+abline(v = mode, lty = 3, col = "grey60")
+abline(h = 0, col = "grey80")
+legend("topright", bty = "n", lwd = 2.5, lty = c(1, 2),
+       col = c("black", "#c0392b"),
+       legend = c("Gamma(5, 1)", "Laplace approximation"))
+```
+
+The peak is matched exactly, which is all the method promises. But the target leans right, so its **mean** (5) sits above its **mode**
+(4), and a symmetric curve cannot follow. The Gaussian also has visible
+density below zero, where a gamma has none.
+
+Laplace also approximates the *normalising constant*, which is what `INLA`
+uses to score each hyperparameter combination:
+
+```{r}
+tibble(
+  quantity = c("Laplace estimate", "exact (Gamma function)"),
+  value    = c(exp(lf(mode)) * sqrt(2 * pi / prec), gamma(shape))
+) |> kable(digits = 3)
+```
+
+The estimate is within about 2% of the exact value.
+
+::: {.callout-tip}
+## Exercise 1
+
+`shape` is a dial. Re-run the plot with `shape <- 50` and then `shape <- 2`.
+
+- Which gives the better approximation, and why?
+- What does this tell you about models with many observations per latent
+  element versus few? (Think binary outcomes with one observation per random
+  effect.)
+:::
+
+## Integrating over a hyperparameter
+
+Laplace alone would stop at the best hyperparameter value. The **integrated**
+part of INLA is the refusal to do that.
+
+Take a case with a known exact answer: $x \mid \theta \sim N(0, 1/\theta)$
+with $\theta \sim \text{Gamma}(2, 2)$, so $\theta$ is a precision, exactly as
+in our models. The exact marginal for $x$ is a $t_4$.
+
+```{r}
+a <- 2; b <- 2; K <- 7
+
+# 1. scan theta — a grid on the log scale, as INLA does
+theta <- exp(seq(log(0.03), log(12), length.out = K))
+w     <- dgamma(theta, a, b) * theta      # Jacobian for the log scale
+w     <- w / sum(w)                       # plausibility weights
+
+# 2. the conditional for x at each value of theta
+x    <- seq(-7, 7, length.out = 400)
+cond <- sapply(theta, \(t) dnorm(x, 0, 1 / sqrt(t)))
+
+# 3. integrate: the weighted sum
+marg <- as.vector(cond %*% w)
+```
+
+Three stages, three lines. Everything `INLA` does to a 168,000-element latent
+field has this shape.
+
+```{r}
+#| fig-width: 10
+#| fig-height: 3.6
+#| fig-align: center
+par(mfrow = c(1, 3), mar = c(4, 4, 3, 1), cex = 0.95)
+
+tt <- exp(seq(log(0.03), log(12), length.out = 300))
+plot(tt, dgamma(tt, a, b), type = "l", log = "x", lwd = 2.5, bty = "n",
+     xlab = expression(theta), ylab = "density",
+     main = "1. scan the hyperparameter")
+points(theta, dgamma(theta, a, b), pch = 19, col = "#c0392b",
+       cex = 0.5 + 4 * w)
+
+matplot(x, cond, type = "l", lty = 1, bty = "n", lwd = 1 + 7 * w,
+        col = adjustcolor("#2980b9", alpha.f = 0.75),
+        xlab = "x", ylab = "density", main = "2. one conditional each")
+
+plot(x, dt(x, 4), type = "l", lwd = 4, col = "grey65", bty = "n",
+     xlab = "x", ylab = "density", main = "3. the weighted sum")
+lines(x, marg, lwd = 2, lty = 2, col = "#16a085")
+lines(x, dnorm(x, 0, 1 / sqrt((a - 1) / b)), lwd = 2, lty = 3, col = "#c0392b")
+legend("topright", bty = "n", lwd = c(4, 2, 2), lty = c(1, 2, 3), cex = 0.9,
+       col = c("grey65", "#16a085", "#c0392b"),
+       legend = c("truth", "integrated", "fixed theta"))
+```
+
+Middle panel is the whole idea in miniature: every blue curve is a *Gaussian*,
+none of them is the answer, and their weighted sum is a $t$, a shape none of
+the ingredients had.
+
+```{r}
+eval_at <- c(0, 3, 6)
+tibble(
+  x                = eval_at,
+  truth            = dt(eval_at, 4),
+  integrated       = sapply(eval_at, \(xi) sum(w * dnorm(xi, 0, 1 / sqrt(theta)))),
+  `fixed theta`    = dnorm(eval_at, 0, 1 / sqrt((a - 1) / b))
+) |> kable(digits = 5)
+```
+
+Seven points recover the exact answer to three decimals. Fixing $\theta$ at
+its mode gets the peak wrong and the far tail wrong by a factor of about
+thirty. The tail is where interval endpoints live, and this is
+what `int.strategy = "eb"` does, and precisely what it costs.
+
+::: {.callout-tip}
+## Exercise 2
+
+- Reduce `K` to 3 and then 2. How few points can you get away with here?
+- Replace the log-scale grid with a linear one,
+  `theta <- seq(0.03, 12, length.out = K)`, and drop the Jacobian. What
+  happens in the tails, and why does `INLA` work on the log scale?
+:::
+
+# Part 2: the Italian mortality models
+
+## Exploratory data analysis
 
 ```{r}
 data <- read_rds(here("data", "italy", "italy_mortality.rds"))
 glimpse(data)
-summary(data)
 ```
 
-As in the hierarchical modelling lab, we collapse the time dimension and focus on September 2018.
+As in the hierarchical modelling lab, we collapse the time dimension and focus
+on September 2018.
 
 ```{r}
 data <- data |>
@@ -93,8 +274,6 @@ data |>
 
 ## Full pooling model
 
-The model is the same as before:
-
 Priors
 $$
 \alpha \sim N(0, 5)
@@ -108,12 +287,17 @@ y_i &\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 \end{split}
 $$
 
-In `INLA` this is one call. Some things to notice compared to the `NIMBLE` version:
+In `INLA` this is one call. Some things to notice compared to the `NIMBLE`
+version:
 
-- The offset goes in through `E =`, on the **natural** scale (not logged) — `INLA` takes the log for us.
-- There is no `f()` term, so the hyperparameter vector $\boldsymbol{\theta}$ is empty.
-- We match the $N(0, 5)$ prior on $\alpha$ via `control.fixed` — remember `INLA` parameterises Gaussians by **precision**, so $\text{sd} = 5$ becomes $\text{prec} = 1/25 = 0.04$.
-- We ask for DIC, WAIC and CPO up front so we can compare models later.
+- The offset goes in through `E =`, on the **natural** scale, not logged;
+  `INLA` takes the log for us.
+- There is no `f()` term, so the hyperparameter vector $\boldsymbol{\theta}$
+  is **empty**. There is nothing to integrate over, and Part 1's second stage
+  does not happen at all.
+- We match the $N(0, 5)$ prior on $\alpha$ via `control.fixed`, remember
+  `INLA` parameterises Gaussians by **precision**, so $\text{sd} = 5$ becomes
+  $\text{prec} = 1/25 = 0.04$.
 
 ```{r}
 t_full_inla <- system.time(
@@ -123,7 +307,7 @@ t_full_inla <- system.time(
     E      = expected,
     data   = data,
     control.fixed   = list(mean.intercept = 0, prec.intercept = 0.04),
-    control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE)
+    control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE)
   )
 )
 
@@ -131,17 +315,23 @@ t_full_inla
 summary(m_pooled)
 ```
 
-Note there are no initial values, iteration counts or burn-in settings to specify. The fixed-effect summary gives us the posterior of $\alpha$ directly:
+No initial values, iteration counts or burn-in settings. The fixed-effect
+summary gives the posterior of $\alpha$ directly:
 
 ```{r}
 m_pooled$summary.fixed
 ```
 
 ::: aside
-The `kld` column is the Kullback-Leibler divergence between the Gaussian and the simplified Laplace marginal for that parameter. Values much above $\sim 0.01$ suggest the approximation is straining. Here it should be essentially zero.
+The `kld` column is the Kullback-Leibler divergence between the Gaussian and
+the simplified Laplace marginal for that parameter, a direct measure of how
+much the skew correction from Part 1 mattered. Values much above $\sim 0.01$
+suggest the approximation is straining. Here it should be near zero.
 :::
 
-Let's map the (single, national) SMR, working with the full posterior marginal rather than just point summaries. `inla.tmarginal()` transforms a marginal through a function — here $\exp$ — and `inla.zmarginal()` summarises the result.
+Let's map the (single, national) SMR, working with the full posterior marginal
+rather than point summaries. `inla.tmarginal()` transforms a marginal through
+a function, here $\exp$, and `inla.zmarginal()` summarises the result.
 
 ```{r}
 smr_marg_pooled <- inla.tmarginal(exp, m_pooled$marginals.fixed$`(Intercept)`)
@@ -163,7 +353,7 @@ Still pretty boring, eh?
 
 ## No pooling model
 
-Each province gets its own fixed effect, with no borrowing of strength:
+Each province gets its own fixed effect, with no borrowing of strength.
 
 Priors
 $$
@@ -173,12 +363,14 @@ $$
 Likelihood
 $$
 \begin{split}
-y_i &\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
+y_i &\sim \text{Pois}(\mu_i) \\
 \log(\mu_i) &= \log(E_i) + \alpha_{j[i]}
 \end{split}
 $$
 
-In `INLA`, provinces enter as a factor with the global intercept removed (`-1`), so each level is estimated directly — exactly as we would in `glm()`. The `prec = 1` in `control.fixed` puts an independent $N(0, 1)$ prior on each $\alpha_j$, matching the `NIMBLE` model.
+Province enters as a **fixed effect**. It still lives in the latent
+field, a vague Gaussian prior is still a Gaussian prior, but because there
+is no `f()` term there is still no hyperparameter.
 
 ```{r}
 t_no_inla <- system.time(
@@ -187,23 +379,13 @@ t_no_inla <- system.time(
     family = "poisson",
     E      = expected,
     data   = data,
-    control.fixed   = list(mean = 0, prec = 1),
+    control.fixed   = list(prec = 1),
     control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE)
   )
 )
 
 t_no_inla
-```
 
-There are now 107 rows in `summary.fixed` — one per province.
-
-```{r}
-head(m_unpooled$summary.fixed)
-```
-
-Map the province SMRs. For a map of posterior medians, exponentiating the `0.5quant` column is fine (the median commutes with monotone transformations — the posterior *mean* would not).
-
-```{r}
 SMR_no_pooling <- exp(m_unpooled$summary.fixed$`0.5quant`)
 
 p_no <- shp_italy |>
@@ -218,7 +400,8 @@ p_no
 
 ## Partial pooling model
 
-Now the hierarchical model: a common intercept plus an IID random effect for each province, whose spread $\sigma_p$ is estimated from the data.
+Now the hierarchical model: a common intercept plus an IID random effect for
+each province, whose spread $\sigma_p$ is estimated from the data.
 
 Priors
 $$
@@ -236,15 +419,15 @@ y_i &\sim \text{Pois}(\mu_i) \quad i = 1,..., N \\
 \end{split}
 $$
 
-Instead of the half-normal prior on $\sigma_p$ we used in `NIMBLE`, we use a **penalised complexity (PC) prior** on the precision of the random effect — the recommended default in `INLA` for variance components. The parameterisation `param = c(1, 0.01)` reads as
+This is the first model with a hyperparameter, so it is the first model where
+Part 1's second stage actually runs.
 
-$$
-P(\sigma_p > 1) = 0.01,
-$$
+Instead of the half-normal prior on $\sigma_p$ we used in `NIMBLE`, we use a
+**penalised complexity (PC) prior** on the precision. The parameterisation
+`param = c(1, 0.01)` reads as $P(\sigma_p > 1) = 0.01$, we consider it
+unlikely that the between-province SD exceeds 1 on the log scale.
 
-i.e. we consider it unlikely that the between-province SD exceeds 1 on the log scale. This prior shrinks towards the base model $\sigma_p = 0$ (the full pooling model) unless the data support between-province variation.
-
-The `f()` term needs an integer or factor **index**, which is exactly what `provincia_id` is.
+The `f()` term needs an integer or factor **index**; `provincia_id` is one.
 
 ```{r}
 pc_prec <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)))
@@ -256,7 +439,7 @@ t_partial_inla <- system.time(
     E      = expected,
     data   = data,
     control.fixed   = list(mean.intercept = 0, prec.intercept = 0.04),
-    control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE)
+    control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE)
   )
 )
 
@@ -264,7 +447,59 @@ t_partial_inla
 summary(m_partial)
 ```
 
-Note that this differs from the pooled model by a single `f()` term.
+One `f()` term is the entire difference from the pooled model.
+
+### What INLA actually did
+
+This is the part the lecture described and you built by hand in Part 1. With
+`config = TRUE` we can look at the hyperparameter combinations that were
+evaluated:
+
+```{r}
+n_config <- m_partial$misc$configs$nconfig
+n_config
+```
+
+That is the number of red dots in panel 1 of your Part 1 figure. For each one,
+`INLA` solved the latent field once. Here are the values and their weights:
+
+```{r}
+configs <- tibble(
+  k          = seq_len(n_config),
+  log_theta  = map_dbl(m_partial$misc$configs$config, ~ .x$theta[1]),
+  log_post   = map_dbl(m_partial$misc$configs$config, ~ .x$log.posterior)
+) |>
+  mutate(
+    precision = exp(log_theta),
+    sigma_p   = 1 / sqrt(precision),
+    weight    = exp(log_post - max(log_post)),
+    weight    = weight / sum(weight)
+  ) |>
+  arrange(log_theta)
+
+configs |> select(k, precision, sigma_p, weight) |> kable(digits = 4)
+```
+
+Note the grid is laid out on **log precision**, not precision, exactly as in
+Exercise 2. Plot it against the posterior marginal to see the correspondence:
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: center
+prec_marg <- as.data.frame(
+  m_partial$marginals.hyperpar$`Precision for provincia_id`
+)
+
+ggplot(prec_marg, aes(x = x, y = y)) +
+  geom_line(colour = "darkcyan", linewidth = 1) +
+  geom_point(data = configs,
+             aes(x = precision, y = 0, size = weight),
+             colour = "#c0392b", alpha = 0.8, inherit.aes = FALSE) +
+  scale_size_continuous(range = c(1, 6)) +
+  labs(x = "Precision for provincia_id", y = "Density",
+       size = "Weight")
+```
 
 ### From precision to standard deviation
 
@@ -274,7 +509,9 @@ Note that this differs from the pooled model by a single `f()` term.
 m_partial$summary.hyperpar
 ```
 
-A precision is difficult to interpret, and note that the posterior mean of $1/\sqrt{\tau}$ is *not* $1/\sqrt{\text{posterior mean of } \tau}$. To summarise $\sigma_p$ correctly we transform the whole marginal, not the summary:
+A precision is difficult to interpret, and the posterior mean of
+$1/\sqrt{\tau}$ is *not* $1/\sqrt{\text{posterior mean of } \tau}$. Transform
+the whole marginal, not the summary:
 
 ```{r}
 sd_marg <- inla.tmarginal(
@@ -287,18 +524,14 @@ inla.emarginal(function(x) x, sd_marg)   # posterior mean of sigma_p
 inla.hpdmarginal(0.95, sd_marg)          # 95% HPD interval
 ```
 
-Compare this against the posterior of `sigma_p` from your `NIMBLE` run in the hierarchical modelling lab. They should agree closely (they will not be identical — different priors on $\sigma_p$, and one is a stochastic estimate while the other is a deterministic approximation).
-
 ```{r}
 ggplot(as.data.frame(sd_marg), aes(x = x, y = y)) +
   geom_line(colour = "darkcyan", linewidth = 1) +
   labs(x = expression(sigma[p]), y = "Density",
-       title = expression("Posterior marginal of " * sigma[p]))
+)
 ```
 
 ### Random effects and shrinkage
-
-The province effects live in `summary.random`:
 
 ```{r}
 re <- m_partial$summary.random$provincia_id
@@ -310,7 +543,9 @@ ggplot(re, aes(x = ID, y = mean)) +
   labs(x = "Province", y = expression(theta[j]))
 ```
 
-Now compare the unpooled and partially pooled estimates, province by province. The hierarchical estimates are pulled towards the overall mean, and provinces with small expected counts (the least data) are pulled hardest, with the amount of shrinkage estimated from the data via $\sigma_p$.
+Now compare the unpooled and partially pooled estimates, province by province.
+Provinces with small expected counts are pulled hardest, with the amount of
+shrinkage estimated from the data via $\sigma_p$.
 
 ```{r}
 shrinkage <- tibble(
@@ -326,10 +561,8 @@ ggplot(shrinkage, aes(x = unpooled, y = partial, size = expected)) +
   scale_size_continuous(name = "Expected deaths") +
   labs(x = expression("Unpooled " * alpha[j]),
        y = expression("Partially pooled " * alpha + theta[j]),
-       title = "Shrinkage towards the national rate")
+)
 ```
-
-Points on the dashed line are unshrunk; points pulled towards the middle are shrunk.
 
 ### Map the partially pooled SMR
 
@@ -348,8 +581,6 @@ p_partial
 
 ## Comparing each of the models
 
-Side by side, as before:
-
 ```{r}
 p_full + labs(caption = "Full pooling model")
 p_no + labs(caption = "No pooling model")
@@ -358,20 +589,21 @@ p_partial + labs(caption = "Partial pooling model")
 
 There is clearly more smoothing in the partial pooling model.
 
-And the information criteria (lowest is preferred). WAIC here is directly comparable to the WAIC `nimbleMCMC()` gave us.
-
 ```{r}
 tibble(
   model = c("Full pooling", "No pooling", "Partial pooling"),
   dic   = map_dbl(list(m_pooled, m_unpooled, m_partial), ~ .x$dic$dic),
   waic  = map_dbl(list(m_pooled, m_unpooled, m_partial), ~ .x$waic$waic),
   p_eff = map_dbl(list(m_pooled, m_unpooled, m_partial), ~ .x$waic$p.eff)
-)
+) |> kable(digits = 1)
 ```
 
-`p.eff` is the effective number of parameters, which gives a numerical measure of how much shrinkage is happening. The partial pooling model has 107 province effects but far fewer *effective* parameters, because they are tied together through $\sigma_p$.
+`p.eff` is the effective number of parameters. The partial pooling model has
+107 province effects but far fewer *effective* parameters, because they are
+tied together through $\sigma_p$.
 
-`INLA` also provides leave-one-out quantities via CPO at little extra cost, which would require refitting the model $n$ times with MCMC:
+`INLA` also provides leave-one-out quantities via CPO at little extra cost,
+which would require refitting the model $n$ times with MCMC:
 
 ```{r}
 # Leave-one-out log score (lower is better)
@@ -381,15 +613,166 @@ tibble(
 sum(m_partial$cpo$failure > 0)
 ```
 
+# Part 3: the approximation choices
+
+The lecture described two separate dials. They control different stages and
+are easy to confuse; the next two fits move them separately.
+
+## `int.strategy`: how many combinations
+
+This governs **stage 1**, where the hyperparameter space gets evaluated. It
+is the choice you made by hand when you set `K` in Part 1.
+
+```{r}
+fit_int <- function(strategy) {
+  system.time(
+    m <- inla(
+      deaths ~ 1 + f(provincia_id, model = "iid", hyper = pc_prec),
+      family = "poisson",
+      E      = expected,
+      data   = data,
+      control.fixed   = list(mean.intercept = 0, prec.intercept = 0.04),
+      control.compute = list(config = TRUE),
+      control.inla    = list(int.strategy = strategy)
+    )
+  ) -> tt
+  list(fit = m, time = tt[["elapsed"]])
+}
+
+r_eb   <- fit_int("eb")
+r_ccd  <- fit_int("ccd")
+r_grid <- fit_int("grid")
+```
+
+```{r}
+int_compare <- tibble(
+  int.strategy = c("eb", "ccd", "grid"),
+  n_points     = map_dbl(list(r_eb, r_ccd, r_grid),
+                         ~ .x$fit$misc$configs$nconfig),
+  seconds      = map_dbl(list(r_eb, r_ccd, r_grid), ~ .x$time),
+  alpha_sd     = map_dbl(list(r_eb, r_ccd, r_grid),
+                         ~ .x$fit$summary.fixed$sd[1]),
+  ci_width     = map_dbl(list(r_eb, r_ccd, r_grid),
+                         ~ diff(unlist(.x$fit$summary.random$provincia_id[1,
+                             c("0.025quant", "0.975quant")])))
+)
+
+int_compare |> kable(digits = 4)
+```
+
+Look at `ci_width`. `eb` uses one combination and its intervals come out
+**narrowest**, because the uncertainty in $\sigma_p$ never reaches the answer.
+This is the red curve from Part 1, in a real model.
+
+::: aside
+With only one hyperparameter the differences are small, there is not much
+uncertainty to lose. Re-run this comparison after fitting the BYM2 model
+below, which has two, and the gap widens.
+:::
+
+**Practical habit:** develop with `eb`, report with `ccd`.
+
+## `strategy`: how each marginal is read out
+
+This governs a different stage, extracting an individual element's marginal
+from the joint Gaussian. This is where the skew you saw in the Gamma example
+gets corrected.
+
+```{r}
+fit_strat <- function(strategy) {
+  system.time(
+    m <- inla(
+      deaths ~ 1 + f(provincia_id, model = "iid", hyper = pc_prec),
+      family = "poisson",
+      E      = expected,
+      data   = data,
+      control.fixed   = list(mean.intercept = 0, prec.intercept = 0.04),
+      control.inla    = list(strategy = strategy),
+      control.compute = list(return.marginals.random = TRUE)
+    )
+  ) -> tt
+  list(fit = m, time = tt[["elapsed"]])
+}
+
+s_gauss <- fit_strat("gaussian")
+s_simpl <- fit_strat("simplified.laplace")
+s_lap   <- fit_strat("laplace")
+```
+
+```{r}
+tibble(
+  strategy  = c("gaussian", "simplified.laplace", "laplace"),
+  seconds   = map_dbl(list(s_gauss, s_simpl, s_lap), ~ .x$time),
+  mean_kld  = map_dbl(list(s_gauss, s_simpl, s_lap),
+                      ~ mean(.x$fit$summary.random$provincia_id$kld)),
+  max_kld   = map_dbl(list(s_gauss, s_simpl, s_lap),
+                      ~ max(.x$fit$summary.random$provincia_id$kld))
+) |> kable(digits = 6)
+```
+
+The `kld` column measures how far each marginal is from the Gaussian
+approximation. Under `gaussian` it is zero **by construction**, the strategy
+does not correct anything, so it cannot report a discrepancy. Under the other
+two it tells you how much correcting was needed.
+
+Compare a single province's marginal across strategies:
+
+```{r}
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: center
+# the province with the least data: use its provincia_id, not its row number
+j <- data$provincia_id[which.min(data$expected)]
+
+# marginals.random is only returned when asked for (see control.compute above)
+stopifnot(length(s_gauss$fit$marginals.random$provincia_id) >= j)
+
+get_marg <- function(res, label) {
+  res$fit$marginals.random$provincia_id[[j]] |>
+    as.data.frame() |>
+    mutate(strategy = label)
+}
+
+marg_df <- bind_rows(
+  get_marg(s_gauss, "gaussian"),
+  get_marg(s_simpl, "simplified.laplace"),
+  get_marg(s_lap,   "laplace")
+)
+
+ggplot(marg_df, aes(x = x, y = y, colour = strategy, linetype = strategy)) +
+  geom_line(linewidth = 0.9) +
+  labs(x = expression(theta[j]), y = "Density")
+```
+
+The three curves should nearly coincide here. They separate when data per
+latent element are thin. The mechanism is the same as `shape = 2` in
+Exercise 1.
+
+::: {.callout-tip}
+## Exercise 3
+
+- Why is `mean_kld` exactly zero under `strategy = "gaussian"`? What would you
+  need to compute in order to know whether that strategy was adequate?
+- The `laplace` strategy is the most expensive. On this model the extra cost
+  is small. What feature of this dataset makes that true, and what kind of
+  outcome would change it?
+:::
+
 ## Prior sensitivity on the variance component
 
-The default `INLA` prior on random effect precisions is `loggamma(1, 5e-5)`. Although widely used, it can be more informative than expected for small variances. Let's see how much our conclusions change under three priors:
+The default `INLA` prior on random effect precisions is `loggamma(1, 5e-5)`.
+Widely used, but more informative than expected for small variances. Three
+priors:
 
-- PC prior with `param = c(1, 0.01)`: $P(\sigma_p > 1) = 0.01$ (what we used);
-- PC prior with `param = c(0.1, 0.01)`: $P(\sigma_p > 0.1) = 0.01$, which is much tighter and allows little between-province variation;
+- PC prior `param = c(1, 0.01)`: $P(\sigma_p > 1) = 0.01$ (what we used);
+- PC prior `param = c(0.1, 0.01)`: much tighter, allowing little
+  between-province variation;
 - the `loggamma` default.
 
 ```{r}
+#| fig-width: 10
+#| fig-height: 4.5
+#| out-width: "100%"
 fit_partial <- function(hyper) {
   inla(
     deaths ~ 1 + f(provincia_id, model = "iid", hyper = hyper),
@@ -401,77 +784,60 @@ fit_partial <- function(hyper) {
   )
 }
 
-m_pc_1   <- m_partial   # already fitted: pc.prec, c(1, 0.01)
-m_pc_01  <- fit_partial(list(prec = list(prior = "pc.prec", param = c(0.1, 0.01))))
-m_gamma  <- fit_partial(list(prec = list(prior = "loggamma", param = c(1, 5e-5))))
-```
+m_pc_wide  <- fit_partial(list(prec = list(prior = "pc.prec", param = c(1, 0.01))))
+m_pc_tight <- fit_partial(list(prec = list(prior = "pc.prec", param = c(0.1, 0.01))))
+m_lgamma   <- fit_partial(list(prec = list(prior = "loggamma", param = c(1, 5e-5))))
 
-Compare the posterior of $\sigma_p$ under each:
-
-```{r}
-get_sd_marg <- function(m, label) {
+sd_of <- function(m) {
   inla.tmarginal(function(x) 1 / sqrt(x),
-                 m$marginals.hyperpar$`Precision for provincia_id`) |>
-    as.data.frame() |>
-    mutate(prior = label)
+                 m$marginals.hyperpar$`Precision for provincia_id`)
 }
 
-sd_df <- bind_rows(
-  get_sd_marg(m_pc_1,  "PC: P(sd > 1) = 0.01"),
-  get_sd_marg(m_pc_01, "PC: P(sd > 0.1) = 0.01"),
-  get_sd_marg(m_gamma, "loggamma(1, 5e-5)")
+sens <- bind_rows(
+  as.data.frame(sd_of(m_pc_wide))  |> mutate(prior = "PC, U = 1"),
+  as.data.frame(sd_of(m_pc_tight)) |> mutate(prior = "PC, U = 0.1"),
+  as.data.frame(sd_of(m_lgamma))   |> mutate(prior = "loggamma default")
 )
 
-ggplot(sd_df, aes(x = x, y = y, colour = prior)) +
-  geom_line(linewidth = 1, alpha = 0.7) +
-  scale_colour_manual(values = c(
-    "PC: P(sd > 1) = 0.01"   = "#0072B2",
-    "PC: P(sd > 0.1) = 0.01" = "#D55E00",
-    "loggamma(1, 5e-5)"      = "#009E73"
-  )) +
-  labs(x = expression(sigma[p]), y = "Density", colour = "Prior",
-       title = expression("Posterior of " * sigma[p] * " under three priors")) +
-  theme(legend.position = "bottom")
-```
 
-And whether it matters for the main quantity of interest, the province SMRs:
 
-```{r}
-smr_compare <- tibble(
-  pc_1  = m_pc_1$summary.fixed$mean[1]  + m_pc_1$summary.random$provincia_id$mean,
-  pc_01 = m_pc_01$summary.fixed$mean[1] + m_pc_01$summary.random$provincia_id$mean,
-  gamma = m_gamma$summary.fixed$mean[1] + m_gamma$summary.random$provincia_id$mean
-)
+p_a <- ggplot(sens, aes(x = x, y = y, colour = prior)) +
+  geom_line(linewidth = 0.9) +
+  xlim(0, 0.6) +
+  labs(x = expression(sigma[p]), y = "Density")
 
-p_a <- ggplot(smr_compare, aes(x = exp(pc_1), y = exp(pc_01))) +
-  geom_abline(slope = 1, intercept = 0, linetype = 2) +
-  geom_point(alpha = 0.6, size = 0.8, colour = "darkcyan") +
-  labs(x = "SMR, PC c(1, 0.01)", y = "SMR, PC c(0.1, 0.01)")
+smr_of <- function(m) {
+  exp(m$summary.fixed$`0.5quant`[1] + m$summary.random$provincia_id$`0.5quant`)
+}
 
-p_b <- ggplot(smr_compare, aes(x = exp(pc_1), y = exp(gamma))) +
-  geom_abline(slope = 1, intercept = 0, linetype = 2) +
-  geom_point(alpha = 0.6, size = 0.8, colour = "darkcyan") +
-  labs(x = "SMR, PC c(1, 0.01)", y = "SMR, loggamma default")
+p_b <- tibble(
+  wide  = smr_of(m_pc_wide),
+  tight = smr_of(m_pc_tight),
+  lg    = smr_of(m_lgamma)
+) |>
+  pivot_longer(everything(), names_to = "prior", values_to = "SMR") |>
+  ggplot(aes(x = SMR, colour = prior)) +
+  geom_density(linewidth = 0.9) +
+  labs(fill = "SMR")
 
 p_a + p_b
 ```
 
-With 107 provinces and reasonably large expected counts, the data are informative and the SMRs should be fairly robust; the posterior of $\sigma_p$ itself will typically move more than the SMRs do. In general, priors on variance components should always be stated in a paper and checked with a sensitivity analysis; with `INLA` each refit takes seconds, which makes this straightforward.
+With 107 provinces and reasonably large expected counts, the data are
+informative and the SMRs move little; the posterior of $\sigma_p$
+itself will typically move more than the SMRs do. Priors on variance
+components should always be stated in a paper and checked with a sensitivity
+analysis; with `INLA` each refit takes seconds.
 
-## Spatial extension: BYM2
+# Part 4: sparsity and the spatial extension
 
-The IID model shrinks every province towards the *national* mean, ignoring the map. But neighbouring provinces tend to be alike. The BYM2 model adds spatially structured smoothing: each province is pulled towards its **neighbours** as well as the national mean.
+## Looking at $\boldsymbol{Q}$
 
-$$
-\begin{split}
-\log(\mu_i) &= \log(E_i) + \alpha + b_{j[i]} \\
-\boldsymbol{b} &= \frac{\sigma_b}{\sqrt{1}}\left(\sqrt{1-\phi}\,\boldsymbol{v} + \sqrt{\phi}\,\boldsymbol{u}_\star\right)
-\end{split}
-$$
+The lecture argued that the latent field is a GMRF, and that its precision
+matrix is almost entirely blank. Now we can see it.
 
-where $\boldsymbol{v}$ is IID noise, $\boldsymbol{u}_\star$ is a scaled ICAR (neighbours-only) field, and the **mixing parameter** $\phi \in [0, 1]$ is the proportion of the variance that is spatially structured. $\phi = 0$ recovers the IID model; $\phi = 1$ is pure ICAR.
-
-First, build the adjacency structure from the shapefile using `spdep`, and write it in the format `INLA` expects:
+Build the adjacency structure from the shapefile using `spdep`, and write it
+in the format `INLA` expects:
 
 ```{r}
 nb <- poly2nb(shp_italy)
@@ -481,11 +847,64 @@ g <- inla.read.graph(here("data", "italy", "italy.adj"))
 summary(g)
 ```
 
+The graph *is* the pattern of blanks. Look at it directly:
+
+```{r}
+#| fig-width: 6
+#| fig-height: 6
+#| fig-align: center
+inla.spy(g)
+```
+
+And count:
+
+```{r}
+Q_struct <- inla.graph2matrix(g)
+Np       <- g$n
+
+tibble(
+  quantity = c("elements in the field", "entries in Q", "filled entries",
+               "percentage filled"),
+  value    = c(Np, Np^2, Matrix::nnzero(Q_struct),
+               100 * Matrix::nnzero(Q_struct) / Np^2)
+) |> kable(digits = 2)
+```
+
+Roughly six entries per row and several hundred blanks, with 107 provinces
+the saving is modest, but the cost of a dense factorisation grows as $m^3$
+while a sparse one grows closer to $m^{3/2}$. At 8,000 areas, the difference
+between those is the difference between seconds and hours.
+
 ::: aside
-Check `g$n` matches the number of provinces, and look out for islands (areas with no neighbours) — Italy has a couple of island provinces, which `INLA` handles but which you should know about. `summary(nb)` will tell you.
+Check `g$n` matches the number of provinces, and look out for islands (areas
+with no neighbours), Italy has a couple, which `INLA` handles but which you
+should know about. `summary(nb)` will tell you.
 :::
 
-Now fit. Two hyperparameters, two PC priors: one on the overall precision (as before), and one on $\phi$, where `param = c(0.5, 0.5)` reads as $P(\phi < 0.5) = 0.5$ — agnostic about how spatial the variation is. `scale.model = TRUE` scales the ICAR component so the precision means the same thing regardless of the graph — essential for the PC prior to be interpretable.
+## Spatial extension: BYM2
+
+The IID model shrinks every province towards the *national* mean, ignoring
+the map. BYM2 adds spatially structured smoothing: each province is pulled
+towards its **neighbours** as well as the national mean.
+
+$$
+\begin{split}
+\log(\mu_i) &= \log(E_i) + \alpha + b_{j[i]} \\
+\boldsymbol{b} &= \frac{1}{\sqrt{\tau_b}}\left(\sqrt{1-\phi}\,\boldsymbol{v} + \sqrt{\phi}\,\boldsymbol{u}_\star\right)
+\end{split}
+$$
+
+where $\boldsymbol{v}$ is IID noise, $\boldsymbol{u}_\star$ is a scaled ICAR
+(neighbours-only) field, and $\phi \in [0, 1]$ is the proportion of the
+variance that is spatially structured. $\phi = 0$ recovers the IID model;
+$\phi = 1$ is pure ICAR.
+
+This is our first model with **two** hyperparameters, so stage 1 now scans a
+two-dimensional space rather than a line.
+
+`scale.model = TRUE` scales the ICAR component so the precision means the same
+thing regardless of the graph, essential for the PC prior to be
+interpretable.
 
 ```{r}
 t_bym2 <- system.time(
@@ -499,7 +918,7 @@ t_bym2 <- system.time(
     E      = expected,
     data   = data,
     control.fixed   = list(mean.intercept = 0, prec.intercept = 0.04),
-    control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE)
+    control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE)
   )
 )
 
@@ -507,7 +926,47 @@ t_bym2
 m_bym2$summary.hyperpar
 ```
 
-What does the posterior of $\phi$ tell us? Values near 1 say most of the between-province variation is spatially structured; values near 0 say the map adds little beyond IID effects.
+How many combinations did it take this time?
+
+```{r}
+tibble(
+  model            = c("Partial pooling (iid)", "BYM2"),
+  hyperparameters  = c(1, 2),
+  n_configurations = c(m_partial$misc$configs$nconfig,
+                       m_bym2$misc$configs$nconfig),
+  seconds          = c(t_partial_inla[["elapsed"]], t_bym2[["elapsed"]])
+) |> kable(digits = 2)
+```
+
+One extra hyperparameter, and the number of points `INLA` must evaluate jumps.
+This is the geometric growth from the lecture, in miniature. It is the reason
+the practical ceiling is on the *number of hyperparameters*, not the size of
+the latent field.
+
+See the two-dimensional scan directly:
+
+```{r}
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: center
+th <- map_dfr(m_bym2$misc$configs$config, \(cc) {
+  tibble(log_prec = cc$theta[1], logit_phi = cc$theta[2],
+         lp = cc$log.posterior)
+}) |>
+  mutate(weight = exp(lp - max(lp)), weight = weight / sum(weight))
+
+ggplot(th, aes(x = log_prec, y = logit_phi, size = weight)) +
+  geom_point(colour = "#c0392b", alpha = 0.7) +
+  labs(x = "log precision", y = "logit phi",
+       size = "Weight")
+```
+
+That scatter is the `ccd` design from the lecture: the mode, plus axial and
+factorial points placed using the curvature.
+
+What does the posterior of $\phi$ tell us? Values near 1 say most of the
+between-province variation is spatially structured; values near 0 say the map
+adds little beyond IID effects.
 
 ```{r}
 phi_marg <- m_bym2$marginals.hyperpar$`Phi for provincia_id`
@@ -517,13 +976,15 @@ inla.zmarginal(phi_marg)
 ggplot(as.data.frame(phi_marg), aes(x = x, y = y)) +
   geom_line(colour = "darkcyan", linewidth = 1) +
   labs(x = expression(phi), y = "Density",
-       title = expression("Posterior of the mixing parameter " * phi))
+)
 ```
 
-Map the BYM2-smoothed SMRs next to the IID version. In the `bym2` model, `summary.random` has $2 N_p$ rows: the first $N_p$ are the **combined** effect $b_j$ (what we want for the map), the second $N_p$ are the structured component alone.
+Map the BYM2-smoothed SMRs next to the IID version. In the `bym2` model,
+`summary.random` has $2 N_p$ rows: the first $N_p$ are the **combined** effect
+$b_j$ (what we want for the map), the second $N_p$ are the structured
+component alone.
 
 ```{r}
-Np <- g$n
 re_bym2 <- m_bym2$summary.random$provincia_id[1:Np, ]
 
 SMR_bym2 <- exp(m_bym2$summary.fixed$`0.5quant`[1] + re_bym2$`0.5quant`)
@@ -539,109 +1000,209 @@ p_bym2 <- shp_italy |>
   (p_bym2 + labs(caption = "BYM2 (spatially structured)"))
 ```
 
-We can compare the IID and BYM2 models with DIC and WAIC to check whether the spatial structure improves fit:
-
 ```{r}
 tibble(
   model = c("Partial pooling (iid)", "BYM2"),
   dic   = map_dbl(list(m_partial, m_bym2), ~ .x$dic$dic),
   waic  = map_dbl(list(m_partial, m_bym2), ~ .x$waic$waic)
-)
+) |> kable(digits = 1)
 ```
 
-## Comparing INLA and NIMBLE
+::: {.callout-tip}
+## Exercise 4
 
-Finally, let's compare the two approaches directly. Below we refit the partial pooling model with `nimbleMCMC()` exactly as in the hierarchical modelling lab, and time it against `INLA`.
+Re-run the `int.strategy` comparison from Part 3 on the BYM2 model, which has
+two hyperparameters rather than one.
 
-::: aside
-The `NIMBLE` fit takes a couple of minutes, most of it model compilation. Feel free to skip re-running it and use your saved output from the previous lab instead.
+- How much wider are the `ccd` intervals than the `eb` ones now?
+- Why should the gap grow with the number of hyperparameters?
 :::
 
-```{r}
-#| cache: true
-constants <- list(
-  N = nrow(data),
-  Np = max(data$provincia_id),
-  province = data$provincia_id
-)
+<!-- ## Adding time: a third hyperparameter -->
 
-nimble_data <- list(
-  y = as.integer(data$deaths),
-  E = data$expected
-)
+<!-- Everything so far used a single month. Take the whole of 2018 and add a smooth -->
+<!-- temporal trend, and we arrive at the lecture's running example: a Poisson -->
+<!-- likelihood, a spatial term and a temporal term. -->
 
-inits <- list(
-  list(alpha = 0,   theta = rep(0, constants$Np), sigma_p = 1),
-  list(alpha = 0.1, theta = rep(0, constants$Np), sigma_p = 1)
-)
+<!-- ```{r} -->
+<!-- data_year <- read_rds(here("data", "italy", "italy_mortality.rds")) |> -->
+<!--   mutate(provincia_id = _ |> group_by(SIGLA) |> group_indices()) |> -->
+<!--   filter(year == 2018) |> -->
+<!--   arrange(SIGLA, month) -->
 
-partial_pooling_model <- nimbleCode({
-  alpha ~ dnorm(0, 5)
-  sigma_p ~ T(dnorm(0, 1), 0, Inf)
+<!-- t_st <- system.time( -->
+<!--   m_st <- inla( -->
+<!--     deaths ~ 1 + -->
+<!--       f(provincia_id, model = "bym2", graph = g, scale.model = TRUE, -->
+<!--         hyper = list(prec = list(prior = "pc.prec", param = c(1, 0.01)), -->
+<!--                      phi  = list(prior = "pc",      param = c(0.5, 0.5)))) + -->
+<!--       f(month, model = "rw1", scale.model = TRUE, constr = TRUE, -->
+<!--         hyper = list(prec = list(prior = "pc.prec", param = c(1, 0.01)))), -->
+<!--     family = "poisson", -->
+<!--     E      = expected, -->
+<!--     data   = data_year, -->
+<!--     control.fixed   = list(mean.intercept = 0, prec.intercept = 0.04), -->
+<!--     control.compute = list(dic = TRUE, waic = TRUE, config = TRUE) -->
+<!--   ) -->
+<!-- ) -->
 
-  for (j in 1:Np) {
-    theta[j] ~ dnorm(0, sd = sigma_p)
-  }
+<!-- t_st -->
+<!-- m_st$summary.hyperpar -->
+<!-- ``` -->
 
-  for (i in 1:N) {
-    y[i] ~ dpois(mu[i])
-    log(mu[i]) <- log(E[i]) + alpha + theta[province[i]]
-  }
-})
+<!-- ```{r} -->
+<!-- tibble( -->
+<!--   model            = c("Full pooling", "Partial pooling", "BYM2", "BYM2 + RW1"), -->
+<!--   hyperparameters  = c(0, 1, 2, 3), -->
+<!--   n_configurations = c(1, m_partial$misc$configs$nconfig, -->
+<!--                        m_bym2$misc$configs$nconfig, -->
+<!--                        m_st$misc$configs$nconfig), -->
+<!--   seconds          = c(t_full_inla[["elapsed"]], t_partial_inla[["elapsed"]], -->
+<!--                        t_bym2[["elapsed"]], t_st[["elapsed"]]) -->
+<!-- ) |> kable(digits = 2) -->
+<!-- ``` -->
 
-t_partial_nimble <- system.time(
-  partial_pooling_samples <- nimbleMCMC(
-    code = partial_pooling_model,
-    data = nimble_data,
-    constants = constants,
-    inits = inits,
-    monitors = c("alpha", "sigma_p", "theta"),
-    niter = 2000,
-    nburnin = 1000,
-    thin = 1,
-    nchains = 2,
-    samplesAsCodaMCMC = TRUE,
-    progressBar = FALSE,
-    WAIC = TRUE
-  )
-)
-```
+<!-- The latent field grew twelvefold when we added the other eleven months. The -->
+<!-- runtime is driven by the third column, not the size of the field. -->
 
-```{r}
-tibble(
-  engine  = c("NIMBLE (MCMC)", "INLA"),
-  elapsed = c(t_partial_nimble["elapsed"], t_partial_inla["elapsed"])
-)
-```
+<!-- The temporal trend itself: -->
 
-And do the two engines agree on the province effects?
+<!-- ```{r} -->
+<!-- ggplot(m_st$summary.random$month, -->
+<!--        aes(x = ID, y = mean)) + -->
+<!--   geom_hline(yintercept = 0, linetype = 2) + -->
+<!--   geom_ribbon(aes(ymin = `0.025quant`, ymax = `0.975quant`), -->
+<!--               alpha = 0.2, fill = "darkcyan") + -->
+<!--   geom_line(colour = "darkcyan", linewidth = 1) + -->
+<!--   scale_x_continuous(breaks = 1:12) + -->
+<!--   labs(x = "Month of 2018", y = "RW1 effect", -->
+<!--        title = "Smooth seasonal trend in mortality") -->
+<!-- ``` -->
 
-```{r}
-nimble_theta <- summarise_draws(
-  partial_pooling_samples$samples,
-  default_summary_measures()
-) |>
-  filter(str_detect(variable, "theta")) |>
-  arrange(as.integer(str_extract(variable, "\\d+")))
+<!-- # Part 5: comparing INLA and NIMBLE -->
 
-agreement <- tibble(
-  inla   = m_partial$summary.random$provincia_id$mean,
-  nimble = nimble_theta$mean
-)
+<!-- Finally, the two approaches side by side. Below we refit the partial pooling -->
+<!-- model with `nimbleMCMC()` exactly as in the hierarchical modelling lab. -->
 
-ggplot(agreement, aes(x = nimble, y = inla)) +
-  geom_abline(slope = 1, intercept = 0, linetype = 2) +
-  geom_point(alpha = 0.6, size = 0.8, colour = "darkcyan") +
-  labs(x = expression("NIMBLE posterior mean of " * theta[j]),
-       y = expression("INLA posterior mean of " * theta[j]))
-```
+<!-- ::: aside -->
+<!-- The `NIMBLE` fit takes a couple of minutes, most of it model compilation. Feel -->
+<!-- free to skip re-running it and use your saved output from the previous lab. -->
+<!-- ::: -->
 
-The points should sit close to the line; any scatter is mostly Monte Carlo noise in the (short) `NIMBLE` run, plus the difference between the half-normal and PC priors on $\sigma_p$. MCMC error shrinks as the chains run longer, whereas the `INLA` approximation error is fixed but, for models like this, very small.
+<!-- ```{r} -->
+<!-- #| cache: true -->
+<!-- constants <- list( -->
+<!--   N = nrow(data), -->
+<!--   Np = max(data$provincia_id), -->
+<!--   province = data$provincia_id -->
+<!-- ) -->
 
-The two approaches are complementary. A common workflow is to develop and compare models in `INLA`, then verify the final model with MCMC where the additional flexibility or exactness is needed.
+<!-- nimble_data <- list( -->
+<!--   y = as.integer(data$deaths), -->
+<!--   E = data$expected -->
+<!-- ) -->
+
+<!-- inits <- list( -->
+<!--   list(alpha = 0,   theta = rep(0, constants$Np), sigma_p = 1), -->
+<!--   list(alpha = 0.1, theta = rep(0, constants$Np), sigma_p = 1) -->
+<!-- ) -->
+
+<!-- partial_pooling_model <- nimbleCode({ -->
+<!--   alpha ~ dnorm(0, 5) -->
+<!--   sigma_p ~ T(dnorm(0, 1), 0, Inf) -->
+
+<!--   for (j in 1:Np) { -->
+<!--     theta[j] ~ dnorm(0, sd = sigma_p) -->
+<!--   } -->
+
+<!--   for (i in 1:N) { -->
+<!--     y[i] ~ dpois(mu[i]) -->
+<!--     log(mu[i]) <- log(E[i]) + alpha + theta[province[i]] -->
+<!--   } -->
+<!-- }) -->
+
+<!-- t_partial_nimble <- system.time( -->
+<!--   partial_pooling_samples <- nimbleMCMC( -->
+<!--     code = partial_pooling_model, -->
+<!--     data = nimble_data, -->
+<!--     constants = constants, -->
+<!--     inits = inits, -->
+<!--     monitors = c("alpha", "sigma_p", "theta"), -->
+<!--     niter = 2000, -->
+<!--     nburnin = 1000, -->
+<!--     thin = 1, -->
+<!--     nchains = 2, -->
+<!--     samplesAsCodaMCMC = TRUE, -->
+<!--     progressBar = FALSE, -->
+<!--     WAIC = TRUE -->
+<!--   ) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- tibble( -->
+<!--   engine  = c("NIMBLE (MCMC)", "INLA"), -->
+<!--   elapsed = c(t_partial_nimble["elapsed"], t_partial_inla["elapsed"]) -->
+<!-- ) |> kable(digits = 2) -->
+<!-- ``` -->
+
+<!-- Note what each engine was doing. `NIMBLE` sampled 108 latent quantities *and* -->
+<!-- the hyperparameter jointly, 2,000 times, twice. `INLA` scanned a handful of -->
+<!-- values of $\sigma_p$ and solved the latent field once at each. The second -->
+<!-- column is the whole argument of the lecture. -->
+
+<!-- And do they agree? -->
+
+<!-- ```{r} -->
+<!-- nimble_theta <- summarise_draws( -->
+<!--   partial_pooling_samples$samples, -->
+<!--   default_summary_measures() -->
+<!-- ) |> -->
+<!--   filter(str_detect(variable, "theta")) |> -->
+<!--   arrange(as.integer(str_extract(variable, "\\d+"))) -->
+
+<!-- agreement <- tibble( -->
+<!--   inla   = m_partial$summary.random$provincia_id$mean, -->
+<!--   nimble = nimble_theta$mean -->
+<!-- ) -->
+
+<!-- ggplot(agreement, aes(x = nimble, y = inla)) + -->
+<!--   geom_abline(slope = 1, intercept = 0, linetype = 2) + -->
+<!--   geom_point(alpha = 0.6, size = 0.8, colour = "darkcyan") + -->
+<!--   labs(x = expression("NIMBLE posterior mean of " * theta[j]), -->
+<!--        y = expression("INLA posterior mean of " * theta[j])) -->
+<!-- ``` -->
+
+<!-- The points should sit close to the line; any scatter is mostly Monte Carlo -->
+<!-- noise in the (short) `NIMBLE` run, plus the difference between the half-normal -->
+<!-- and PC priors on $\sigma_p$. MCMC error shrinks as the chains run longer, -->
+<!-- whereas the `INLA` approximation error is fixed but, for models like this, -->
+<!-- very small. -->
+
+<!-- ::: {.callout-tip} -->
+<!-- ## Exercise 5 -->
+
+<!-- The `NIMBLE` model above has one hyperparameter (`sigma_p`) and 108 latent -->
+<!-- quantities, and samples them together. Suppose you wanted 8,000 areas over 20 -->
+<!-- years with a BYM2 field and an RW1 trend. -->
+
+<!-- - Which engine's cost grows fastest, and with respect to what? -->
+<!-- - Which of the lecture's two conditions would you check first before reaching -->
+<!--   for `INLA`? -->
+<!-- ::: -->
 
 ## Closing remarks
 
-In this lab session, we refitted the Italian mortality pooling models in `R-INLA`. For latent Gaussian models, posterior marginals are available deterministically, in seconds, with no convergence diagnostics required, and the results agree closely with MCMC.
+In this lab we built both halves of INLA by hand: a Laplace approximation
+from a mode and a curvature, and a weighted sum over a grid of hyperparameter
+values. `R-INLA` then did the same on real data, at a scale where doing it by
+hand is not possible.
 
-For many of the hierarchical models used in environmental health research (IID random effects, structured time trends, spatial and spatiotemporal fields), this makes sensitivity analyses, cross-validation via CPO, and model extension (e.g. IID to BYM2) much less costly. The limitations are a fixed approximation error and a restricted model class; where a model falls outside these limits, MCMC remains the reference approach.
+The two conditions from the lecture held throughout. Every model here had a
+Gaussian latent field with local links, and between zero and three
+hyperparameters. For models with many variance components, or a latent field
+that is not Gaussian, MCMC in `NIMBLE` remains the reference approach.
+
+A common workflow is to develop and compare models in `INLA`, using the speed
+for prior sensitivity and cross-validation, then verify the final model
+with MCMC where the extra flexibility or exactness is needed.

@@ -995,6 +995,41 @@ tibble(sigma = sigma,
 
 # Making `INLA` run faster
 
+## Making a slow fit faster {.smaller}
+
+In rough order of how much they usually buy you:
+
+| Lever | Code |
+|---|---|
+| Develop with cheap options, switch back for the final run | `control.inla = list(strategy = "gaussian", int.strategy = "eb")` |
+| Use empirical Bayes — modal $\boldsymbol{\theta}$ only, one configuration | `int.strategy = "eb"` |
+| Warm-start from a previous fit's hyperparameters | `control.mode = list(theta = fit$mode$theta, restart = FALSE)` |
+| Install the PARDISO solver (free academic licence) | `inla.pardiso()` |
+
+## Making a slow fit faster {.smaller}
+
+In rough order of how much they usually buy you:
+
+| Lever | Code |
+|---|---|
+| Set threads: outer over configurations, inner within factorisation | `num.threads = "4:2"` |
+| Coarsen the mesh — always check `mesh$n` before fitting | `max.edge`, `cutoff` |
+| Turn off diagnostics you are not reading | `control.compute = list(dic = FALSE, waic = FALSE, cpo = FALSE)` |
+| Store the full configuration **only** when you need posterior sampling | `config = TRUE` |
+
+. . .
+
+Two habits worth forming: **scale your covariates**, because a badly conditioned
+latent field makes the $\boldsymbol{\theta}$ optimisation wander; and **use PC
+priors**, which keep the hyperparameters on a sensible scale and tend to make
+the mode easier to find.
+
+<!-- . . . -->
+
+<!-- [If none of this helps, the model is probably not a good LGM. Check -->
+<!-- $\dim(\boldsymbol{\theta})$ first.]{style="color:#c0392b"} -->
+
+
 ## Approximation settings
 
 `INLA` lets you trade accuracy against cost, via `control.inla`.

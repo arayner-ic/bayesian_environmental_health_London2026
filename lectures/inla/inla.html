@@ -6,8 +6,8 @@
 <script src="inla_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="inla_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="inla_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+<link href="inla_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.25">
 
   <meta name="author" content="Robbie M. Parks">
   <title>INLA and R-INLA</title>
@@ -218,9 +218,9 @@ Robbie M. Parks
 <h2>Outline</h2>
 <ul>
 <li>Recap: where Bayesian inference gets expensive</li>
-<li>What INLA is trading away, and what it buys</li>
-<li>Latent Gaussian models</li>
-<li>Gaussian Markov random fields and sparsity</li>
+<li>What we actually need from a posterior</li>
+<li>Latent Gaussian models: structure and limits</li>
+<li>Sparsity, and why the largest layer is the cheap one</li>
 <li>The Laplace approximation</li>
 <li>The three steps of the INLA algorithm</li>
 <li>Accuracy, speed, and limits</li>
@@ -231,35 +231,11 @@ Robbie M. Parks
 </section>
 <section id="recap-bayesian-inference" class="slide level2">
 <h2>Recap: Bayesian inference</h2>
+<p><span class="math display">\[P(\theta|y) \propto P(y|\theta) P(\theta)\]</span></p>
 <ul>
-<li>We have data <span class="math inline">\(y\)</span>, parameters <span class="math inline">\(x\)</span>, and Bayes’ theorem:</li>
-</ul>
-<p><span class="math display">\[
-p(x \mid y) = \frac{p(y \mid x)\, p(x)}{p(y)}
-\]</span></p>
-<ul>
-<li>The numerator is easy: it is just the likelihood times the prior.</li>
-<li>The denominator <span class="math inline">\(p(y) = \int p(y \mid x) p(x)\, dx\)</span> is the problem.</li>
-<li>For anything beyond conjugate toy examples, that integral has no closed form.</li>
-</ul>
-</section>
-<section id="non-closed-solutions" class="slide level2">
-<h2>Non-closed solutions</h2>
-<ul>
-<li>In a hierarchical model, <span class="math inline">\(x\)</span> is not one parameter but thousands: intercepts, coefficients, one random effect per area, per year, per city-year…</li>
-<li>The normalising constant is then a <em>very</em> high-dimensional integral.</li>
-</ul>
-</section>
-<section id="non-closed-solutions-1" class="slide level2">
-<h2>Non-closed solutions</h2>
-<ul>
-<li>And we rarely want the joint posterior anyway — we want <strong>marginals</strong>:</li>
-</ul>
-<p><span class="math display">\[
-p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
-\]</span></p>
-<ul>
-<li>Which requires integrating out everything else. <span style="color:red">Also intractable.</span></li>
+<li><span class="math inline">\(P(\theta)\)</span> is the <code>prior</code> (known or estimated a priori).</li>
+<li><span class="math inline">\(P(y|\theta)\)</span> is the <code>likelihood</code> (probability of data given parameters of interest).</li>
+<li><span class="math inline">\(P(\theta|y)\)</span> is the <code>posterior</code> (parameters of interest given data).</li>
 </ul>
 </section>
 <section id="the-usual-answer-mcmc" class="slide level2">
@@ -268,8 +244,8 @@ p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
 <li>Do not compute the integral. <strong>Sample</strong> from the posterior instead.</li>
 <li>Gibbs, Metropolis-Hastings, HMC/NUTS (<code>NIMBLE</code>, <code>Stan</code>, <code>JAGS</code>).</li>
 <li>Guaranteed to be correct <em>in the limit</em> of infinite samples.</li>
-<li>Extremely general: works for essentially any model you can write down.</li>
-<li>This is what we did last session with <code>NIMBLE</code>.</li>
+<li>General: works for essentially any model you can write down.</li>
+<li>This is what we did basically until now with <code>NIMBLE</code>.</li>
 </ul>
 </section>
 <section id="what-mcmc-costs" class="slide level2">
@@ -277,38 +253,754 @@ p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
 <ul>
 <li><strong>Time.</strong> A spatiotemporal model over 8,000 areas and 20 years has <span class="math inline">\(&gt;\)</span> 160,000 latent parameters to sample.</li>
 <li><strong>Convergence diagnostics.</strong> Trace plots, <span class="math inline">\(\hat{R}\)</span>, effective sample size, burn-in, thinning — all need testing and re-testing.</li>
+<li><strong>Autocorrelation.</strong> Strongly correlated latent fields mix badly; effective sample size can be a small fraction of the nominal one.</li>
+<li><strong>Iteration cost.</strong> Every time you change a prior or add a covariate, you wait again.</li>
 </ul>
 </section>
 <section id="what-mcmc-costs-1" class="slide level2">
 <h2>What MCMC costs</h2>
 <ul>
-<li><strong>Autocorrelation.</strong> Strongly correlated latent fields mix badly; effective sample size can be a tiny fraction of the nominal one.</li>
-<li><strong>Iteration cost.</strong> Every time you change a prior or add a covariate, you wait again.</li>
-<li>Model <em>development</em> is where the pain really is: you may fit a model thirty times before you fit it once for real.</li>
+<li>Model development is where the pain really is: you may fit a model thirty times before you fit it once for real.</li>
+<li>When models are complex, particularly with hierarchical structures or with massive datasets, MCMC can become unfeasible.</li>
 </ul>
 </section>
-<section id="where-mcmc-starts-to-hurt" class="slide level2">
-<h2>Where MCMC starts to hurt</h2>
+<section id="where-mcmc-starts-to-become-strained" class="slide level2">
+<h2>Where MCMC starts to become strained</h2>
 <ul>
 <li>Disease mapping: one random effect per small area, spatially correlated by construction.</li>
-<li>Space-time interactions: <span class="math inline">\(N_{\text{area}} \times T\)</span> parameters, often weakly identified.</li>
-<li>Cross-validation: refitting the model <span class="math inline">\(n\)</span> times is simply not feasible.</li>
+<li>Space-time interactions: <span class="math inline">\(N_{\text{area}} \times T\)</span> parameters.</li>
+<li>Cross-validation: refitting the model <span class="math inline">\(n\)</span> times often not feasible.</li>
 <li>Sensitivity analysis over priors: same problem again.</li>
-<li>These are exactly the models that climate-and-health work keeps reaching for.</li>
 </ul>
+<!-- ## Which joint do we need? {.smaller} -->
+<!-- ```{=html} -->
+<!-- <svg viewBox="0 0 920 360" style="width:100%;color:inherit" font-family="inherit"> -->
+<!-- <rect x="60" y="90" width="440" height="220" rx="8" fill="none" -->
+<!--       stroke="currentColor" stroke-opacity="0.45" stroke-width="1.2"/> -->
+<!-- <g transform="rotate(-25 280 200)"> -->
+<!-- <ellipse cx="280" cy="200" rx="130" ry="70" fill="#2980b9" fill-opacity="0.10" -->
+<!--          stroke="#2980b9" stroke-opacity="0.5" stroke-width="1.2"/> -->
+<!-- <ellipse cx="280" cy="200" rx="95" ry="50" fill="#2980b9" fill-opacity="0.16" -->
+<!--          stroke="#2980b9" stroke-opacity="0.6" stroke-width="1.2"/> -->
+<!-- <ellipse cx="280" cy="200" rx="58" ry="30" fill="#2980b9" fill-opacity="0.26" -->
+<!--          stroke="#2980b9" stroke-opacity="0.7" stroke-width="1.2"/> -->
+<!-- </g> -->
+<!-- <text x="280" y="338" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a latent element</text> -->
+<!-- <text x="42" y="205" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.7">a hyperparameter</text> -->
+<!-- <path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82 Z" -->
+<!--       fill="#c0392b" fill-opacity="0.14" stroke="none"/> -->
+<!-- <path d="M60,82 C183,82 218,45 280,45 C342,45 377,82 500,82" -->
+<!--       fill="none" stroke="#c0392b" stroke-width="2.8"/> -->
+<!-- <path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90 Z" -->
+<!--       fill="#c0392b" fill-opacity="0.14" stroke="none"/> -->
+<!-- <path d="M510,310 C510,248 558,226 558,200 C558,174 510,152 510,90" -->
+<!--       fill="none" stroke="#c0392b" stroke-width="2.8"/> -->
+<!-- <text x="620" y="128" font-size="17" font-weight="600" fill="currentColor">The all-at-once joint</text> -->
+<!-- <text x="620" y="152" font-size="15" fill="currentColor" opacity="0.8">field and hyperparameters together</text> -->
+<!-- <text x="620" y="216" font-size="17" font-weight="600" fill="#c0392b">What we report</text> -->
+<!-- <text x="620" y="240" font-size="15" fill="#c0392b" opacity="0.9">one marginal at a time</text> -->
+<!-- <path d="M612,210 L568,202" stroke="#c0392b" stroke-width="1.2" stroke-dasharray="4 3" -->
+<!--       opacity="0.75" fill="none"/> -->
+<!-- </svg> -->
+<!-- ``` -->
+<!-- ::: {.nonincremental} -->
+<!-- -   MCMC draws from the joint posterior over **everything at once** — the -->
+<!--     latent field and the hyperparameters together. -->
+<!-- -   Almost everything we publish is **marginal**: a mean and interval per -->
+<!--     coefficient, a relative risk per area, an exposure–response curve with a -->
+<!--     band. -->
+<!-- -   We never need that all-at-once joint. So the two need not be handled -->
+<!--     together. -->
+<!-- ::: -->
 </section>
-<section id="inla" class="slide level2">
-<h2><code>INLA</code></h2>
+<section id="building-blocks-of-inference" class="slide level2 smaller">
+<h2>Building blocks of inference</h2>
+<svg viewbox="0 0 920 340" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ah1" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<rect x="330" y="30" width="200" height="52" rx="8" fill="#8e44ad" fill-opacity="0.10" stroke="currentColor" stroke-opacity="0.35"></rect>
+<text x="430" y="52" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">hyperparameters</text>
+<path d="M370,68 H490" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-dasharray="0.1 40" opacity="0.6" fill="none"></path>
+<text x="555" y="49" font-size="15" fill="currentColor" opacity="0.8">a handful of them</text>
+<text x="555" y="71" font-size="15" fill="currentColor" opacity="0.8">not Gaussian</text>
+
+<line x1="430" y1="86" x2="430" y2="116" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah1)"></line>
+
+<rect x="150" y="122" width="560" height="94" rx="8" fill="#2980b9" fill-opacity="0.10" stroke="currentColor" stroke-opacity="0.35"></rect>
+<text x="170" y="147" font-size="16" font-weight="600" fill="currentColor">latent field</text>
+<g stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-dasharray="0.1 14" opacity="0.5" fill="none">
+<path d="M175,172 H685"></path><path d="M175,190 H685"></path><path d="M175,208 H685"></path></g>
+<text x="740" y="158" font-size="15" fill="currentColor" opacity="0.8">very many</text>
+<text x="740" y="180" font-size="15" fill="currentColor" opacity="0.8">jointly Gaussian</text>
+
+<line x1="430" y1="220" x2="430" y2="250" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah1)"></line>
+
+<rect x="280" y="256" width="300" height="52" rx="8" fill="#16a085" fill-opacity="0.10" stroke="currentColor" stroke-opacity="0.35"></rect>
+<text x="300" y="288" font-size="16" font-weight="600" fill="currentColor">data</text>
+<path d="M400,282 H560" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 20" opacity="0.6" fill="none"></path>
+<text x="620" y="288" font-size="15" fill="currentColor" opacity="0.8">n observations</text>
+
+<path d="M110,284 V56" stroke="#c0392b" stroke-width="1.6" stroke-dasharray="5 5" opacity="0.8" fill="none" marker-end="url(#ah1)"></path>
+<text x="30" y="40" font-size="15" fill="#c0392b">inference</text>
+</svg>
 <ul>
-<li><strong>I</strong>ntegrated <strong>N</strong>ested <strong>L</strong>aplace <strong>A</strong>pproximation (Rue, Martino &amp; Chopin, 2009).</li>
-<li>We usually only want <strong>posterior marginals</strong>, not the joint posterior.</li>
-<li>A huge share of the models we actually fit belong to one restricted class — <strong>latent Gaussian models</strong>.</li>
-<li>Within that class, marginals can be <em>approximated deterministically</em>, accurately, and very fast.</li>
-<li>No chains. No burn-in. No <span class="math inline">\(\hat{R}\)</span>. Same answer every time you run it.</li>
+<li>Data generation runs top to bottom.</li>
+<li>Inference recovers bottom to top.</li>
+<li>The large layer is Gaussian; the layer that is not Gaussian is small.</li>
 </ul>
 </section>
-<section id="mcmc-and-inla" class="slide level2 smaller">
-<h2><code>MCMC</code> and <code>INLA</code></h2>
+<section id="an-illustrative-example" class="slide level2 smaller">
+<h2>An illustrative example</h2>
+<p>Example: weekly death counts by county, with a heat term, a spatial term and a temporal trend.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>code <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
+<span id="cb1-2"><a href=""></a></span>
+<span id="cb1-3"><a href=""></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb1-4"><a href=""></a>  beta  <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb1-5"><a href=""></a>  tau_b <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb1-6"><a href=""></a>  tau_g <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb1-7"><a href=""></a>  phi   <span class="sc">~</span> <span class="fu">dbeta</span>(<span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb1-8"><a href=""></a></span>
+<span id="cb1-9"><a href=""></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N) {</span>
+<span id="cb1-10"><a href=""></a>    deaths[i] <span class="sc">~</span> <span class="fu">dpois</span>(mu[i])</span>
+<span id="cb1-11"><a href=""></a>    <span class="fu">log</span>(mu[i]) <span class="ot">&lt;-</span> <span class="fu">log</span>(E[i]) <span class="sc">+</span> alpha <span class="sc">+</span> beta <span class="sc">*</span> heat[i] <span class="sc">+</span></span>
+<span id="cb1-12"><a href=""></a>                    b[county[i]] <span class="sc">+</span> gamma[week[i]]</span>
+<span id="cb1-13"><a href=""></a>  }</span>
+<span id="cb1-14"><a href=""></a></span>
+<span id="cb1-15"><a href=""></a>  s[<span class="dv">1</span><span class="sc">:</span>M] <span class="sc">~</span> <span class="fu">dcar_normal</span>(adj[<span class="dv">1</span><span class="sc">:</span>L], w[<span class="dv">1</span><span class="sc">:</span>L], num[<span class="dv">1</span><span class="sc">:</span>M], <span class="dv">1</span>, <span class="at">zero_mean =</span> <span class="dv">1</span>)</span>
+<span id="cb1-16"><a href=""></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>M) {</span>
+<span id="cb1-17"><a href=""></a>    theta[j] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb1-18"><a href=""></a>    b[j] <span class="ot">&lt;-</span> (<span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> phi) <span class="sc">*</span> theta[j] <span class="sc">+</span> <span class="fu">sqrt</span>(phi <span class="sc">/</span> scl) <span class="sc">*</span> s[j]) <span class="sc">/</span> <span class="fu">sqrt</span>(tau_b)</span>
+<span id="cb1-19"><a href=""></a>  }</span>
+<span id="cb1-20"><a href=""></a></span>
+<span id="cb1-21"><a href=""></a>  gamma[<span class="dv">1</span>] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb1-22"><a href=""></a>  <span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>Tw) {</span>
+<span id="cb1-23"><a href=""></a>    gamma[t] <span class="sc">~</span> <span class="fu">dnorm</span>(gamma[t <span class="sc">-</span> <span class="dv">1</span>], tau_g)</span>
+<span id="cb1-24"><a href=""></a>  }</span>
+<span id="cb1-25"><a href=""></a></span>
+<span id="cb1-26"><a href=""></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="the-data" class="slide level2 smaller">
+<h2>The data</h2>
+<svg viewbox="0 0 920 220" style="width:100%;color:inherit" font-family="inherit">
+<rect x="290" y="20" width="180" height="44" rx="8" fill="#8e44ad" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"></rect>
+<g fill="currentColor" fill-opacity="0.18">
+<circle cx="340" cy="42" r="4.5"></circle><circle cx="380" cy="42" r="4.5"></circle><circle cx="420" cy="42" r="4.5"></circle></g>
+<text x="660" y="38" font-size="16" fill="currentColor" opacity="0.3">hyperparameters</text>
+<rect x="120" y="82" width="520" height="54" rx="8" fill="#2980b9" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"></rect>
+<g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 12" opacity="0.18" fill="none">
+<path d="M140,100 H620"></path><path d="M140,118 H620"></path></g>
+<text x="660" y="105" font-size="16" fill="currentColor" opacity="0.3">latent field</text>
+<rect x="210" y="154" width="340" height="44" rx="8" fill="#16a085" fill-opacity="0.18" stroke="currentColor" stroke-opacity="0.45"></rect>
+<path d="M240,176 H530" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 18" opacity="0.7" fill="none"></path>
+<text x="660" y="172" font-size="16" font-weight="600" fill="currentColor">data</text>
+<text x="660" y="192" font-size="15" fill="currentColor" opacity="0.75">161,616 rows</text>
+</svg>
+<ul>
+<li>3,108 counties over 52 weeks.</li>
+<li>Each row reaches the model through <strong>one</strong> number — its own linear predictor.</li>
+</ul>
+</section>
+<section id="the-latent-field" class="slide level2 smaller">
+<h2>The latent field</h2>
+<svg viewbox="0 0 920 220" style="width:100%;color:inherit" font-family="inherit">
+<rect x="290" y="20" width="180" height="44" rx="8" fill="#8e44ad" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"></rect>
+<g fill="currentColor" fill-opacity="0.18">
+<circle cx="340" cy="42" r="4.5"></circle><circle cx="380" cy="42" r="4.5"></circle><circle cx="420" cy="42" r="4.5"></circle></g>
+<text x="660" y="38" font-size="16" fill="currentColor" opacity="0.3">hyperparameters</text>
+<rect x="120" y="82" width="520" height="54" rx="8" fill="#2980b9" fill-opacity="0.18" stroke="currentColor" stroke-opacity="0.45"></rect>
+<g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 12" opacity="0.7" fill="none">
+<path d="M140,100 H620"></path><path d="M140,118 H620"></path></g>
+<text x="660" y="105" font-size="16" font-weight="600" fill="currentColor">latent field</text>
+<text x="660" y="125" font-size="15" fill="currentColor" opacity="0.75">about 168,000 elements</text>
+<rect x="210" y="154" width="340" height="44" rx="8" fill="#16a085" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"></rect>
+<path d="M240,176 H530" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 18" opacity="0.18" fill="none"></path>
+<text x="660" y="172" font-size="16" fill="currentColor" opacity="0.3">data</text>
+</svg>
+<p>Everything unobserved, stacked into one vector:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Piece</th>
+<th>Elements</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>intercept</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>coefficient on <code>heat</code></td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td><code>bym2</code> county effects</td>
+<td>6,216</td>
+</tr>
+<tr class="even">
+<td><code>rw1</code> weekly trend</td>
+<td>52</td>
+</tr>
+<tr class="odd">
+<td>the linear predictors</td>
+<td>161,616</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="the-hyperparameters" class="slide level2 smaller">
+<h2>The hyperparameters</h2>
+<svg viewbox="0 0 920 220" style="width:100%;color:inherit" font-family="inherit">
+<rect x="290" y="20" width="180" height="44" rx="8" fill="#8e44ad" fill-opacity="0.18" stroke="currentColor" stroke-opacity="0.45"></rect>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="340" cy="42" r="4.5"></circle><circle cx="380" cy="42" r="4.5"></circle><circle cx="420" cy="42" r="4.5"></circle></g>
+<text x="660" y="38" font-size="16" font-weight="600" fill="currentColor">hyperparameters</text>
+<text x="660" y="58" font-size="15" fill="currentColor" opacity="0.75">3 of them</text>
+<rect x="120" y="82" width="520" height="54" rx="8" fill="#2980b9" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"></rect>
+<g stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="0.1 12" opacity="0.18" fill="none">
+<path d="M140,100 H620"></path><path d="M140,118 H620"></path></g>
+<text x="660" y="105" font-size="16" fill="currentColor" opacity="0.3">latent field</text>
+<rect x="210" y="154" width="340" height="44" rx="8" fill="#16a085" fill-opacity="0.05" stroke="currentColor" stroke-opacity="0.15"></rect>
+<path d="M240,176 H530" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-dasharray="0.1 18" opacity="0.18" fill="none"></path>
+<text x="660" y="172" font-size="16" fill="currentColor" opacity="0.3">data</text>
+</svg>
+<p>Not part of what the model predicts, but quantities that govern the shape of the latent field:</p>
+<ul>
+<li>the <code>bym2</code> precision — how much the county effects vary.</li>
+<li>the <code>bym2</code> mixing proportion <span class="math inline">\(\phi\)</span> — how much of that is spatial rather than unstructured.</li>
+<li>the <code>rw1</code> precision — how smooth the weekly trend is.</li>
+</ul>
+</section>
+<section id="what-is-in-each-layer" class="slide level2 smaller">
+<h2>What is in each layer</h2>
+<p><strong>The latent field</strong> collects everything unobserved that enters the linear predictor:</p>
+<ul>
+<li>the intercept and every regression coefficient,</li>
+<li>every random effect, smooth curve, spatial field and time trend,</li>
+<li>and the linear predictors themselves.</li>
+</ul>
+<p>It is usually <strong>larger than the dataset</strong>, because the linear predictors sit inside it. Fixed effects belong to it too, since a vague Gaussian prior is still a Gaussian prior.</p>
+<p><strong>The hyperparameters</strong> are what remains — the precisions of random effects, correlation and range parameters, mixing proportions such as the BYM2 <span class="math inline">\(\phi\)</span>, and likelihood-specific quantities such as negative binomial dispersion.</p>
+<p>They govern the shape of the latent field. There are far fewer of them than there are elements in the field. This model has three.</p>
+</section>
+<section id="the-class-of-latent-gaussian-models" class="slide level2">
+<h2>The class of latent Gaussian models</h2>
+<p>Every latent Gaussian model has a linear predictor of this form:</p>
+<p><span class="math display">\[
+\eta_i \;=\; \underbrace{\alpha}_{\text{intercept}} \;+\; \underbrace{\sum_{k} \beta_k z_{ki}}_{\text{linear terms}} \;+\; \underbrace{\sum_{j} f_j(u_{ji})}_{\text{structured terms}}
+\]</span></p>
+<p>with a Gaussian prior on everything in it, and a short list of hyperparameters governing the <span class="math inline">\(f_j\)</span>.</p>
+</section>
+<section id="the-class-of-latent-gaussian-models-1" class="slide level2 smaller">
+<h2>The class of latent Gaussian models</h2>
+<p>The whole class comes from choosing what the <span class="math inline">\(f_j\)</span> are:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Choose <span class="math inline">\(f_j\)</span> to be</th>
+<th>and you have</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>nothing</td>
+<td>a GLM</td>
+</tr>
+<tr class="even">
+<td>independent by group</td>
+<td>a mixed / multilevel model</td>
+</tr>
+<tr class="odd">
+<td>a random walk over time</td>
+<td>a smooth trend</td>
+</tr>
+<tr class="even">
+<td>a random walk over exposure</td>
+<td>a non-linear exposure–response curve</td>
+</tr>
+<tr class="odd">
+<td>neighbours on a map</td>
+<td>ICAR, BYM2, Leroux</td>
+</tr>
+<tr class="even">
+<td>a Matérn field over space</td>
+<td>SPDE / geostatistics</td>
+</tr>
+<tr class="odd">
+<td>space crossed with time</td>
+<td>a spatiotemporal interaction</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Same model with different <span class="math inline">\(f_j\)</span> — which is why one algorithm fits all of them.</li>
+</ul>
+</section>
+<section id="the-latent-field-as-a-multivariate-normal" class="slide level2">
+<h2>The latent field as a multivariate normal</h2>
+<p>The latent field is one vector of length <span class="math inline">\(m \approx 168{,}000\)</span>, with a multivariate normal prior:</p>
+<p><span class="math display">\[
+\boldsymbol{x} \mid \boldsymbol{\theta} \;\sim\; N\big(\boldsymbol{0},\, \boldsymbol{\Sigma}(\boldsymbol{\theta})\big)
+\qquad\text{or}\qquad
+\boldsymbol{x} \mid \boldsymbol{\theta} \;\sim\; N\big(\boldsymbol{0},\, \boldsymbol{Q}(\boldsymbol{\theta})^{-1}\big),
+\]</span></p>
+<p><span class="math display">\[
+\qquad \boldsymbol{Q} = \boldsymbol{\Sigma}^{-1}
+\]</span></p>
+<p>The precision matrix <span class="math inline">\(\boldsymbol{Q}\)</span> often has useful properties (sparse, Markov).</p>
+</section>
+<section id="latent-field-often-has-a-gaussian-markov-random-field-gmrf-prior" class="slide level2 smaller">
+<h2>Latent field often has a Gaussian Markov Random Field (GMRF) prior</h2>
+<svg viewbox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahg" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<g font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">
+<text x="180" y="28">f(county, "bym2")</text>
+<text x="470" y="28">f(week, "rw1")</text>
+<text x="745" y="28">alpha, beta</text></g>
+
+<g stroke="currentColor" stroke-width="1.4" opacity="0.45" fill="none">
+<path d="M110,70 L180,60"></path><path d="M180,60 L250,80"></path><path d="M110,70 L100,140"></path>
+<path d="M180,60 L175,130"></path><path d="M250,80 L245,150"></path><path d="M100,140 L175,130"></path>
+<path d="M175,130 L245,150"></path>
+<path d="M370,105 H590"></path></g>
+
+<g fill="#2980b9" fill-opacity="0.3" stroke="currentColor" stroke-opacity="0.55">
+<circle cx="110" cy="70" r="14"></circle><circle cx="180" cy="60" r="14"></circle><circle cx="250" cy="80" r="14"></circle>
+<circle cx="100" cy="140" r="14"></circle><circle cx="175" cy="130" r="14"></circle><circle cx="245" cy="150" r="14"></circle>
+<circle cx="370" cy="105" r="14"></circle><circle cx="425" cy="105" r="14"></circle><circle cx="480" cy="105" r="14"></circle>
+<circle cx="535" cy="105" r="14"></circle><circle cx="590" cy="105" r="14"></circle>
+<circle cx="700" cy="105" r="14"></circle><circle cx="790" cy="105" r="14"></circle></g>
+
+<g font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">
+<text x="180" y="200">linked to its neighbours</text>
+<text x="470" y="200">linked to the week before</text>
+<text x="745" y="200">linked to nothing</text></g>
+
+<line x1="460" y1="220" x2="460" y2="246" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ahg)"></line>
+<rect x="120" y="252" width="680" height="46" rx="8" fill="#2980b9" fill-opacity="0.2" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="460" y="281" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">one jointly Gaussian vector, every link local</text>
+</svg>
+<ul>
+<li>Each term is Gaussian, so stacking them gives a Gaussian vector. Nothing is lost by treating them as one object.</li>
+<li>Each term is also <strong>local</strong>. A random walk is a Markov chain; an adjacency structure is a Markov random field. Neither has any long-range link written into it. <!-- -   Gaussian *and* Markov is a **GMRF**. Every `f()` in `INLA` is one. --></li>
+</ul>
+</section>
+<section id="what-the-gmrf-structure-allows" class="slide level2">
+<h2>What the GMRF structure allows</h2>
+<svg viewbox="0 0 920 350" style="width:100%;color:inherit" font-family="inherit">
+<text x="40" y="110" font-size="17" font-weight="600" fill="currentColor">Q for this model</text>
+<text x="40" y="140" font-size="15" fill="currentColor" opacity="0.8">168,000 rows and columns</text>
+<text x="40" y="164" font-size="15" fill="currentColor" opacity="0.8">about six entries per row</text>
+<text x="40" y="198" font-size="15" fill="#c0392b">everything else is blank</text>
+
+<rect x="310" y="30" width="280" height="280" fill="none" stroke="currentColor" stroke-opacity="0.4"></rect>
+<line x1="313" y1="33" x2="587" y2="307" stroke="#16a085" stroke-width="6" stroke-linecap="round" opacity="0.5"></line>
+<rect x="310" y="30" width="14" height="14" fill="#16a085" fill-opacity="0.55"></rect>
+<g fill="#16a085" fill-opacity="0.55">
+<rect x="322" y="72" width="6" height="6"></rect><rect x="352" y="42" width="6" height="6"></rect>
+<rect x="352" y="102" width="6" height="6"></rect><rect x="382" y="72" width="6" height="6"></rect>
+<rect x="382" y="132" width="6" height="6"></rect><rect x="412" y="102" width="6" height="6"></rect>
+<rect x="412" y="162" width="6" height="6"></rect><rect x="442" y="132" width="6" height="6"></rect>
+<rect x="442" y="192" width="6" height="6"></rect><rect x="472" y="162" width="6" height="6"></rect>
+<rect x="472" y="222" width="6" height="6"></rect><rect x="502" y="192" width="6" height="6"></rect>
+<rect x="502" y="252" width="6" height="6"></rect><rect x="532" y="222" width="6" height="6"></rect>
+<rect x="327" y="147" width="6" height="6"></rect><rect x="427" y="57" width="6" height="6"></rect>
+<rect x="367" y="207" width="6" height="6"></rect><rect x="487" y="87" width="6" height="6"></rect>
+<rect x="407" y="242" width="6" height="6"></rect><rect x="522" y="127" width="6" height="6"></rect>
+<rect x="337" y="117" width="6" height="6"></rect><rect x="397" y="57" width="6" height="6"></rect>
+<rect x="550" y="277" width="6" height="6"></rect><rect x="557" y="270" width="6" height="6"></rect>
+<rect x="557" y="284" width="6" height="6"></rect><rect x="564" y="277" width="6" height="6"></rect>
+<rect x="564" y="291" width="6" height="6"></rect><rect x="571" y="284" width="6" height="6"></rect>
+<rect x="571" y="298" width="6" height="6"></rect><rect x="578" y="291" width="6" height="6"></rect></g>
+
+<g stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.6" fill="none">
+<path d="M592,37 L622,42"></path><path d="M592,150 L622,150"></path><path d="M592,285 L622,282"></path></g>
+<g font-size="15" fill="currentColor" opacity="0.85">
+<text x="630" y="47">fixed effects</text>
+<text x="630" y="147">county effects:</text>
+<text x="630" y="167">neighbours only</text>
+<text x="630" y="278">weekly trend:</text>
+<text x="630" y="298">the week before</text></g>
+<text x="310" y="338" font-size="15" fill="currentColor" opacity="0.7">shaded = a direct link</text>
+</svg>
+<ul>
+<li><span class="math inline">\(\boldsymbol{Q}\)</span> is almost entirely blank.</li>
+<li>Sparsity of the <span class="math inline">\(\boldsymbol{Q}\)</span> enable large computational gains when making inference (outside scope).</li>
+</ul>
+<!-- . . . -->
+<!-- [Factorising a full matrix of size $m$ costs on the order of $m^3$; a mostly -->
+<!-- blank one, closer to $m^{3/2}$. That is the whole reason a field this large -->
+<!-- stays tractable.]{style="color:#c0392b"} -->
+</section>
+<section id="summmary-of-gmrf" class="slide level2 smaller">
+<h2>Summmary of GMRF</h2>
+<svg viewbox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahs" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<rect x="60" y="24" width="330" height="48" rx="8" fill="#2980b9" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="225" y="54" font-size="17" font-weight="600" text-anchor="middle" fill="currentColor">Gaussian</text>
+<rect x="530" y="24" width="330" height="48" rx="8" fill="#16a085" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="695" y="54" font-size="17" font-weight="600" text-anchor="middle" fill="currentColor">Markov</text>
+
+<path d="M225,74 V110" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"></path>
+<path d="M695,74 V110" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"></path>
+
+<text x="225" y="134" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">a bell shape in 168,000 dimensions</text>
+<text x="225" y="156" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">described by a mean and a precision</text>
+<text x="695" y="134" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">each element linked only to</text>
+<text x="695" y="156" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.85">its neighbours in space or time</text>
+
+<path d="M225,170 V196 H460" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"></path>
+<path d="M695,170 V196 H460" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"></path>
+<path d="M460,196 V214" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahs)"></path>
+<text x="460" y="240" font-size="17" font-weight="600" text-anchor="middle" fill="#c0392b">a precision matrix that is almost entirely blank</text>
+</svg>
+<ul>
+<li><strong>Gaussian</strong> gives the algebra: means, variances and conditionals all in closed form once <span class="math inline">\(\boldsymbol{Q}\)</span> is known.</li>
+<li><strong>Markov</strong> gives the sparsity: no direct link means a blank entry in <span class="math inline">\(\boldsymbol{Q}\)</span>, and the blanks are almost everything.</li>
+<li>Distant counties are still <strong>correlated</strong> — they share what lies between them. The blanks record the absence of a <em>direct</em> link, not of a relationship.</li>
+</ul>
+</section>
+<section id="laplace-approximation" class="slide level2 smaller">
+<h2>Laplace approximation</h2>
+<p>Take any density <span class="math inline">\(f(x)\)</span>, work on the log scale, and expand about the mode <span class="math inline">\(x^{*}\)</span> via Taylor expansion, where the first derivative vanishes :</p>
+<p><span class="math display">\[
+\log f(x) \;\approx\; \underbrace{\log f(x^{*})}_{\text{height}} \;+\; \underbrace{\tfrac{1}{2} \log f''(x^{*})\,(x - x^{*})^{2}}_{\text{curvature}}
+\]</span></p>
+<div class="fragment">
+<p>Writing <span class="math inline">\(H = -\log f''(x^{*})\)</span> for the negative curvature, exponentiating gives a Gaussian:</p>
+<p><span class="math display">\[
+f(x) \;\approx\; f(x^{*}) \exp\!\left(-\tfrac{1}{2} H (x - x^{*})^{2}\right)
+\qquad\Longrightarrow\qquad
+x \;\sim\; N\!\left(x^{*},\; H^{-1}\right)
+\]</span></p>
+</div>
+<div class="fragment">
+<p>So the whole approximation is <strong>two numbers</strong>: the mode, and the curvature there. In our example <span class="math inline">\(x^{*} = 4\)</span> and <span class="math inline">\(H = 0.25\)</span>, giving <span class="math inline">\(N(4, 2^{2})\)</span>.</p>
+</div>
+<div class="fragment">
+<p>The same expansion also gives the integral in closed form:</p>
+<p><span class="math display">\[
+\int f(x)\, \mathrm{d}x \;\approx\; f(x^{*})\, (2\pi)^{d/2} \, |H|^{-1/2}
+\]</span></p>
+</div>
+</section>
+<section id="the-laplace-approximation-visually" class="slide level2 smaller">
+<h2>The Laplace approximation visually</h2>
+<svg viewbox="0 0 920 285" style="width:100%;color:inherit" font-family="inherit">
+<path d="M120,245 C230,245 310,100 380,95 C450,90 500,143 570,187 C660,235 730,245 810,245" fill="none" stroke="currentColor" stroke-width="2.2" opacity="0.85"></path>
+<path d="M185,245 C293,245 325,95 380,95 C435,95 467,245 575,245" fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></path>
+<path d="M380,95 V245" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity="0.4" fill="none"></path>
+<circle cx="380" cy="95" r="6" fill="#c0392b"></circle>
+<line x1="620" y1="80" x2="660" y2="80" stroke="currentColor" stroke-width="2.2" opacity="0.85"></line>
+<text x="672" y="85" font-size="15" fill="currentColor" opacity="0.85">the target density</text>
+<line x1="620" y1="110" x2="660" y2="110" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></line>
+<text x="672" y="115" font-size="15" fill="#c0392b">the Gaussian fitted at its mode</text>
+<line x1="100" y1="245" x2="840" y2="245" stroke="currentColor" stroke-width="0.8" opacity="0.4"></line>
+</svg>
+<ul>
+<li>Laplace (1774): approximate an awkward integrand by the Gaussian that matches it at the mode, after which the integral is available in closed form.</li>
+<li>It is reliable when the target is unimodal and not strongly skewed.</li>
+<li><span style="color:#c0392b">With a GMRF prior and the hyperparameters fixed, this gives a deterministic joint Gaussian approximation to the whole latent field.</span></li>
+</ul>
+</section>
+<section id="laplace-approximation-a-worked-example" class="slide level2 smaller">
+<h2>Laplace approximation: a worked example</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>shape <span class="ot">&lt;-</span> <span class="dv">5</span>; rate <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb2-2"><a href=""></a></span>
+<span id="cb2-3"><a href=""></a><span class="co"># log density, up to a constant</span></span>
+<span id="cb2-4"><a href=""></a>lf <span class="ot">&lt;-</span> <span class="cf">function</span>(x) (shape <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="fu">log</span>(x) <span class="sc">-</span> rate <span class="sc">*</span> x</span>
+<span id="cb2-5"><a href=""></a></span>
+<span id="cb2-6"><a href=""></a><span class="co"># 1. the mode</span></span>
+<span id="cb2-7"><a href=""></a>mode <span class="ot">&lt;-</span> <span class="fu">optimise</span>(lf, <span class="fu">c</span>(<span class="fl">1e-6</span>, <span class="dv">50</span>), <span class="at">maximum =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>maximum</span>
+<span id="cb2-8"><a href=""></a></span>
+<span id="cb2-9"><a href=""></a><span class="co"># 2. curvature there:  -f''(x) = (shape - 1) / x^2</span></span>
+<span id="cb2-10"><a href=""></a>prec <span class="ot">&lt;-</span> (shape <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> mode<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb2-11"><a href=""></a>sdev <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(prec)</span>
+<span id="cb2-12"><a href=""></a></span>
+<span id="cb2-13"><a href=""></a><span class="fu">curve</span>(<span class="fu">dgamma</span>(x, shape, rate), <span class="dv">0</span>, <span class="dv">14</span>, <span class="at">n =</span> <span class="dv">400</span>, <span class="at">lwd =</span> <span class="fl">2.5</span>, <span class="at">bty =</span> <span class="st">"n"</span>,</span>
+<span id="cb2-14"><a href=""></a>      <span class="at">xlab =</span> <span class="st">"x"</span>, <span class="at">ylab =</span> <span class="st">"density"</span>)</span>
+<span id="cb2-15"><a href=""></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x, mode, sdev), <span class="at">add =</span> <span class="cn">TRUE</span>, <span class="at">n =</span> <span class="dv">400</span>, <span class="at">lwd =</span> <span class="fl">2.5</span>,</span>
+<span id="cb2-16"><a href=""></a>      <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"#c0392b"</span>)</span>
+<span id="cb2-17"><a href=""></a><span class="fu">abline</span>(<span class="at">v =</span> mode, <span class="at">lty =</span> <span class="dv">3</span>, <span class="at">col =</span> <span class="st">"grey60"</span>)</span>
+<span id="cb2-18"><a href=""></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="at">bty =</span> <span class="st">"n"</span>, <span class="at">lwd =</span> <span class="fl">2.5</span>, <span class="at">lty =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
+<span id="cb2-19"><a href=""></a>       <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"black"</span>, <span class="st">"#c0392b"</span>),</span>
+<span id="cb2-20"><a href=""></a>       <span class="at">legend =</span> <span class="fu">c</span>(<span class="st">"Gamma(5, 1)"</span>, <span class="st">"Laplace approximation"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Two numbers do all the work: where the peak is, and how sharply it falls away.</p>
+</section>
+<section id="laplace-approximation-a-worked-example-1" class="slide level2 smaller">
+<h2>Laplace approximation: a worked example</h2>
+
+<img data-src="inla_files/figure-revealjs/laplace-plot-1.png" class="quarto-figure quarto-figure-center r-stretch" width="864"><div class="fragment">
+<p>The peak is matched exactly as per matching at the mode. What it misses is the <strong>skew</strong>: the target leans right, so its mean sits above its mode, and a symmetric curve cannot follow.</p>
+</div>
+</section>
+<section id="integrating-nested-laplace-approximation-a-worked-example" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: a worked example</h2>
+<p>A case with a known exact answer. Let <span class="math inline">\(x \mid \theta \sim N(0, 1/\theta)\)</span> with <span class="math inline">\(\theta \sim \text{Gamma}(2,2)\)</span> — so <span class="math inline">\(\theta\)</span> is a precision, as in our models.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a>a <span class="ot">&lt;-</span> <span class="dv">2</span>; b <span class="ot">&lt;-</span> <span class="dv">2</span>; K <span class="ot">&lt;-</span> <span class="dv">7</span></span>
+<span id="cb3-2"><a href=""></a></span>
+<span id="cb3-3"><a href=""></a><span class="co"># 1. scan theta — a grid on the log scale, as INLA does</span></span>
+<span id="cb3-4"><a href=""></a>theta <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">seq</span>(<span class="fu">log</span>(<span class="fl">0.03</span>), <span class="fu">log</span>(<span class="dv">12</span>), <span class="at">length.out =</span> K))</span>
+<span id="cb3-5"><a href=""></a>w     <span class="ot">&lt;-</span> <span class="fu">dgamma</span>(theta, a, b) <span class="sc">*</span> theta      <span class="co"># Jacobian for the log scale</span></span>
+<span id="cb3-6"><a href=""></a>w     <span class="ot">&lt;-</span> w <span class="sc">/</span> <span class="fu">sum</span>(w)                       <span class="co"># plausibility weights</span></span>
+<span id="cb3-7"><a href=""></a></span>
+<span id="cb3-8"><a href=""></a><span class="co"># 2. the conditional for x at each value of theta</span></span>
+<span id="cb3-9"><a href=""></a>x    <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">7</span>, <span class="dv">7</span>, <span class="at">length.out =</span> <span class="dv">400</span>)</span>
+<span id="cb3-10"><a href=""></a>cond <span class="ot">&lt;-</span> <span class="fu">sapply</span>(theta, \(t) <span class="fu">dnorm</span>(x, <span class="dv">0</span>, <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(t)))</span>
+<span id="cb3-11"><a href=""></a></span>
+<span id="cb3-12"><a href=""></a><span class="co"># 3. integrate: the weighted sum</span></span>
+<span id="cb3-13"><a href=""></a>marg <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(cond <span class="sc">%*%</span> w)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Three lines, three stages. Everything INLA does to the 168,000-element field has this shape.</p>
+</section>
+<section id="integrating-nested-laplace-approximation-a-worked-example-1" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: a worked example</h2>
+
+<img data-src="inla_files/figure-revealjs/inla-three-panel-1.png" class="quarto-figure quarto-figure-center r-stretch" width="960"></section>
+<section id="integrating-nested-laplace-approximation-a-worked-example-2" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: a worked example</h2>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>at <span class="math inline">\(x = 0\)</span></th>
+<th>at <span class="math inline">\(x = 3\)</span></th>
+<th>at <span class="math inline">\(x = 6\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>truth</td>
+<td>0.3750</td>
+<td>0.01969</td>
+<td>0.001186</td>
+</tr>
+<tr class="even">
+<td>integrated, 7 points</td>
+<td>0.3759</td>
+<td>0.01974</td>
+<td>0.001167</td>
+</tr>
+<tr class="odd">
+<td>fixed <span class="math inline">\(\theta\)</span> (<code>eb</code>)</td>
+<td>0.2821</td>
+<td>0.02973</td>
+<td>0.000035</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Seven points recover the exact answer to three decimals. Fixing <span class="math inline">\(\theta\)</span> gets the peak wrong and the far tail wrong by a factor of thirty — and the tail is where interval endpoints live.</li>
+</ul>
+</section>
+<section id="integrating-nested-laplace-approximation-more-than-one-hyperparameter" class="slide level2 smaller">
+<h2>Integrating nested Laplace Approximation: more than one hyperparameter</h2>
+<p>We try several combinations, and combine the answers. It can be computationally expensive…</p>
+<svg viewbox="0 0 920 320" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ah2" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<text x="25" y="28" font-size="18" font-weight="600" fill="currentColor">1. Score and place points</text>
+<rect x="25" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="150" cy="142" rx="105" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="150" cy="142" rx="76" ry="51" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="150" cy="142" rx="46" ry="31" fill="#2980b9" fill-opacity="0.11"></ellipse>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="80" cy="107" r="3"></circle><circle cx="115" cy="107" r="3.5"></circle><circle cx="150" cy="107" r="4"></circle>
+<circle cx="185" cy="107" r="3.5"></circle><circle cx="220" cy="107" r="3"></circle>
+<circle cx="80" cy="142" r="3.5"></circle><circle cx="115" cy="142" r="4.5"></circle>
+<circle cx="185" cy="142" r="4.5"></circle><circle cx="220" cy="142" r="3.5"></circle>
+<circle cx="80" cy="177" r="3"></circle><circle cx="115" cy="177" r="3.5"></circle><circle cx="150" cy="177" r="4"></circle>
+<circle cx="185" cy="177" r="3.5"></circle><circle cx="220" cy="177" r="3"></circle></g>
+<circle cx="150" cy="142" r="6.5" fill="#c0392b"></circle>
+<text x="25" y="266" font-size="15" fill="currentColor" opacity="0.75">climb to the mode, measure</text>
+<text x="25" y="286" font-size="15" fill="currentColor" opacity="0.75">curvature, lay down points</text>
+
+<line x1="285" y1="142" x2="320" y2="142" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah2)"></line>
+
+<text x="335" y="28" font-size="18" font-weight="600" fill="currentColor">2. Solve at each point</text>
+<rect x="335" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<g fill="currentColor" fill-opacity="0.04" stroke="currentColor" stroke-opacity="0.35">
+<rect x="395" y="64" width="115" height="112" rx="6"></rect>
+<rect x="382" y="76" width="115" height="112" rx="6"></rect>
+<rect x="369" y="88" width="115" height="112" rx="6"></rect></g>
+<path d="M386,106 H416 V121 H431 V136 H446 V151 H461 V181 H431 V166 H416 V151 H401 V136 H386 Z" fill="#16a085" fill-opacity="0.55"></path>
+<g stroke="currentColor" stroke-opacity="0.25" stroke-width="0.6" fill="none">
+<path d="M386 106V181M401 106V181M416 106V181M431 106V181M446 106V181M461 106V181"></path>
+<path d="M386 106H461M386 121H461M386 136H461M386 151H461M386 166H461M386 181H461"></path></g>
+<text x="335" y="266" font-size="15" fill="currentColor" opacity="0.75">one sparse factorisation each,</text>
+<text x="335" y="286" font-size="15" fill="currentColor" opacity="0.75">independent and parallelisable</text>
+
+<line x1="595" y1="142" x2="630" y2="142" stroke="currentColor" stroke-width="1.6" opacity="0.55" marker-end="url(#ah2)"></line>
+
+<text x="645" y="28" font-size="18" font-weight="600" fill="currentColor">3. Combine</text>
+<rect x="645" y="44" width="250" height="196" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<g fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.35">
+<path d="M655,212 C689,212 698,148 715,148 C732,148 741,212 775,212"></path>
+<path d="M672,212 C707,212 717,134 734,134 C752,134 762,212 797,212"></path>
+<path d="M700,212 C736,212 747,124 765,124 C783,124 794,212 830,212"></path></g>
+<path d="M665,212 C707,212 719,98 740,98 C761,98 773,212 815,212" fill="none" stroke="#c0392b" stroke-width="2.6"></path>
+<line x1="652" y1="212" x2="888" y2="212" stroke="currentColor" stroke-width="0.6" opacity="0.4"></line>
+<text x="645" y="266" font-size="15" fill="currentColor" opacity="0.75">weighted by plausibility;</text>
+<text x="645" y="286" font-size="15" fill="currentColor" opacity="0.75">the output is a density</text>
+</svg>
+</section>
+<section id="where-to-put-the-combinations" class="slide level2 smaller">
+<h2>Where to put the combinations</h2>
+<svg viewbox="0 0 920 300" style="width:100%;color:inherit" font-family="inherit">
+<text x="30" y="28" font-size="17" font-weight="600" fill="currentColor">grid</text>
+<rect x="30" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="160" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="160" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="160" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="88" cy="84" r="3.4"></circle><circle cx="124" cy="84" r="3.4"></circle><circle cx="160" cy="84" r="3.4"></circle><circle cx="196" cy="84" r="3.4"></circle><circle cx="232" cy="84" r="3.4"></circle>
+<circle cx="88" cy="108" r="3.4"></circle><circle cx="124" cy="108" r="3.4"></circle><circle cx="160" cy="108" r="3.4"></circle><circle cx="196" cy="108" r="3.4"></circle><circle cx="232" cy="108" r="3.4"></circle>
+<circle cx="88" cy="132" r="3.4"></circle><circle cx="124" cy="132" r="3.4"></circle><circle cx="196" cy="132" r="3.4"></circle><circle cx="232" cy="132" r="3.4"></circle>
+<circle cx="88" cy="156" r="3.4"></circle><circle cx="124" cy="156" r="3.4"></circle><circle cx="160" cy="156" r="3.4"></circle><circle cx="196" cy="156" r="3.4"></circle><circle cx="232" cy="156" r="3.4"></circle>
+<circle cx="88" cy="180" r="3.4"></circle><circle cx="124" cy="180" r="3.4"></circle><circle cx="160" cy="180" r="3.4"></circle><circle cx="196" cy="180" r="3.4"></circle><circle cx="232" cy="180" r="3.4"></circle></g>
+<circle cx="160" cy="132" r="6" fill="#c0392b"></circle>
+<text x="30" y="248" font-size="15" fill="currentColor" opacity="0.85">every combination on a lattice</text>
+<text x="30" y="270" font-size="15" fill="currentColor" opacity="0.85">most accurate; count multiplies</text>
+<text x="30" y="292" font-size="15" fill="currentColor" opacity="0.85">with each hyperparameter added</text>
+
+<text x="330" y="28" font-size="17" font-weight="600" fill="currentColor">ccd</text>
+<rect x="330" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="460" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="460" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="460" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
+<g fill="currentColor" fill-opacity="0.7">
+<circle cx="388" cy="132" r="4.2"></circle><circle cx="532" cy="132" r="4.2"></circle>
+<circle cx="460" cy="84" r="4.2"></circle><circle cx="460" cy="180" r="4.2"></circle>
+<circle cx="412" cy="100" r="4.2"></circle><circle cx="508" cy="100" r="4.2"></circle>
+<circle cx="412" cy="164" r="4.2"></circle><circle cx="508" cy="164" r="4.2"></circle></g>
+<circle cx="460" cy="132" r="6" fill="#c0392b"></circle>
+<text x="330" y="248" font-size="15" fill="currentColor" opacity="0.85">a designed scatter around the mode</text>
+<text x="330" y="270" font-size="15" fill="#16a085">the default beyond two</text>
+<text x="330" y="292" font-size="15" fill="currentColor" opacity="0.85">good accuracy, far fewer points</text>
+
+<text x="630" y="28" font-size="17" font-weight="600" fill="currentColor">eb</text>
+<rect x="630" y="44" width="260" height="176" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.3"></rect>
+<ellipse cx="760" cy="132" rx="106" ry="70" fill="#2980b9" fill-opacity="0.07"></ellipse>
+<ellipse cx="760" cy="132" rx="74" ry="49" fill="#2980b9" fill-opacity="0.09"></ellipse>
+<ellipse cx="760" cy="132" rx="42" ry="28" fill="#2980b9" fill-opacity="0.12"></ellipse>
+<circle cx="760" cy="132" r="8" fill="#c0392b"></circle>
+<text x="630" y="248" font-size="15" fill="currentColor" opacity="0.85">the best combination only</text>
+<text x="630" y="270" font-size="15" fill="#c0392b">no averaging, so intervals</text>
+<text x="630" y="292" font-size="15" fill="#c0392b">come out slightly too narrow</text>
+</svg>
+<ul>
+<li>The contours are the same in all three — the same posterior over the three hyperparameters. Only the choice of where to evaluate it differs.</li>
+<li>Every point costs one pass through Question 1: mode-finding, sparse factorisation, a joint Gaussian over the field. <!-- -   [Useful habit: `eb` while you iterate on the model, `ccd` for the fit you --> <!-- report.]{style="color:#c0392b"} --></li>
+</ul>
+</section>
+<section id="inla-with-our-previous-example" class="slide level2 smaller">
+<h2>INLA with our previous example</h2>
+<p>We want a posterior for each unknown: the heat coefficient, each county effect, each week. The obstacle is that every one of them depends on the three hyperparameters — and we do not know those either.</p>
+<svg viewbox="0 0 920 300" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahq" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<text x="40" y="24" font-size="16" font-weight="600" fill="currentColor">Step 1: pick hyperparameter values, solve the field</text>
+<text x="580" y="24" font-size="16" font-weight="600" fill="currentColor">Step 2: average the answers</text>
+<text x="115" y="46" font-size="13" text-anchor="middle" fill="currentColor" opacity="0.6">bym2 prec, φ, rw1 prec</text>
+
+<g fill="#8e44ad" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45">
+<rect x="40" y="56" width="150" height="38" rx="6"></rect>
+<rect x="40" y="104" width="150" height="38" rx="6"></rect>
+<rect x="40" y="152" width="150" height="38" rx="6"></rect>
+<rect x="40" y="200" width="150" height="38" rx="6"></rect></g>
+<g font-size="14" text-anchor="middle" fill="currentColor">
+<text x="115" y="80">4.1, 0.70, 20</text>
+<text x="115" y="128">3.6, 0.82, 14</text>
+<text x="115" y="176">5.0, 0.61, 25</text>
+<text x="115" y="224">4.4, 0.75, 18</text></g>
+
+<g stroke="currentColor" stroke-width="1.4" opacity="0.5" fill="none" marker-end="url(#ahq)">
+<path d="M196,75 H224"></path><path d="M196,123 H224"></path>
+<path d="M196,171 H224"></path><path d="M196,219 H224"></path></g>
+
+<g fill="#2980b9" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45">
+<rect x="230" y="56" width="290" height="38" rx="6"></rect>
+<rect x="230" y="104" width="290" height="38" rx="6"></rect>
+<rect x="230" y="152" width="290" height="38" rx="6"></rect>
+<rect x="230" y="200" width="290" height="38" rx="6"></rect></g>
+<g font-size="15" text-anchor="middle" fill="currentColor">
+<text x="375" y="80">a full answer for all 168,000 latent Gaussians</text>
+<text x="375" y="128">a full answer for all 168,000 latent Gaussians</text>
+<text x="375" y="176">a full answer for all 168,000 latent Gaussians</text>
+<text x="375" y="224">a full answer for all 168,000 latent Gaussians</text></g>
+
+<g stroke="currentColor" stroke-width="1.4" opacity="0.5" fill="none" marker-end="url(#ahq)">
+<path d="M526,75 C552,75 556,116 574,134"></path>
+<path d="M526,123 C552,123 558,136 574,142"></path>
+<path d="M526,171 C552,171 558,158 574,150"></path>
+<path d="M526,219 C552,219 556,178 574,158"></path></g>
+
+<rect x="580" y="76" width="300" height="142" rx="8" fill="#c0392b" fill-opacity="0.12" stroke="#c0392b" stroke-opacity="0.55" stroke-width="1.2"></rect>
+<g font-size="15" text-anchor="middle" fill="#c0392b">
+<text x="730" y="126">combine the answers,</text>
+<text x="730" y="151">weighting each by how</text>
+<text x="730" y="176">plausible that combination was</text></g>
+
+<g font-size="15" fill="currentColor" opacity="0.75">
+<text x="40" y="266">each row is one combination</text>
+<text x="40" y="286">of the three hyperparameter values</text>
+<text x="580" y="266">cheap because there are only</text>
+<text x="580" y="286">three hyperparameters to vary</text></g>
+</svg>
+</section>
+<section id="three-strategies-for-the-latent-marginals" class="slide level2 smaller">
+<h2>Three strategies for the latent marginals</h2>
+<p>Set by <code>strategy</code> in <code>control.inla</code>:</p>
+<ul>
+<li><strong>Gaussian</strong> (<code>"gaussian"</code>): read the marginal straight off the Gaussian approximation. Fastest; can be poor in the tails and misses skewness.</li>
+<li><strong>Simplified Laplace</strong> (<code>"simplified.laplace"</code>): a third-order correction to the Gaussian, capturing location and skewness. <span style="color:#c0392b">The default, and almost always the right choice.</span></li>
+<li><strong>Laplace</strong> (<code>"laplace"</code>): a full nested Laplace approximation for each <span class="math inline">\(x_i\)</span>. Most accurate, and considerably more expensive.</li>
+</ul>
+<div class="fragment">
+<p>The middle option exists because the Gaussian is usually close, and a cheap correction for asymmetry recovers most of what a full recomputation would give. Note where the cost sits: it scales with the number of hyperparameters and the sparsity of <span class="math inline">\(\boldsymbol{Q}\)</span>, not with the size of the latent field — which is the shape that made these models slow to sample in the first place.</p>
+</div>
+</section>
+<section id="three-strategies-for-the-latent-marginals-1" class="slide level2 smaller">
+<h2>Three strategies for the latent marginals</h2>
+<svg viewbox="0 0 920 290" style="width:100%;color:inherit" font-family="inherit">
+<text x="30" y="26" font-size="17" font-weight="600" fill="currentColor">gaussian</text>
+<path d="M40,200 C88,200 112,86 152,80 C192,74 214,132 254,162 C280,182 292,196 300,200" fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"></path>
+<path d="M62,200 C104,200 118,80 152,80 C186,80 200,200 242,200" fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></path>
+<line x1="35" y1="200" x2="305" y2="200" stroke="currentColor" stroke-width="0.8" opacity="0.4"></line>
+<text x="30" y="230" font-size="15" fill="currentColor" opacity="0.85">symmetric by construction</text>
+<text x="30" y="252" font-size="15" fill="currentColor" opacity="0.85">misses the tail entirely</text>
+<text x="30" y="278" font-size="15" fill="currentColor" opacity="0.7">fastest</text>
+
+<text x="330" y="26" font-size="17" font-weight="600" fill="currentColor">simplified.laplace</text>
+<path d="M340,200 C388,200 412,86 452,80 C492,74 514,132 554,162 C580,182 592,196 600,200" fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"></path>
+<path d="M356,200 C400,200 416,84 454,82 C492,80 508,146 548,172 C572,188 586,197 596,200" fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></path>
+<line x1="335" y1="200" x2="605" y2="200" stroke="currentColor" stroke-width="0.8" opacity="0.4"></line>
+<text x="330" y="230" font-size="15" fill="currentColor" opacity="0.85">shifted and allowed to lean</text>
+<text x="330" y="252" font-size="15" fill="currentColor" opacity="0.85">catches most of the skew</text>
+<text x="330" y="278" font-size="15" fill="#c0392b">the default</text>
+
+<text x="630" y="26" font-size="17" font-weight="600" fill="currentColor">laplace</text>
+<path d="M640,200 C688,200 712,86 752,80 C792,74 814,132 854,162 C880,182 892,196 900,200" fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"></path>
+<path d="M641,200 C689,200 713,88 752,82 C791,76 813,133 853,163 C879,183 891,196 899,200" fill="none" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="7 5"></path>
+<line x1="635" y1="200" x2="905" y2="200" stroke="currentColor" stroke-width="0.8" opacity="0.4"></line>
+<text x="630" y="230" font-size="15" fill="currentColor" opacity="0.85">recomputed for each element</text>
+<text x="630" y="252" font-size="15" fill="currentColor" opacity="0.85">essentially exact</text>
+<text x="630" y="278" font-size="15" fill="currentColor" opacity="0.7">much more expensive</text>
+</svg>
+<p>Solid line: the true marginal for one element. Dashed: what each strategy returns. Set by <code>strategy</code> in <code>control.inla</code>.</p>
+</section>
+<section id="what-each-question-needed" class="slide level2 smaller">
+<h2>What each question needed</h2>
 <table class="caption-top">
 <colgroup>
 <col style="width: 33%">
@@ -318,295 +1010,136 @@ p(x_i \mid y) = \int p(x \mid y)\, dx_{-i}
 <thead>
 <tr class="header">
 <th></th>
-<th><code>MCMC</code></th>
-<th><code>INLA</code></th>
+<th>Question 1: the field</th>
+<th>Question 2: the hyperparameters</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Approach</td>
-<td>Stochastic sampling</td>
-<td>Deterministic approximation</td>
+<td>What we did</td>
+<td>sparse solves, then one joint Gaussian over the field</td>
+<td>try a few combinations, then average</td>
 </tr>
 <tr class="even">
-<td>Model class</td>
-<td>Almost anything</td>
-<td>Latent Gaussian models only</td>
+<td>What made it possible</td>
+<td>Gaussian prior, and <span class="math inline">\(\boldsymbol{Q}\)</span> mostly blank</td>
+<td>there are only three hyperparameters</td>
 </tr>
 <tr class="odd">
-<td>Error</td>
-<td>Monte Carlo error, <span class="math inline">\(\to 0\)</span> with time</td>
-<td>Approximation error, fixed</td>
-</tr>
-<tr class="even">
-<td>Runtime</td>
-<td>Good! But can be challenge to scale</td>
-<td>Potentially accelerated</td>
-</tr>
-<tr class="odd">
-<td>Reproducible</td>
-<td>Up to the seed</td>
-<td>Exactly</td>
-</tr>
-<tr class="even">
-<td>Diagnostics needed</td>
-<td>Many</td>
-<td>Few</td>
+<td>What would break it</td>
+<td>a field that is not Gaussian, or not blank</td>
+<td>too many hyperparameters</td>
 </tr>
 </tbody>
 </table>
-</section>
-<section>
-<section id="latent-gaussian-models" class="title-slide slide level1 center">
-<h1>Latent Gaussian models</h1>
-
-</section>
-<section id="the-three-stage-hierarchy" class="slide level2 smaller">
-<h2>The three-stage hierarchy</h2>
-<p>Every model INLA can fit has this shape:</p>
-<p><span class="math display">\[
-\begin{split}
-\textbf{Stage 1:} \quad &amp; y_i \mid x, \boldsymbol{\theta} \sim \prod_{i=1}^{n} p(y_i \mid x_i, \boldsymbol{\theta}) \\
-\textbf{Stage 2:} \quad &amp; \boldsymbol{x} \mid \boldsymbol{\theta} \sim N\big(\boldsymbol{0}, \boldsymbol{Q}(\boldsymbol{\theta})^{-1}\big) \\
-\textbf{Stage 3:} \quad &amp; \boldsymbol{\theta} \sim p(\boldsymbol{\theta})
-\end{split}
-\]</span></p>
-<ul>
-<li>Stage 1: the likelihood — observations conditionally independent given the latent field.</li>
-<li>Stage 2: the <strong>latent field</strong> <span class="math inline">\(\boldsymbol{x}\)</span>, jointly Gaussian.</li>
-<li>Stage 3: a <strong>small</strong> number of hyperparameters <span class="math inline">\(\boldsymbol{\theta}\)</span>.</li>
-</ul>
-</section>
-<section id="stage-1-the-likelihood" class="slide level2 smaller">
-<h2>Stage 1: the likelihood</h2>
-<ul>
-<li>Given the latent field, observations are independent:</li>
-</ul>
-<p><span class="math display">\[
-p(\boldsymbol{y} \mid \boldsymbol{x}, \boldsymbol{\theta}) = \prod_{i=1}^{n} p(y_i \mid \eta_i, \boldsymbol{\theta})
-\]</span></p>
-<ul>
-<li>Each observation depends on the latent field through <strong>one</strong> element: its linear predictor <span class="math inline">\(\eta_i\)</span>.</li>
-<li>The likelihood itself need <strong>not</strong> be Gaussian: Poisson, binomial, negative binomial, gamma, Weibull, zero-inflated, survival families, etc.</li>
-<li>This is the same conditional independence assumption we always make in hierarchical models.</li>
-</ul>
-</section>
-<section id="stage-2-the-latent-gaussian-field" class="slide level2 smaller">
-<h2>Stage 2: the latent Gaussian field</h2>
-<ul>
-<li>The latent field collects <strong>everything</strong> in the linear predictor:</li>
-</ul>
-<p><span class="math display">\[
-\eta_i = \alpha + \sum_{k} \beta_k z_{ki} + \sum_{j} f_j(u_{ji})
-\]</span></p>
-<ul>
-<li><span class="math inline">\(\boldsymbol{x} = \{\boldsymbol{\eta}, \alpha, \boldsymbol{\beta}, \boldsymbol{f}\}\)</span></li>
-<li>Intercept, fixed effects, random effects, smooth functions, spatial fields, temporal trends — all of it.</li>
-<li>All assigned a <strong>joint Gaussian prior</strong> with precision matrix <span class="math inline">\(\boldsymbol{Q}(\boldsymbol{\theta})\)</span>.</li>
-<li>Note: fixed effects get vague Gaussian priors, so they are Gaussian too. Nothing is excluded.</li>
-</ul>
-</section>
-<section id="stage-3-the-hyperparameters" class="slide level2 smaller">
-<h2>Stage 3: the hyperparameters</h2>
-<ul>
-<li><span class="math inline">\(\boldsymbol{\theta}\)</span> contains everything <strong>not</strong> Gaussian:
-<ul>
-<li>precisions (inverse variances) of random effects,</li>
-<li>correlation and range parameters,</li>
-<li>overdispersion, mixing weights, likelihood-specific parameters.</li>
-</ul></li>
-<li>These enter <span class="math inline">\(\boldsymbol{Q}(\boldsymbol{\theta})\)</span> and the likelihood.</li>
-<li>Crucially, <span class="math inline">\(\dim(\boldsymbol{\theta})\)</span> must be <strong>small</strong> — typically 1 to 6, rarely more than 10.</li>
-<li><span style="color:red">The latent field can be enormous; the hyperparameter space cannot be.</span></li>
-</ul>
-</section>
-<section id="what-counts-as-a-latent-gaussian-model" class="slide level2 smaller">
-<h2>What counts as a latent Gaussian model?</h2>
-<p>Almost everything we fit in this course:</p>
-<ul>
-<li>Linear and generalised linear models</li>
-<li>Mixed / multilevel models (IID random effects)</li>
-<li>Temporal models: RW1, RW2, AR(p), seasonal</li>
-<li>Smoothing splines and non-linear exposure-response (<code>rw2</code>, <code>crossbasis</code>-style)</li>
-<li>Spatial models: ICAR, BYM, BYM2, Leroux, SPDE/Matérn</li>
-<li>Spatiotemporal models, including interaction types I-IV</li>
-<li>Measurement error, missing covariates, survival models</li>
-</ul>
-<p>Two conditions must hold: the latent field is <strong>Gaussian and sparse</strong>, and <span class="math inline">\(\boldsymbol{\theta}\)</span> is <strong>low-dimensional</strong>.</p>
-</section>
-<section id="gaussian-markov-random-fields" class="slide level2 smaller">
-<h2>Gaussian Markov random fields</h2>
-<ul>
-<li>A GMRF is a Gaussian vector whose <strong>precision matrix</strong> <span class="math inline">\(\boldsymbol{Q} = \boldsymbol{\Sigma}^{-1}\)</span> is sparse.</li>
-<li>The Markov property:</li>
-</ul>
-<p><span class="math display">\[
-Q_{ij} = 0 \iff x_i \perp x_j \mid \boldsymbol{x}_{-ij}
-\]</span></p>
-<ul>
-<li>Conditional independence <span class="math inline">\(\Rightarrow\)</span> zeros in <span class="math inline">\(\boldsymbol{Q}\)</span>.</li>
-<li>Neighbours-only spatial models (ICAR) and random walks are GMRFs by construction.</li>
-<li>Sparsity is important: factorising a sparse <span class="math inline">\(\boldsymbol{Q}\)</span> is <span class="math inline">\(O(n^{3/2})\)</span> in 2D rather than <span class="math inline">\(O(n^3)\)</span>, so a 10,000-area field costs a fraction of a second, not hours.</li>
-</ul>
-</section></section>
-<section>
-<section id="how-inla-works-briefly" class="title-slide slide level1 center">
-<h1>How INLA works (briefly)</h1>
-
-</section>
-<section id="what-we-want" class="slide level2 smaller">
-<h2>What we want</h2>
-<p>Two sets of marginals:</p>
-<p><span class="math display">\[
-p(x_i \mid \boldsymbol{y}) = \int p(x_i \mid \boldsymbol{\theta}, \boldsymbol{y})\, p(\boldsymbol{\theta} \mid \boldsymbol{y})\, d\boldsymbol{\theta}
-\]</span></p>
-<p><span class="math display">\[
-p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y})\, d\boldsymbol{\theta}_{-j}
-\]</span></p>
-<ul>
-<li>Note the <strong>nesting</strong>: the latent marginal is an average of conditional marginals, weighted by the hyperparameter posterior.</li>
-<li>So we need three things: <span class="math inline">\(p(\boldsymbol{\theta} \mid \boldsymbol{y})\)</span>, <span class="math inline">\(p(x_i \mid \boldsymbol{\theta}, \boldsymbol{y})\)</span>, and a way to integrate.</li>
-<li>That is the “integrated nested” part of the name.</li>
-</ul>
-</section>
-<section id="the-laplace-approximation" class="slide level2">
-<h2>The Laplace approximation</h2>
-<ul>
-<li>Old idea (Laplace, 1774): approximate an integral by fitting a Gaussian at the mode of the integrand.</li>
-<li>Take logs, expand to second order around the mode <span class="math inline">\(\boldsymbol{x}^{*}\)</span>:</li>
-</ul>
-<p><span class="math display">\[
-\log f(\boldsymbol{x}) \approx \log f(\boldsymbol{x}^{*}) - \tfrac{1}{2}(\boldsymbol{x}-\boldsymbol{x}^{*})^{\top}\boldsymbol{H}(\boldsymbol{x}-\boldsymbol{x}^{*})
-\]</span></p>
-<ul>
-<li>The result is Gaussian, so the integral is available in closed form.</li>
-<li>It works well when the target is unimodal and reasonably symmetric — which posteriors of latent Gaussian fields usually are.</li>
-</ul>
-</section>
-<section id="laplace-approximation-formally" class="slide level2">
-<h2>Laplace approximation, formally</h2>
-<p><span class="math display">\[
-\int f(\boldsymbol{x})\, d\boldsymbol{x} \approx f(\boldsymbol{x}^{*}) \, (2\pi)^{d/2} \, |\boldsymbol{H}|^{-1/2}
-\]</span></p>
-<ul>
-<li><span class="math inline">\(\boldsymbol{x}^{*}\)</span>: the mode, found by Newton-Raphson.</li>
-<li><span class="math inline">\(\boldsymbol{H}\)</span>: the negative Hessian at the mode.</li>
-<li><span style="color:red">The Gaussian prior on <span class="math inline">\(\boldsymbol{x}\)</span> helps enormously: the target is already “nearly Gaussian” before we start.</span></li>
-</ul>
-</section>
-<section id="the-three-steps-in-words" class="slide level2 smaller">
-<h2>The three steps, in words</h2>
-<p>Think of it as: <strong>if I knew the variances, the rest would be easy.</strong></p>
+<div class="fragment">
+<p>So the method carries <strong>two conditions</strong>, one from each half:</p>
 <ol type="1">
-<li><strong>Get a posterior for the few hyperparameters</strong> <span class="math inline">\(\boldsymbol{\theta}\)</span> (the variances, correlations).</li>
-<li><strong>Pick a handful of plausible values of</strong> <span class="math inline">\(\boldsymbol{\theta}\)</span> to stand in for the whole distribution.</li>
-<li><strong>Fit the latent field at each one</strong>, then average the answers, weighting each by how plausible that <span class="math inline">\(\boldsymbol{\theta}\)</span> was.</li>
+<li>The latent field has a Gaussian prior, and its links are local.</li>
+<li>The hyperparameters are few.</li>
 </ol>
-<ul>
-<li>Step 3 is cheap because, with <span class="math inline">\(\boldsymbol{\theta}\)</span> held fixed, the latent field is nearly Gaussian.</li>
-<li>Steps 1-2 are cheap because <span class="math inline">\(\boldsymbol{\theta}\)</span> has only a few entries.</li>
-</ul>
+</div>
 </section>
-<section id="step-1-a-posterior-for-the-hyperparameters" class="slide level2 smaller">
-<h2>Step 1: a posterior for the hyperparameters</h2>
-<p>We want <span class="math inline">\(p(\boldsymbol{\theta} \mid \boldsymbol{y})\)</span>: how plausible is each set of variances, given the data?</p>
-<ul>
-<li>We can write down the <strong>joint</strong> <span class="math inline">\(p(\boldsymbol{x}, \boldsymbol{\theta}, \boldsymbol{y})\)</span> exactly — it is just likelihood <span class="math inline">\(\times\)</span> priors.</li>
-<li>Divide the joint by <span class="math inline">\(p(\boldsymbol{x} \mid \boldsymbol{\theta}, \boldsymbol{y})\)</span> and the latent field cancels out, leaving what we want.</li>
-<li>Problem: that denominator is the thing we cannot compute.</li>
-<li>Solution: <strong>swap it for a Gaussian approximation</strong> — which is a reasonable stand-in, because a latent Gaussian field with <span class="math inline">\(\boldsymbol{\theta}\)</span> fixed really is close to Gaussian.</li>
-</ul>
-</section>
-<section id="step-1-the-same-thing-in-symbols" class="slide level2 smaller">
-<h2>Step 1: the same thing in symbols</h2>
-<p><span class="math display">\[
-\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y}) \;\propto\;
-\left. \frac{\overbrace{p(\boldsymbol{y} \mid \boldsymbol{x}, \boldsymbol{\theta})\, p(\boldsymbol{x} \mid \boldsymbol{\theta})\, p(\boldsymbol{\theta})}^{\text{joint: we know this exactly}}}{\underbrace{\tilde{p}_G(\boldsymbol{x} \mid \boldsymbol{\theta}, \boldsymbol{y})}_{\text{Gaussian stand-in}}} \right|_{\boldsymbol{x} \,=\, \boldsymbol{x}^{*}(\boldsymbol{\theta})}
-\]</span></p>
-<ul>
-<li>The identity holds for <strong>any</strong> value of <span class="math inline">\(\boldsymbol{x}\)</span>, so we are free to choose one — and we choose the mode <span class="math inline">\(\boldsymbol{x}^{*}(\boldsymbol{\theta})\)</span>, where the Gaussian stand-in is most accurate.</li>
-<li>This is exactly the Laplace approximation from two slides ago, applied to the latent field.</li>
-<li>Output: a function we can <strong>evaluate</strong> at any <span class="math inline">\(\boldsymbol{\theta}\)</span>, though we have no formula for it.</li>
-</ul>
-</section>
-<section id="step-2-where-to-evaluate-boldsymboltheta" class="slide level2 smaller">
-<h2>Step 2: where to evaluate <span class="math inline">\(\boldsymbol{\theta}\)</span></h2>
-<p>We can only evaluate <span class="math inline">\(\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y})\)</span> point by point, so we need to choose good points.</p>
-<ul>
-<li>Climb to the <strong>top</strong> of the surface (Newton-Raphson).</li>
-<li>Measure the <strong>curvature</strong> at the top (the Hessian) — this tells us how wide the distribution is in each direction.</li>
-<li>Use that to rescale the axes, so the surface is roughly round rather than a long thin ridge.</li>
-<li>Then lay down evaluation points on the rescaled, well-behaved surface.</li>
-</ul>
-</section>
-<section id="step-2-how-many-points" class="slide level2 smaller">
-<h2>Step 2: how many points?</h2>
+<section id="what-fits-and-what-doesnt" class="slide level2 smaller">
+<h2>What fits and what doesn’t</h2>
 <table class="caption-top">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
+<col style="width: 50%">
+<col style="width: 50%">
 </colgroup>
 <thead>
 <tr class="header">
-<th><code>int.strategy</code></th>
-<th>What it does</th>
-<th>Trade-off</th>
+<th>Fits</th>
+<th>Does not fit</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>"grid"</code></td>
-<td>Dense grid over <span class="math inline">\(\boldsymbol{\theta}\)</span></td>
-<td>Most accurate; cost explodes beyond 2-3 hyperparameters</td>
+<td>Linear and generalised linear models</td>
+<td>Finite mixtures with many components</td>
 </tr>
 <tr class="even">
-<td><code>"ccd"</code></td>
-<td>A clever scatter of points around the mode</td>
-<td><strong>Default</strong> when <span class="math inline">\(\dim(\boldsymbol{\theta}) &gt; 2\)</span>; good accuracy, few points</td>
+<td>Mixed and multilevel models</td>
+<td>Models with hundreds of variance components</td>
 </tr>
 <tr class="odd">
-<td><code>"eb"</code></td>
-<td>The mode only</td>
-<td>Fastest; <span style="color:red">ignores uncertainty in <span class="math inline">\(\boldsymbol{\theta}\)</span></span></td>
+<td>RW1, RW2, AR(<span class="math inline">\(p\)</span>), seasonal terms</td>
+<td>Dirichlet process and non-parametric priors</td>
+</tr>
+<tr class="even">
+<td>Splines and non-linear exposure–response</td>
+<td>Heavy-tailed or latent <span class="math inline">\(t\)</span> fields</td>
+</tr>
+<tr class="odd">
+<td>ICAR, BYM, BYM2, Leroux, SPDE</td>
+<td>Likelihoods depending non-linearly on many latent elements</td>
+</tr>
+<tr class="even">
+<td>Space–time interactions, types I–IV</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Measurement error, survival models</td>
+<td></td>
 </tr>
 </tbody>
 </table>
-<ul>
-<li>Each chosen point <span class="math inline">\(\boldsymbol{\theta}^{(k)}\)</span> comes with a weight: how plausible it is.</li>
-<li>Useful during model development: run <code>"eb"</code> while you iterate, then <code>"ccd"</code> for the final fit.</li>
-</ul>
+<div class="fragment">
+<p>Every entry on the right fails <strong>condition 1</strong> or <strong>condition 2</strong> — nothing else. And the left-hand column is most of what we fit in environmental epidemiology.</p>
+</div>
 </section>
-<section id="step-3-averaging-over-the-hyperparameters" class="slide level2 smaller">
-<h2>Step 3: averaging over the hyperparameters</h2>
-<p>For each <span class="math inline">\(\boldsymbol{\theta}^{(k)}\)</span> we fit the latent field, then take a <strong>weighted average</strong> of the results:</p>
-<p><span class="math display">\[
-\underbrace{\tilde{p}(x_i \mid \boldsymbol{y})}_{\text{what we report}} \approx \sum_{k} \underbrace{\tilde{p}(x_i \mid \boldsymbol{\theta}^{(k)}, \boldsymbol{y})}_{\text{answer if }\boldsymbol{\theta}=\boldsymbol{\theta}^{(k)}} \times \underbrace{\tilde{p}(\boldsymbol{\theta}^{(k)} \mid \boldsymbol{y})\, \Delta_k}_{\text{how much it counts}}
-\]</span></p>
-<ul>
-<li>Same spirit as multiple imputation: solve the easy problem several times, then average, so uncertainty in <span class="math inline">\(\boldsymbol{\theta}\)</span> is carried through.</li>
-<li>The result is a <strong>density</strong>, not a set of samples.</li>
-<li>One thing still missing: how to get each <span class="math inline">\(\tilde{p}(x_i \mid \boldsymbol{\theta}^{(k)}, \boldsymbol{y})\)</span>.</li>
-</ul>
-</section>
-<section id="three-strategies-for-the-latent-marginals" class="slide level2">
-<h2>Three strategies for the latent marginals</h2>
-<ul>
-<li><strong>Gaussian</strong> (<code>strategy = "gaussian"</code>): read the marginal straight off the Gaussian approximation. Fastest; can be poor in the tails and miss skewness.</li>
-<li><strong>Laplace</strong> (<code>strategy = "laplace"</code>): a full nested Laplace approximation for each <span class="math inline">\(x_i\)</span>. Most accurate, most expensive.</li>
-<li><strong>Simplified Laplace</strong> (<code>strategy = "simplified.laplace"</code>): a third-order Taylor correction to the Gaussian, capturing location and skewness. <span style="color:red">The default, and almost always the right choice.</span></li>
-</ul>
-</section>
-<section id="the-algorithm-in-one-slide" class="slide level2">
-<h2>The algorithm in one slide</h2>
-<ol type="1">
-<li>Find the mode of <span class="math inline">\(\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y})\)</span> via Newton-Raphson.</li>
-<li>Compute the Hessian; build the standardised <span class="math inline">\(z\)</span>-space.</li>
-<li>Place integration points (grid or CCD) and evaluate <span class="math inline">\(\tilde{p}(\boldsymbol{\theta}^{(k)} \mid \boldsymbol{y})\)</span>.</li>
-<li>At each point, compute <span class="math inline">\(\tilde{p}(x_i \mid \boldsymbol{\theta}^{(k)}, \boldsymbol{y})\)</span> for all <span class="math inline">\(i\)</span>.</li>
-<li>Sum over <span class="math inline">\(k\)</span> with weights to get <span class="math inline">\(\tilde{p}(x_i \mid \boldsymbol{y})\)</span>.</li>
-<li>Marginalise <span class="math inline">\(\tilde{p}(\boldsymbol{\theta} \mid \boldsymbol{y})\)</span> for each <span class="math inline">\(\theta_j\)</span>.</li>
-</ol>
+<section id="summary-of-the-entire-inla-process" class="slide level2 smaller">
+<h2>Summary of the entire INLA process</h2>
+<svg viewbox="0 0 920 560" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahf" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<rect x="330" y="20" width="260" height="46" rx="8" fill="#16a085" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.5"></rect>
+<text x="460" y="49" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">a latent Gaussian model</text>
+
+<path d="M460,66 V92" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"></path>
+<path d="M225,92 H695" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none"></path>
+<path d="M225,92 V130" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahf)"></path>
+<path d="M695,92 V130" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahf)"></path>
+
+<g fill="#2980b9" fill-opacity="0.14" stroke="currentColor" stroke-opacity="0.45">
+<rect x="55" y="136" width="340" height="54" rx="8"></rect>
+<rect x="55" y="222" width="340" height="54" rx="8"></rect>
+<rect x="55" y="308" width="340" height="54" rx="8"></rect></g>
+<g text-anchor="middle" fill="currentColor">
+<text x="225" y="160" font-size="16" font-weight="600">the latent field</text>
+<text x="225" y="180" font-size="15" opacity="0.85">large, Gaussian, links only local</text>
+<text x="225" y="246" font-size="16" font-weight="600">so Q is mostly blank</text>
+<text x="225" y="266" font-size="15" opacity="0.85">one solve is cheap, however large</text>
+<text x="225" y="332" font-size="16" font-weight="600">Laplace gives a joint Gaussian</text>
+<text x="225" y="352" font-size="15" opacity="0.85">over all 168,000, deterministically</text></g>
+
+<g fill="#8e44ad" fill-opacity="0.14" stroke="currentColor" stroke-opacity="0.45">
+<rect x="525" y="136" width="340" height="54" rx="8"></rect>
+<rect x="525" y="222" width="340" height="54" rx="8"></rect>
+<rect x="525" y="308" width="340" height="54" rx="8"></rect></g>
+<g text-anchor="middle" fill="currentColor">
+<text x="695" y="160" font-size="16" font-weight="600">the hyperparameters</text>
+<text x="695" y="180" font-size="15" opacity="0.85">three of them in this model</text>
+<text x="695" y="246" font-size="16" font-weight="600">so the space is small</text>
+<text x="695" y="266" font-size="15" opacity="0.85">a handful of combinations covers it</text>
+<text x="695" y="332" font-size="16" font-weight="600">one joint per combination</text>
+<text x="695" y="352" font-size="15" opacity="0.85">weighted by plausibility</text></g>
+
+<g stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none">
+<path d="M225,190 V222" marker-end="url(#ahf)"></path><path d="M225,276 V308" marker-end="url(#ahf)"></path>
+<path d="M695,190 V222" marker-end="url(#ahf)"></path><path d="M695,276 V308" marker-end="url(#ahf)"></path>
+<path d="M225,362 V394 H460"></path><path d="M695,362 V394 H460"></path>
+<path d="M460,394 V422" marker-end="url(#ahf)"></path></g>
+
+<rect x="230" y="428" width="460" height="54" rx="8" fill="#c0392b" fill-opacity="0.12" stroke="#c0392b" stroke-opacity="0.55" stroke-width="1.2"></rect>
+<text x="460" y="452" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">marginals read out, then averaged</text>
+<text x="460" y="472" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">no chains, no burn-in, same answer every run</text>
+
+<path d="M460,482 V506" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahf)"></path>
+<text x="460" y="530" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">and most models we fit have exactly this shape</text>
+<text x="460" y="552" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">GLMs · mixed models · splines · ICAR, BYM2, SPDE · space-time · survival</text>
+</svg>
 </section>
 <section id="why-it-is-fast" class="slide level2">
 <h2>Why it is fast</h2>
@@ -617,14 +1150,107 @@ p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y}
 <li>Everything at a given <span class="math inline">\(\boldsymbol{\theta}^{(k)}\)</span> is parallel (<code>num.threads</code>).</li>
 </ul>
 </section>
+<section id="why-its-not-instant" class="slide level2 smaller">
+<h2>Why it’s not instant</h2>
+<ul>
+<li><strong>The hyperparameter grid grows geometrically.</strong> The cost of integrating over <span class="math inline">\(\boldsymbol{\theta}\)</span> scales roughly as <span class="math inline">\(O(g^{\dim(\boldsymbol{\theta})})\)</span>. This is the wall you hit — not <span class="math inline">\(n\)</span>, not <span class="math inline">\(m\)</span>.</li>
+<li><strong>Finding the mode of <span class="math inline">\(p(\boldsymbol{\theta} \mid \boldsymbol{y})\)</span> is an optimisation</strong>, and every function evaluation is a full sparse factorisation with numerical gradients on top.</li>
+<li><strong>Sparse is not the same as cheap.</strong> Depends on the graph structure, not just the number of zeros. Type IV space–time interactions and densely-connected adjacency graphs fill in badly.</li>
+<li><strong>Accuracy costs.</strong> <code>strategy = "laplace"</code> is far more expensive than the default <code>"simplified.laplace"</code>, which in turn costs more than <code>"gaussian"</code>.</li>
+<li><strong>SPDE meshes.</strong> Every extra mesh node enlarges the latent field. An over-refined mesh is the single most common reason a spatial model crawls (outside scope).</li>
+<li><strong>Memory is often the binding constraint, not time.</strong> A lot held in memory for this.</li>
+</ul>
+<!-- . . . -->
+<!-- [INLA is fast because of the *asymmetry* between the two objects. Break the -->
+<!-- asymmetry — many hyperparameters, or a latent field whose sparsity is only -->
+<!-- nominal — and the advantage disappears.]{style="color:#c0392b"} -->
+</section>
+<section id="the-number-of-hyperparameters-is-the-limiting-factor" class="slide level2 smaller">
+<h2>The number of hyperparameters is the limiting factor</h2>
+<svg viewbox="0 0 920 290" style="width:100%;color:inherit" font-family="inherit">
+<text x="60" y="30" font-size="16" font-weight="600" fill="currentColor">1 hyperparameter</text>
+<line x1="60" y1="130" x2="260" y2="130" stroke="currentColor" stroke-width="1" opacity="0.45"></line>
+<g fill="#c0392b" fill-opacity="0.8">
+<circle cx="70" cy="130" r="5"></circle><circle cx="108" cy="130" r="5"></circle><circle cx="146" cy="130" r="5"></circle>
+<circle cx="184" cy="130" r="5"></circle><circle cx="222" cy="130" r="5"></circle><circle cx="255" cy="130" r="5"></circle></g>
+<text x="60" y="196" font-size="15" fill="currentColor" opacity="0.85">points along a line</text>
+
+<text x="360" y="30" font-size="16" font-weight="600" fill="currentColor">2 hyperparameters</text>
+<rect x="360" y="52" width="170" height="156" fill="none" stroke="currentColor" stroke-opacity="0.45"></rect>
+<g fill="#c0392b" fill-opacity="0.8">
+<circle cx="378" cy="70" r="4"></circle><circle cx="412" cy="70" r="4"></circle><circle cx="446" cy="70" r="4"></circle><circle cx="480" cy="70" r="4"></circle><circle cx="514" cy="70" r="4"></circle>
+<circle cx="378" cy="104" r="4"></circle><circle cx="412" cy="104" r="4"></circle><circle cx="446" cy="104" r="4"></circle><circle cx="480" cy="104" r="4"></circle><circle cx="514" cy="104" r="4"></circle>
+<circle cx="378" cy="138" r="4"></circle><circle cx="412" cy="138" r="4"></circle><circle cx="446" cy="138" r="4"></circle><circle cx="480" cy="138" r="4"></circle><circle cx="514" cy="138" r="4"></circle>
+<circle cx="378" cy="172" r="4"></circle><circle cx="412" cy="172" r="4"></circle><circle cx="446" cy="172" r="4"></circle><circle cx="480" cy="172" r="4"></circle><circle cx="514" cy="172" r="4"></circle></g>
+<text x="360" y="240" font-size="15" fill="currentColor" opacity="0.85">points filling a square</text>
+
+<text x="650" y="30" font-size="16" font-weight="600" fill="currentColor">3 hyperparameters</text>
+<g fill="none" stroke="currentColor" stroke-opacity="0.45">
+<rect x="650" y="72" width="150" height="136"></rect>
+<path d="M650,72 L694,40 H844 V176 L800,208"></path><path d="M800,72 L844,40"></path><path d="M800,208 V72"></path></g>
+<g fill="#c0392b" fill-opacity="0.75">
+<circle cx="668" cy="90" r="3.5"></circle><circle cx="702" cy="90" r="3.5"></circle><circle cx="736" cy="90" r="3.5"></circle><circle cx="770" cy="90" r="3.5"></circle>
+<circle cx="668" cy="124" r="3.5"></circle><circle cx="702" cy="124" r="3.5"></circle><circle cx="736" cy="124" r="3.5"></circle><circle cx="770" cy="124" r="3.5"></circle>
+<circle cx="668" cy="158" r="3.5"></circle><circle cx="702" cy="158" r="3.5"></circle><circle cx="736" cy="158" r="3.5"></circle><circle cx="770" cy="158" r="3.5"></circle>
+<circle cx="668" cy="192" r="3.5"></circle><circle cx="702" cy="192" r="3.5"></circle><circle cx="736" cy="192" r="3.5"></circle><circle cx="770" cy="192" r="3.5"></circle></g>
+<g fill="#c0392b" fill-opacity="0.35">
+<circle cx="712" cy="58" r="3.5"></circle><circle cx="746" cy="58" r="3.5"></circle><circle cx="780" cy="58" r="3.5"></circle><circle cx="814" cy="58" r="3.5"></circle>
+<circle cx="712" cy="92" r="3.5"></circle><circle cx="746" cy="92" r="3.5"></circle><circle cx="780" cy="92" r="3.5"></circle><circle cx="814" cy="92" r="3.5"></circle>
+<circle cx="712" cy="126" r="3.5"></circle><circle cx="746" cy="126" r="3.5"></circle><circle cx="780" cy="126" r="3.5"></circle><circle cx="814" cy="126" r="3.5"></circle>
+<circle cx="712" cy="160" r="3.5"></circle><circle cx="746" cy="160" r="3.5"></circle><circle cx="780" cy="160" r="3.5"></circle><circle cx="814" cy="160" r="3.5"></circle></g>
+<text x="650" y="240" font-size="15" fill="currentColor" opacity="0.85">points filling a cube</text>
+
+<text x="60" y="278" font-size="16" fill="currentColor" opacity="0.85">Every point is a full sparse solve over the entire 168,000-element field.</text>
+</svg>
+</section>
+<section id="the-number-of-hyperparameters-is-the-limiting-factor-1" class="slide level2 smaller">
+<h2>The number of hyperparameters is the limiting factor</h2>
+<p>Add a dial and the points do not increase — they <strong>multiply</strong>. Taking five per dial for illustration:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Hyperparameters</th>
+<th>Grid points</th>
+<th>At 0.5 s each</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2</td>
+<td>25</td>
+<td>12 seconds</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>625</td>
+<td>5 minutes</td>
+</tr>
+<tr class="odd">
+<td>6</td>
+<td>15,625</td>
+<td>2 hours</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>390,625</td>
+<td>2 days</td>
+</tr>
+<tr class="odd">
+<td>10</td>
+<td>9,765,625</td>
+<td>7 weeks</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="how-accurate-is-it" class="slide level2 smaller">
 <h2>How accurate is it?</h2>
 <ul>
 <li>For latent Gaussian models with well-behaved likelihoods, INLA and long MCMC runs typically agree to two or three decimal places on posterior means and quantiles.</li>
 <li>Accuracy degrades when:
 <ul>
-<li>the number of observations per latent parameter is very small (e.g.&nbsp;binary data with one observation per random effect),</li>
-<li>the likelihood is far from Gaussian and weakly informative,</li>
+<li>the number of observations per latent parameter is very small (e.g.&nbsp;binary data with one observation per random effect).</li>
+<li>the likelihood is far from Gaussian and weakly informative.</li>
 <li>the posterior is genuinely multimodal.</li>
 </ul></li>
 <li>Check with <code>inla(..., control.compute = list(config = TRUE))</code> and compare against a short MCMC run when it matters.</li>
@@ -633,13 +1259,12 @@ p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y}
 <section id="when-not-to-use-inla" class="slide level2">
 <h2>When not to use <code>INLA</code></h2>
 <ul>
-<li>The latent field is <strong>not</strong> Gaussian (e.g.&nbsp;discrete mixture components, changepoint indicators).</li>
-<li><span class="math inline">\(\dim(\boldsymbol{\theta})\)</span> is large — say more than 10-15.</li>
+<li>Beyond the two conditions already covered, three practical cases:</li>
 <li>You need the <strong>joint</strong> posterior over many latent parameters, not marginals. (Partly recoverable via <code>inla.posterior.sample()</code>.)</li>
 <li>Genuinely multimodal posteriors.</li>
-<li>Novel likelihoods with no <code>INLA</code> implementation — though <code>rgeneric</code> and <code>cgeneric</code> let you write your own.</li>
+<li>(Potentially): Novel likelihoods with no <code>INLA</code> implementation — though <code>rgeneric</code> and <code>cgeneric</code> let you write your own.</li>
 </ul>
-</section></section>
+</section>
 <section>
 <section id="using-r-inla" class="title-slide slide level1 center">
 <h1>Using R-INLA</h1>
@@ -650,15 +1275,15 @@ p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y}
 <ul>
 <li><code>INLA</code> is not on CRAN. Install from the project repository:</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="fu">install.packages</span>(</span>
-<span id="cb1-2"><a href=""></a>  <span class="st">"INLA"</span>,</span>
-<span id="cb1-3"><a href=""></a>  <span class="at">repos =</span> <span class="fu">c</span>(<span class="fu">getOption</span>(<span class="st">"repos"</span>),</span>
-<span id="cb1-4"><a href=""></a>            <span class="at">INLA =</span> <span class="st">"https://inla.r-inla-download.org/R/stable"</span>),</span>
-<span id="cb1-5"><a href=""></a>  <span class="at">dep =</span> <span class="cn">TRUE</span></span>
-<span id="cb1-6"><a href=""></a>)</span>
-<span id="cb1-7"><a href=""></a></span>
-<span id="cb1-8"><a href=""></a><span class="fu">library</span>(INLA)</span>
-<span id="cb1-9"><a href=""></a><span class="fu">inla.version</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">install.packages</span>(</span>
+<span id="cb4-2"><a href=""></a>  <span class="st">"INLA"</span>,</span>
+<span id="cb4-3"><a href=""></a>  <span class="at">repos =</span> <span class="fu">c</span>(<span class="fu">getOption</span>(<span class="st">"repos"</span>),</span>
+<span id="cb4-4"><a href=""></a>            <span class="at">INLA =</span> <span class="st">"https://inla.r-inla-download.org/R/stable"</span>),</span>
+<span id="cb4-5"><a href=""></a>  <span class="at">dep =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-6"><a href=""></a>)</span>
+<span id="cb4-7"><a href=""></a></span>
+<span id="cb4-8"><a href=""></a><span class="fu">library</span>(INLA)</span>
+<span id="cb4-9"><a href=""></a><span class="fu">inla.version</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Use <code>testing</code> instead of <code>stable</code> for the development version.</li>
 <li><code>inla.upgrade()</code> to update in place.</li>
@@ -666,18 +1291,18 @@ p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y}
 </section>
 <section id="the-central-function-inla" class="slide level2">
 <h2>The central function: <code>inla()</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>formula <span class="ot">&lt;-</span> y <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> <span class="fu">f</span>(area, <span class="at">model =</span> <span class="st">"iid"</span>)</span>
-<span id="cb2-2"><a href=""></a></span>
-<span id="cb2-3"><a href=""></a>m <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb2-4"><a href=""></a>  formula,</span>
-<span id="cb2-5"><a href=""></a>  <span class="at">family            =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb2-6"><a href=""></a>  <span class="at">data              =</span> data,</span>
-<span id="cb2-7"><a href=""></a>  <span class="at">E                 =</span> data<span class="sc">$</span>expected,</span>
-<span id="cb2-8"><a href=""></a>  <span class="at">control.compute   =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb2-9"><a href=""></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">compute =</span> <span class="cn">TRUE</span>, <span class="at">link =</span> <span class="dv">1</span>)</span>
-<span id="cb2-10"><a href=""></a>)</span>
-<span id="cb2-11"><a href=""></a></span>
-<span id="cb2-12"><a href=""></a><span class="fu">summary</span>(m)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>formula <span class="ot">&lt;-</span> y <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> <span class="fu">f</span>(area, <span class="at">model =</span> <span class="st">"iid"</span>)</span>
+<span id="cb5-2"><a href=""></a></span>
+<span id="cb5-3"><a href=""></a>m <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb5-4"><a href=""></a>  formula,</span>
+<span id="cb5-5"><a href=""></a>  <span class="at">family            =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb5-6"><a href=""></a>  <span class="at">data              =</span> data,</span>
+<span id="cb5-7"><a href=""></a>  <span class="at">E                 =</span> data<span class="sc">$</span>expected,</span>
+<span id="cb5-8"><a href=""></a>  <span class="at">control.compute   =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb5-9"><a href=""></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">compute =</span> <span class="cn">TRUE</span>, <span class="at">link =</span> <span class="dv">1</span>)</span>
+<span id="cb5-10"><a href=""></a>)</span>
+<span id="cb5-11"><a href=""></a></span>
+<span id="cb5-12"><a href=""></a><span class="fu">summary</span>(m)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="what-the-formula-means" class="slide level2">
 <h2>What the formula means</h2>
@@ -691,14 +1316,14 @@ p(\theta_j \mid \boldsymbol{y}) = \int p(\boldsymbol{\theta} \mid \boldsymbol{y}
 </section>
 <section id="the-f-function" class="slide level2">
 <h2>The <code>f()</code> function</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">f</span>(index,</span>
-<span id="cb3-2"><a href=""></a>  <span class="at">model      =</span> <span class="st">"iid"</span>,       <span class="co"># latent model class</span></span>
-<span id="cb3-3"><a href=""></a>  <span class="at">hyper      =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>,</span>
-<span id="cb3-4"><a href=""></a>                               <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>))),</span>
-<span id="cb3-5"><a href=""></a>  <span class="at">constr     =</span> <span class="cn">TRUE</span>,        <span class="co"># sum-to-zero constraint</span></span>
-<span id="cb3-6"><a href=""></a>  <span class="at">graph      =</span> <span class="st">"map.adj"</span>,   <span class="co"># for spatial models</span></span>
-<span id="cb3-7"><a href=""></a>  <span class="at">replicate  =</span> id,          <span class="co"># independent copies</span></span>
-<span id="cb3-8"><a href=""></a>  <span class="at">group      =</span> time)        <span class="co"># grouped/interaction structure</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href=""></a><span class="fu">f</span>(index,</span>
+<span id="cb6-2"><a href=""></a>  <span class="at">model      =</span> <span class="st">"iid"</span>,       <span class="co"># latent model class</span></span>
+<span id="cb6-3"><a href=""></a>  <span class="at">hyper      =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>,</span>
+<span id="cb6-4"><a href=""></a>                               <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>))),</span>
+<span id="cb6-5"><a href=""></a>  <span class="at">constr     =</span> <span class="cn">TRUE</span>,        <span class="co"># sum-to-zero constraint</span></span>
+<span id="cb6-6"><a href=""></a>  <span class="at">graph      =</span> <span class="st">"map.adj"</span>,   <span class="co"># for spatial models</span></span>
+<span id="cb6-7"><a href=""></a>  <span class="at">replicate  =</span> id,          <span class="co"># independent copies</span></span>
+<span id="cb6-8"><a href=""></a>  <span class="at">group      =</span> time)        <span class="co"># grouped/interaction structure</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>index</code> <strong>must</strong> be an integer or factor indexing the latent component — not the covariate value itself.</li>
 <li>Each <code>f()</code> term adds hyperparameters to <span class="math inline">\(\boldsymbol{\theta}\)</span>.</li>
@@ -768,13 +1393,13 @@ y_i &amp;\sim \text{Pois}(\mu_i) \quad i = 1,\ldots,N \\
 \log(\mu_i) &amp;= \log(E_i) + \alpha
 \end{split}
 \]</span></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>m_pooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb4-2"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span>,</span>
-<span id="cb4-3"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb4-4"><a href=""></a>  <span class="at">E      =</span> expected,</span>
-<span id="cb4-5"><a href=""></a>  <span class="at">data   =</span> data,</span>
-<span id="cb4-6"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb4-7"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>m_pooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb7-2"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb7-3"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb7-4"><a href=""></a>  <span class="at">E      =</span> expected,</span>
+<span id="cb7-5"><a href=""></a>  <span class="at">data   =</span> data,</span>
+<span id="cb7-6"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-7"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>One intercept, shared by every province. No <code>f()</code> term, so <span class="math inline">\(\boldsymbol{\theta}\)</span> is empty.</li>
 </ul>
@@ -787,14 +1412,14 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 \log(\mu_i) &amp;= \log(E_i) + \alpha_{j[i]}
 \end{split}
 \]</span></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>m_unpooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb5-2"><a href=""></a>  deaths <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> <span class="fu">factor</span>(province),</span>
-<span id="cb5-3"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb5-4"><a href=""></a>  <span class="at">E      =</span> expected,</span>
-<span id="cb5-5"><a href=""></a>  <span class="at">data   =</span> data,</span>
-<span id="cb5-6"><a href=""></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="dv">1</span>),   <span class="co"># N(0, 1) on each alpha_j</span></span>
-<span id="cb5-7"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb5-8"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>m_unpooled <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb8-2"><a href=""></a>  deaths <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> <span class="fu">factor</span>(province),</span>
+<span id="cb8-3"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb8-4"><a href=""></a>  <span class="at">E      =</span> expected,</span>
+<span id="cb8-5"><a href=""></a>  <span class="at">data   =</span> data,</span>
+<span id="cb8-6"><a href=""></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="dv">1</span>),   <span class="co"># N(0, 1) on each alpha_j</span></span>
+<span id="cb8-7"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-8"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Province enters as a <strong>fixed effect</strong>: independent parameters, no borrowing of strength.</li>
 <li><code>-1</code> drops the global intercept so each level is estimated directly.</li>
@@ -808,24 +1433,24 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 \theta_j \sim N(0, \sigma^2_p)
 \end{split}
 \]</span></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href=""></a>data<span class="sc">$</span>province_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(data<span class="sc">$</span>province))</span>
-<span id="cb6-2"><a href=""></a></span>
-<span id="cb6-3"><a href=""></a>m_partial <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb6-4"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(province_id, <span class="at">model =</span> <span class="st">"iid"</span>,</span>
-<span id="cb6-5"><a href=""></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(</span>
-<span id="cb6-6"><a href=""></a>                   <span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))),</span>
-<span id="cb6-7"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb6-8"><a href=""></a>  <span class="at">E      =</span> expected,</span>
-<span id="cb6-9"><a href=""></a>  <span class="at">data   =</span> data,</span>
-<span id="cb6-10"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb6-11"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>data<span class="sc">$</span>province_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(data<span class="sc">$</span>province))</span>
+<span id="cb9-2"><a href=""></a></span>
+<span id="cb9-3"><a href=""></a>m_partial <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb9-4"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(province_id, <span class="at">model =</span> <span class="st">"iid"</span>,</span>
+<span id="cb9-5"><a href=""></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(</span>
+<span id="cb9-6"><a href=""></a>                   <span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))),</span>
+<span id="cb9-7"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb9-8"><a href=""></a>  <span class="at">E      =</span> expected,</span>
+<span id="cb9-9"><a href=""></a>  <span class="at">data   =</span> data,</span>
+<span id="cb9-10"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-11"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>One line of difference from the pooled model.</li>
 </ul>
 </section>
 <section id="reading-the-output-fixed-effects" class="slide level2">
 <h2>Reading the output: fixed effects</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>m_partial<span class="sc">$</span>summary.fixed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a>m_partial<span class="sc">$</span>summary.fixed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Columns: <code>mean</code>, <code>sd</code>, <code>0.025quant</code>, <code>0.5quant</code>, <code>0.975quant</code>, <code>mode</code>, <code>kld</code>.</li>
 <li><code>kld</code> is the Kullback-Leibler divergence between the Gaussian and the simplified Laplace marginal. <span style="color:red">Values much above <span class="math inline">\(\sim 0.01\)</span> suggest the approximation is straining.</span></li>
@@ -834,26 +1459,26 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 </section>
 <section id="reading-the-output-hyperparameters" class="slide level2">
 <h2>Reading the output: hyperparameters</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>m_partial<span class="sc">$</span>summary.hyperpar</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href=""></a>m_partial<span class="sc">$</span>summary.hyperpar</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>INLA</code> reports <strong>precisions</strong>, not standard deviations: <span class="math inline">\(\tau = 1/\sigma^2\)</span>.</li>
 <li>A posterior mean of a precision is <em>not</em> the reciprocal of the posterior mean of a variance. Transform the whole marginal:</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>sd_marg <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(<span class="cf">function</span>(x) <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(x),</span>
-<span id="cb9-2"><a href=""></a>                          m_partial<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Precision for province_id</span><span class="st">`</span>)</span>
-<span id="cb9-3"><a href=""></a></span>
-<span id="cb9-4"><a href=""></a><span class="fu">inla.zmarginal</span>(sd_marg)</span>
-<span id="cb9-5"><a href=""></a><span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, sd_marg)   <span class="co"># posterior mean of sigma</span></span>
-<span id="cb9-6"><a href=""></a><span class="fu">inla.hpdmarginal</span>(<span class="fl">0.95</span>, sd_marg)          <span class="co"># HPD interval</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href=""></a>sd_marg <span class="ot">&lt;-</span> <span class="fu">inla.tmarginal</span>(<span class="cf">function</span>(x) <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(x),</span>
+<span id="cb12-2"><a href=""></a>                          m_partial<span class="sc">$</span>marginals.hyperpar<span class="sc">$</span><span class="st">`</span><span class="at">Precision for province_id</span><span class="st">`</span>)</span>
+<span id="cb12-3"><a href=""></a></span>
+<span id="cb12-4"><a href=""></a><span class="fu">inla.zmarginal</span>(sd_marg)</span>
+<span id="cb12-5"><a href=""></a><span class="fu">inla.emarginal</span>(<span class="cf">function</span>(x) x, sd_marg)   <span class="co"># posterior mean of sigma</span></span>
+<span id="cb12-6"><a href=""></a><span class="fu">inla.hpdmarginal</span>(<span class="fl">0.95</span>, sd_marg)          <span class="co"># HPD interval</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="random-effects-and-shrinkage" class="slide level2">
 <h2>Random effects and shrinkage</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a>re <span class="ot">&lt;-</span> m_partial<span class="sc">$</span>summary.random<span class="sc">$</span>province_id</span>
-<span id="cb10-2"><a href=""></a></span>
-<span id="cb10-3"><a href=""></a><span class="fu">ggplot</span>(re, <span class="fu">aes</span>(<span class="at">x =</span> ID, <span class="at">y =</span> mean)) <span class="sc">+</span></span>
-<span id="cb10-4"><a href=""></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb10-5"><a href=""></a>  <span class="fu">geom_pointrange</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> <span class="st">`</span><span class="at">0.025quant</span><span class="st">`</span>, <span class="at">ymax =</span> <span class="st">`</span><span class="at">0.975quant</span><span class="st">`</span>)) <span class="sc">+</span></span>
-<span id="cb10-6"><a href=""></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Province"</span>, <span class="at">y =</span> <span class="fu">expression</span>(theta[j]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a>re <span class="ot">&lt;-</span> m_partial<span class="sc">$</span>summary.random<span class="sc">$</span>province_id</span>
+<span id="cb13-2"><a href=""></a></span>
+<span id="cb13-3"><a href=""></a><span class="fu">ggplot</span>(re, <span class="fu">aes</span>(<span class="at">x =</span> ID, <span class="at">y =</span> mean)) <span class="sc">+</span></span>
+<span id="cb13-4"><a href=""></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb13-5"><a href=""></a>  <span class="fu">geom_pointrange</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> <span class="st">`</span><span class="at">0.025quant</span><span class="st">`</span>, <span class="at">ymax =</span> <span class="st">`</span><span class="at">0.975quant</span><span class="st">`</span>)) <span class="sc">+</span></span>
+<span id="cb13-6"><a href=""></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Province"</span>, <span class="at">y =</span> <span class="fu">expression</span>(theta[j]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Compare the spread of these to the unpooled <code>factor(province)</code> estimates: the hierarchical ones are pulled toward zero.</li>
 <li>Provinces with small expected counts shrink most — adaptive regularisation, estimated from the data.</li>
@@ -871,7 +1496,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <section id="pc-priors" class="slide level2">
 <h2>PC priors</h2>
 <p><strong>Penalised complexity</strong> priors (Simpson et al., 2017) shrink toward a simpler <em>base model</em> — here, <span class="math inline">\(\sigma = 0\)</span> — with an exponential penalty on the distance from it.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href=""></a>hyper <span class="ot">=</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(U, alpha)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a>hyper <span class="ot">=</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(U, alpha)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Read as <span class="math inline">\(P(\sigma &gt; U) = \alpha\)</span>.</li>
 <li><code>param = c(1, 0.01)</code>: “we think it is unlikely (1% chance) that the between-group SD exceeds 1 on the log scale”.</li>
@@ -881,14 +1506,15 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 </section>
 <section id="model-comparison-dic-waic-cpo" class="slide level2">
 <h2>Model comparison: DIC, WAIC, CPO</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href=""></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>dic<span class="sc">$</span>dic)</span>
-<span id="cb12-2"><a href=""></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>waic<span class="sc">$</span>waic)</span>
-<span id="cb12-3"><a href=""></a></span>
-<span id="cb12-4"><a href=""></a><span class="co"># Leave-one-out log score (lower is better)</span></span>
-<span id="cb12-5"><a href=""></a><span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>cpo), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb12-6"><a href=""></a></span>
-<span id="cb12-7"><a href=""></a><span class="co"># Check the CPO computation is trustworthy</span></span>
-<span id="cb12-8"><a href=""></a><span class="fu">sum</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>failure <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href=""></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>dic<span class="sc">$</span>dic)</span>
+<span id="cb15-2"><a href=""></a><span class="fu">map_dbl</span>(<span class="fu">list</span>(m_pooled, m_unpooled, m_partial), <span class="sc">~</span> .x<span class="sc">$</span>waic<span class="sc">$</span>waic)</span>
+<span id="cb15-3"><a href=""></a></span>
+<span id="cb15-4"><a href=""></a></span>
+<span id="cb15-5"><a href=""></a><span class="co"># Leave-one-out log score (lower is better)</span></span>
+<span id="cb15-6"><a href=""></a><span class="sc">-</span><span class="fu">mean</span>(<span class="fu">log</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>cpo), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-7"><a href=""></a></span>
+<span id="cb15-8"><a href=""></a><span class="co"># Check the CPO computation is trustworthy</span></span>
+<span id="cb15-9"><a href=""></a><span class="fu">sum</span>(m_partial<span class="sc">$</span>cpo<span class="sc">$</span>failure <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>dic$p.eff</code> and <code>waic$p.eff</code>: effective number of parameters, a nice numerical read on how much shrinkage is happening.</li>
 <li>PIT values (<code>m$cpo$pit</code>) should be roughly uniform if the model is calibrated.</li>
@@ -900,48 +1526,53 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <p><span class="math display">\[
 \log(\mu_{ijt}) = \log(E_{ijt}) + \alpha + \beta x_{ijt} + \theta_j + \gamma_{jt}
 \]</span></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a>d<span class="sc">$</span>city_id     <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(d<span class="sc">$</span>city))</span>
-<span id="cb13-2"><a href=""></a>d<span class="sc">$</span>cityyear_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(<span class="fu">paste</span>(d<span class="sc">$</span>city, d<span class="sc">$</span>year)))</span>
-<span id="cb13-3"><a href=""></a></span>
-<span id="cb13-4"><a href=""></a>pc <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))</span>
-<span id="cb13-5"><a href=""></a></span>
-<span id="cb13-6"><a href=""></a>m2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb13-7"><a href=""></a>  admissions <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> pm25 <span class="sc">+</span></span>
-<span id="cb13-8"><a href=""></a>    <span class="fu">f</span>(city_id,     <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc) <span class="sc">+</span></span>
-<span id="cb13-9"><a href=""></a>    <span class="fu">f</span>(cityyear_id, <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc),</span>
-<span id="cb13-10"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> d,</span>
-<span id="cb13-11"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb13-12"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href=""></a>d<span class="sc">$</span>city_id     <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(d<span class="sc">$</span>city))</span>
+<span id="cb16-2"><a href=""></a>d<span class="sc">$</span>cityyear_id <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">as.factor</span>(<span class="fu">paste</span>(d<span class="sc">$</span>city, d<span class="sc">$</span>year)))</span>
+<span id="cb16-3"><a href=""></a></span>
+<span id="cb16-4"><a href=""></a>pc <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)))</span>
+<span id="cb16-5"><a href=""></a></span>
+<span id="cb16-6"><a href=""></a>m2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb16-7"><a href=""></a>  admissions <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> pm25 <span class="sc">+</span></span>
+<span id="cb16-8"><a href=""></a>    <span class="fu">f</span>(city_id,     <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc) <span class="sc">+</span></span>
+<span id="cb16-9"><a href=""></a>    <span class="fu">f</span>(cityyear_id, <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> pc),</span>
+<span id="cb16-10"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> d,</span>
+<span id="cb16-11"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-12"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Two hyperparameters. Two <code>f()</code> terms.</li>
 </ul>
 </section>
 <section id="spatial-extension-bym2" class="slide level2 smaller">
 <h2>Spatial extension: BYM2</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a>nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(shp)</span>
-<span id="cb14-2"><a href=""></a><span class="fu">nb2INLA</span>(<span class="st">"map.adj"</span>, nb)</span>
-<span id="cb14-3"><a href=""></a>g <span class="ot">&lt;-</span> <span class="fu">inla.read.graph</span>(<span class="st">"map.adj"</span>)</span>
-<span id="cb14-4"><a href=""></a></span>
-<span id="cb14-5"><a href=""></a>m_bym2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb14-6"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(area_id, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g,</span>
-<span id="cb14-7"><a href=""></a>                 <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb14-8"><a href=""></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(</span>
-<span id="cb14-9"><a href=""></a>                   <span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
-<span id="cb14-10"><a href=""></a>                   <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)))),</span>
-<span id="cb14-11"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> shp,</span>
-<span id="cb14-12"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb14-13"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href=""></a>nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(shp)</span>
+<span id="cb17-2"><a href=""></a><span class="fu">nb2INLA</span>(<span class="st">"map.adj"</span>, nb)</span>
+<span id="cb17-3"><a href=""></a>g <span class="ot">&lt;-</span> <span class="fu">inla.read.graph</span>(<span class="st">"map.adj"</span>)</span>
+<span id="cb17-4"><a href=""></a></span>
+<span id="cb17-5"><a href=""></a>m_bym2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb17-6"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(area_id, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g,</span>
+<span id="cb17-7"><a href=""></a>                 <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb17-8"><a href=""></a>                 <span class="at">hyper =</span> <span class="fu">list</span>(</span>
+<span id="cb17-9"><a href=""></a>                   <span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
+<span id="cb17-10"><a href=""></a>                   <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)))),</span>
+<span id="cb17-11"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>, <span class="at">E =</span> expected, <span class="at">data =</span> shp,</span>
+<span id="cb17-12"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-13"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><code>bym2</code> separates total SD from the <strong>mixing parameter</strong> <span class="math inline">\(\phi\)</span>: the proportion of variance that is spatially structured.</li>
 <li><code>scale.model = TRUE</code> makes the precision comparable across maps — essential for the prior to mean anything.</li>
 </ul>
 </section>
-<section id="practical-tips-and-common-errors" class="slide level2 smaller">
+<section id="practical-tips-and-common-errors" class="slide level2">
 <h2>Practical tips and common errors</h2>
 <ul>
 <li><em>“Index for f() must be integer or factor”</em> — you passed a covariate value. Create an explicit <code>1:n</code> index.</li>
 <li>Missing values in <code>y</code> are <strong>predicted</strong>, not dropped. Useful, but be deliberate about it.</li>
 <li>Model does not converge: try <code>control.inla = list(strategy = "gaussian", int.strategy = "eb")</code> first to check the model runs, then tighten.</li>
+</ul>
+</section>
+<section id="practical-tips-and-common-errors-1" class="slide level2">
+<h2>Practical tips and common errors</h2>
+<ul>
 <li><code>control.inla = list(h = 0.01)</code> if the numerical Hessian misbehaves.</li>
 <li>Centre and scale continuous covariates: it helps the optimiser and makes priors interpretable.</li>
 <li><code>verbose = TRUE</code> prints what the optimiser is actually doing.</li>
@@ -998,6 +1629,56 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <ul>
 <li>We will see models in <code>INLA</code> going forward</li>
 </ul>
+</section>
+<section id="an-illustrative-example-again" class="slide level2 smaller">
+<h2>An illustrative example (again)</h2>
+<p>Example: weekly death counts by county, with a heat term, a spatial term and a temporal trend.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href=""></a>code <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
+<span id="cb18-2"><a href=""></a></span>
+<span id="cb18-3"><a href=""></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb18-4"><a href=""></a>  beta  <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb18-5"><a href=""></a>  tau_b <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb18-6"><a href=""></a>  tau_g <span class="sc">~</span> <span class="fu">dgamma</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)</span>
+<span id="cb18-7"><a href=""></a>  phi   <span class="sc">~</span> <span class="fu">dbeta</span>(<span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb18-8"><a href=""></a></span>
+<span id="cb18-9"><a href=""></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>N) {</span>
+<span id="cb18-10"><a href=""></a>    deaths[i] <span class="sc">~</span> <span class="fu">dpois</span>(mu[i])</span>
+<span id="cb18-11"><a href=""></a>    <span class="fu">log</span>(mu[i]) <span class="ot">&lt;-</span> <span class="fu">log</span>(E[i]) <span class="sc">+</span> alpha <span class="sc">+</span> beta <span class="sc">*</span> heat[i] <span class="sc">+</span></span>
+<span id="cb18-12"><a href=""></a>                    b[county[i]] <span class="sc">+</span> gamma[week[i]]</span>
+<span id="cb18-13"><a href=""></a>  }</span>
+<span id="cb18-14"><a href=""></a></span>
+<span id="cb18-15"><a href=""></a>  s[<span class="dv">1</span><span class="sc">:</span>M] <span class="sc">~</span> <span class="fu">dcar_normal</span>(adj[<span class="dv">1</span><span class="sc">:</span>L], w[<span class="dv">1</span><span class="sc">:</span>L], num[<span class="dv">1</span><span class="sc">:</span>M], <span class="dv">1</span>, <span class="at">zero_mean =</span> <span class="dv">1</span>)</span>
+<span id="cb18-16"><a href=""></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>M) {</span>
+<span id="cb18-17"><a href=""></a>    theta[j] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb18-18"><a href=""></a>    b[j] <span class="ot">&lt;-</span> (<span class="fu">sqrt</span>(<span class="dv">1</span> <span class="sc">-</span> phi) <span class="sc">*</span> theta[j] <span class="sc">+</span> <span class="fu">sqrt</span>(phi <span class="sc">/</span> scl) <span class="sc">*</span> s[j]) <span class="sc">/</span> <span class="fu">sqrt</span>(tau_b)</span>
+<span id="cb18-19"><a href=""></a>  }</span>
+<span id="cb18-20"><a href=""></a></span>
+<span id="cb18-21"><a href=""></a>  gamma[<span class="dv">1</span>] <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">10</span>)</span>
+<span id="cb18-22"><a href=""></a>  <span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span>Tw) {</span>
+<span id="cb18-23"><a href=""></a>    gamma[t] <span class="sc">~</span> <span class="fu">dnorm</span>(gamma[t <span class="sc">-</span> <span class="dv">1</span>], tau_g)</span>
+<span id="cb18-24"><a href=""></a>  }</span>
+<span id="cb18-25"><a href=""></a></span>
+<span id="cb18-26"><a href=""></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="the-more-or-less-same-model-in-r-inla" class="slide level2 smaller">
+<h2>The (more or less) same model in <code>R-INLA</code></h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href=""></a>formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> heat <span class="sc">+</span></span>
+<span id="cb19-2"><a href=""></a>  <span class="fu">f</span>(county, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> <span class="st">"counties.adj"</span>,</span>
+<span id="cb19-3"><a href=""></a>    <span class="at">scale.model =</span> <span class="cn">TRUE</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-4"><a href=""></a>    <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
+<span id="cb19-5"><a href=""></a>                 <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>)))) <span class="sc">+</span></span>
+<span id="cb19-6"><a href=""></a>  <span class="fu">f</span>(week, <span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-7"><a href=""></a>    <span class="at">hyper =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>))))</span>
+<span id="cb19-8"><a href=""></a></span>
+<span id="cb19-9"><a href=""></a>fit <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb19-10"><a href=""></a>  formula,</span>
+<span id="cb19-11"><a href=""></a>  <span class="at">family            =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb19-12"><a href=""></a>  <span class="at">data              =</span> data,</span>
+<span id="cb19-13"><a href=""></a>  <span class="at">E                 =</span> data<span class="sc">$</span>expected,</span>
+<span id="cb19-14"><a href=""></a>  <span class="at">control.compute   =</span> <span class="fu">list</span>(<span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb19-15"><a href=""></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">compute =</span> <span class="cn">TRUE</span>, <span class="at">link =</span> <span class="dv">1</span>)</span>
+<span id="cb19-16"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Twelve lines against twenty-five, and everything in the NIMBLE version below the priors has gone.</p>
 </section></section>
 <section>
 <section id="getting-ready-for-the-lab" class="title-slide slide level1 center">
@@ -1021,6 +1702,66 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <h1>Questions?</h1>
 
 </section>
+
+<section>
+<section id="appendix" class="title-slide slide level1 center">
+<h1>Appendix</h1>
+
+</section>
+<section id="question-1-the-field-hyperparameters-fixed" class="slide level2 smaller">
+<h2>Question 1: the field, hyperparameters fixed</h2>
+<p>The goal is a <strong>joint</strong> distribution over all 168,000 latent elements — with the three hyperparameters pinned at chosen values.</p>
+<svg viewbox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
+<defs><marker id="ahl" markerwidth="10" markerheight="8" refx="9" refy="4" orient="auto">
+<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+
+<rect x="40" y="90" width="210" height="70" rx="8" fill="#2980b9" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="145" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the GMRF prior</text>
+<text x="145" y="142" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">acts on all 168,000</text>
+
+<rect x="40" y="180" width="210" height="46" rx="8" fill="#16a085" fill-opacity="0.16" stroke="currentColor" stroke-opacity="0.45"></rect>
+<text x="145" y="208" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the 161,616 rows of data</text>
+
+<path d="M258,120 H340" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
+<path d="M258,200 H320 C335,200 340,180 340,150" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
+
+<rect x="355" y="90" width="220" height="70" rx="8" fill="none" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.2"></rect>
+<text x="465" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">exactly Gaussian,</text>
+<text x="465" y="142" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">then adjusted row by row</text>
+
+<path d="M583,125 H665" stroke="currentColor" stroke-width="1.5" opacity="0.55" fill="none" marker-end="url(#ahl)"></path>
+
+<rect x="680" y="90" width="200" height="70" rx="8" fill="#c0392b" fill-opacity="0.12" stroke="#c0392b" stroke-opacity="0.6" stroke-width="1.2"></rect>
+<text x="780" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">approximately Gaussian</text>
+<text x="780" y="142" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">still mostly blanks</text>
+
+<text x="355" y="42" font-size="15" fill="currentColor" opacity="0.75">the latent field once the three</text>
+<text x="355" y="62" font-size="15" fill="currentColor" opacity="0.75">hyperparameters are held fixed</text>
+</svg>
+<p>Hold the three hyperparameters fixed and ask what the latent field looks like. Two things act on it, and they act very differently:</p>
+<ul>
+<li>The <strong>prior</strong> is Gaussian, exactly, and it acts on all 168,000 elements at once.</li>
+<li>Each <strong>row of data</strong> acts too, but on one element only, and weakly.</li>
+</ul>
+</section>
+<section id="question-1-answered" class="slide level2 smaller">
+<h2>Question 1, answered</h2>
+<p>With the three hyperparameters pinned at chosen values, the latent field is handled <strong>deterministically</strong> — no sampling anywhere:</p>
+<ul>
+<li>Climb to the mode of the field’s conditional posterior. A few sparse factorisations, each cheap because <span class="math inline">\(\boldsymbol{Q}^{*}\)</span> is mostly blank.</li>
+<li>Take the curvature there. That gives a <strong>joint Gaussian approximation to all 168,000 elements at once</strong> — a mean vector and a sparse <span class="math inline">\(\boldsymbol{Q}^{*}\)</span>.</li>
+</ul>
+<p>Two ingredients were needed, and both were needed: the <strong>GMRF</strong> made every factorisation cheap, and the <strong>Laplace approximation</strong> made the Gaussian a good fit.</p>
+<div class="fragment">
+<p><span style="color:#c0392b">But we pinned the hyperparameters, and we do not know them. Stopping here — <code>int.strategy = "eb"</code> — gives intervals that come out slightly too narrow.</span></p>
+</div>
+</section>
+<section id="question-2-averaging-over-hyperparameter-combinations" class="slide level2 smaller">
+<h2>Question 2: averaging over hyperparameter combinations</h2>
+<p>Step 1 uses <code>int.strategy</code>: <code>grid</code> evaluates every combination and is accurate but limited to two or three hyperparameters; <code>ccd</code> places a small designed scatter and is the default beyond that; <code>eb</code> keeps the mode alone, which is fast but sets aside uncertainty in <span class="math inline">\(\boldsymbol{\theta}\)</span>.</p>
+<p>Step 3 is the same idea as multiple imputation: solve a tractable problem several times and combine, so that uncertainty carried in step 1 reaches the final answer. Step 2, however, was stated loosely — there is a choice inside it.</p>
+
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <p><img src="assets/bmeh_normal.png" class="slide-logo"></p>

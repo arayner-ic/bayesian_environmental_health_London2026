@@ -6,8 +6,8 @@
 <script src="scaling_models_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="scaling_models_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="scaling_models_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="scaling_models_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+<link href="scaling_models_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.25">
 
   <meta name="author" content="Robbie M. Parks">
   <title>Scaling Bayesian models</title>
@@ -1036,6 +1036,80 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <section id="making-inla-run-faster" class="title-slide slide level1 center">
 <h1>Making <code>INLA</code> run faster</h1>
 
+</section>
+<section id="making-a-slow-fit-faster" class="slide level2 smaller">
+<h2>Making a slow fit faster</h2>
+<p>In rough order of how much they usually buy you:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Lever</th>
+<th>Code</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Develop with cheap options, switch back for the final run</td>
+<td><code>control.inla = list(strategy = "gaussian", int.strategy = "eb")</code></td>
+</tr>
+<tr class="even">
+<td>Use empirical Bayes — modal <span class="math inline">\(\boldsymbol{\theta}\)</span> only, one configuration</td>
+<td><code>int.strategy = "eb"</code></td>
+</tr>
+<tr class="odd">
+<td>Warm-start from a previous fit’s hyperparameters</td>
+<td><code>control.mode = list(theta = fit$mode$theta, restart = FALSE)</code></td>
+</tr>
+<tr class="even">
+<td>Install the PARDISO solver (free academic licence)</td>
+<td><code>inla.pardiso()</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="making-a-slow-fit-faster-1" class="slide level2 smaller">
+<h2>Making a slow fit faster</h2>
+<p>In rough order of how much they usually buy you:</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Lever</th>
+<th>Code</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Set threads: outer over configurations, inner within factorisation</td>
+<td><code>num.threads = "4:2"</code></td>
+</tr>
+<tr class="even">
+<td>Coarsen the mesh — always check <code>mesh$n</code> before fitting</td>
+<td><code>max.edge</code>, <code>cutoff</code></td>
+</tr>
+<tr class="odd">
+<td>Turn off diagnostics you are not reading</td>
+<td><code>control.compute = list(dic = FALSE, waic = FALSE, cpo = FALSE)</code></td>
+</tr>
+<tr class="even">
+<td>Store the full configuration <strong>only</strong> when you need posterior sampling</td>
+<td><code>config = TRUE</code></td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>Two habits worth forming: <strong>scale your covariates</strong>, because a badly conditioned latent field makes the <span class="math inline">\(\boldsymbol{\theta}\)</span> optimisation wander; and <strong>use PC priors</strong>, which keep the hyperparameters on a sensible scale and tend to make the mode easier to find.</p>
+<!-- . . . -->
+<!-- [If none of this helps, the model is probably not a good LGM. Check -->
+<!-- $\dim(\boldsymbol{\theta})$ first.]{style="color:#c0392b"} -->
+</div>
 </section>
 <section id="approximation-settings" class="slide level2">
 <h2>Approximation settings</h2>

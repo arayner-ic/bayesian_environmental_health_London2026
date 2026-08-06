@@ -153,7 +153,16 @@ Garyfallos Konstantinoudis
 </section>
 <section id="outline" class="slide level2">
 <h2>Outline</h2>
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD - What is a prior? - Different types of priors - Examples ======= - The purpose of priors - Different kinds of priors and their applications - Conjugate priors - Jeffreys priors - Informative priors - Hyperpriors and variance priors &gt;&gt;&gt;&gt;&gt;&gt;&gt; bddf9919e2ce2d06d9de71fef17eafd53458d356</p>
+<ul>
+<li class="fragment">The purpose of priors</li>
+<li class="fragment">Different kinds of priors and their applications
+<ul>
+<li class="fragment">Conjugate priors</li>
+<li class="fragment">Jeffreys priors</li>
+<li class="fragment">Informative priors</li>
+</ul></li>
+<li class="fragment">Hyperpriors and variance priors</li>
+</ul>
 </section>
 <section id="a-motivating-question" class="slide level2">
 <h2>A motivating question</h2>
@@ -906,80 +915,42 @@ b_i \sim N(0,\sigma_b^2)
       });
     </script>
     
-
     <script>
-
       // htmlwidgets need to know to resize themselves when slides are shown/hidden.
-
       // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
-
       // slide changes (different for each slide format).
-
       (function () {
-
         // dispatch for htmlwidgets
-
         function fireSlideEnter() {
-
           const event = window.document.createEvent("Event");
-
           event.initEvent("slideenter", true, true);
-
           window.document.dispatchEvent(event);
-
         }
-
-    
 
         function fireSlideChanged(previousSlide, currentSlide) {
-
           fireSlideEnter();
 
-    
-
           // dispatch for shiny
-
           if (window.jQuery) {
-
             if (previousSlide) {
-
               window.jQuery(previousSlide).trigger("hidden");
-
             }
-
             if (currentSlide) {
-
               window.jQuery(currentSlide).trigger("shown");
-
             }
-
           }
-
         }
-
-    
 
         // hookup for slidy
-
         if (window.w3c_slidy) {
-
           window.w3c_slidy.add_observer(function (slide_num) {
-
             // slide_num starts at position 1
-
             fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
-
           });
-
         }
 
-    
-
       })();
-
     </script>
-
-    
 
     <script id="quarto-html-after-body" type="application/javascript">
       window.document.addEventListener("DOMContentLoaded", function (event) {
