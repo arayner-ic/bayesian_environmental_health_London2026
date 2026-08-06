@@ -541,7 +541,7 @@ the three hyperparameters pinned at chosen values.
 Hold the three hyperparameters fixed and ask what the latent field looks
 like. Two things act on it, and they act very differently:
 
-::: {.nonincremental}
+::: {.nonincremental style="font-size: 0.8em;"} 
 -   The **prior** is Gaussian, exactly, and it acts on all 168,000 elements
     at once.
 -   Each **row of data** acts too, but on one element only, and weakly.
