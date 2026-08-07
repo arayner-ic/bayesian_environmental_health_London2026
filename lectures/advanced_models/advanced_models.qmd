@@ -541,6 +541,16 @@ $$
 ## Results in time
 ![](Figures/Fig3.png){fig-align="center"}
 
+## A final (I promise) example
+![](Figures/rr_country_sensitivity_interaction.png){fig-align="center"}
+
+## A final (I promise) example
+![](Figures/Panel_main.png){fig-align="center"}
+
+## A final (I promise) example
+![](Figures/ERH_dens_cat.png){fig-align="center"}
+
+
 ## Summary
 
 -   Introduction to distributed linear (and non-linear) lag models
