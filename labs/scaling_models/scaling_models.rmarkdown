@@ -1,0 +1,835 @@
+---
+title: "Scaling Bayesian models"
+subtitle: "SHARP Bayesian Modeling for Environmental Health Workshop"
+author: "Robbie M. Parks"
+date: "August 07 2026"
+format: html
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(here)
+library(tidyverse)
+library(INLA)
+library(sf)
+library(spdep)
+library(hrbrthemes)
+library(colorspace)
+library(patchwork)
+
+extrafont::loadfonts()
+theme_set(theme_ipsum())
+
+set.seed(2)
+```
+
+## Goal of this computing lab session
+
+The goal of this lab is to build an annual space–time model for Italy, fit each of the space–time interaction types in turn, and then deal with the practical side of running models at scale.
+
+## What's going to happen in this lab session?
+
+During this lab session, we will:
+
+1. Build an annual space–time model one `f()` term at a time;
+2. Fit all four interaction types and compare them;
+3. Fit the restricted linear-slope alternative;
+4. Make the fits cheaper using `INLA`'s approximation settings; and
+5. Turn the model into a script a cluster could run.
+
+## Introduction
+
+In the `INLA` lab we fitted pooling models to September 2018 only.
+Everything ran in seconds, so we could concentrate on the modelling.
+
+Here we keep several years, and add the space–time interaction from the spatiotemporal session.
+The methods do not change; what changes is what each choice costs.
+
+::: aside
+Nothing here needs a cluster account.
+Everything runs on your laptop, but the scripts are written so that they would work on a cluster with minimal edits.
+:::
+
+## Exploratory data analysis
+
+Let's load in the data, keeping every year but aggregating the months away.
+```{r}
+data_all <- read_rds(here("data", "italy", "italy_mortality.rds")) |>
+  group_by(SIGLA, year) |>
+  summarise(deaths   = sum(deaths),
+            expected = sum(expected), .groups = "drop") |>
+  arrange(SIGLA, year)
+
+glimpse(data_all)
+```
+
+Aggregating a dimension we do not need is the cheapest scaling decision available.
+It removed 11 of every 12 rows before we made a single modelling choice.
+
+::: aside
+If seasonality were the research question we would keep months.
+Here the question is about provinces and their trends over years.
+:::
+
+Now the important knob for this lab.
+The interaction models below all have one parameter per province per year, so the number of years we keep decides how long everything takes.
+```{r}
+n_years <- 5   # <- reduce to 3 if the fits are slow, raise to fit more
+```
+
+Let's keep only the most recent `n_years` years, and see what that implies.
+```{r}
+keep_years <- sort(unique(data_all$year)) |> tail(n_years)
+
+data <- data_all |> filter(year %in% keep_years)
+
+tibble(
+  years      = n_years,
+  provinces  = n_distinct(data$SIGLA),
+  rows       = nrow(data),
+  interaction_parameters = n_distinct(data$SIGLA) * n_years
+)
+```
+
+::: aside
+Start with `n_years <- 5`.
+Everything in this lab then fits in well under a minute per model on a laptop.
+Once it all runs, come back and raise it — the point of the exercise is to watch that last column, and the runtimes, grow together.
+:::
+
+Let's look at the crude SMR over time in a sample of provinces.
+```{r}
+data |>
+  filter(SIGLA %in% sample(unique(SIGLA), 12)) |>
+  ggplot(aes(x = year, y = deaths / expected)) +
+  geom_hline(yintercept = 1, linetype = 2, linewidth = 0.2) +
+  geom_line(colour = "darkcyan") +
+  facet_wrap(~SIGLA) +
+  labs(y = "Crude SMR")
+```
+
+Some provinces drift upwards, some downwards.
+A model with only a national trend cannot describe that.
+
+Let's load the shapefile and build the adjacency graph, as in the `INLA` lab.
+```{r}
+shp_italy <- read_rds(here("data", "italy", "italy_shp.rds")) |> arrange(SIGLA)
+
+nb <- poly2nb(shp_italy)
+nb2INLA(here("data", "italy", "italy.adj"), nb)
+g <- inla.read.graph(here("data", "italy", "italy.adj"))
+
+summary(nb)
+```
+
+`INLA` needs a separate index column for every `f()` term, even when several terms index the same thing.
+Note that the indices are built *after* filtering, so that `id_year` runs from 1 to `n_years` with no gaps.
+```{r}
+data <- data |>
+  mutate(
+    id_space     = as.integer(factor(SIGLA)),        # BYM2 baseline
+    id_year      = as.integer(factor(year)),         # RW2 trend
+    id_space_int = id_space,                         # interaction: space
+    id_year_int  = id_year,                          # interaction: time
+    id_cell      = row_number(),                     # interaction: one per cell
+    id_year_c    = id_year - mean(unique(id_year))   # centred year, for slopes
+  )
+
+Np <- max(data$id_space)
+Nt <- max(data$id_year)
+c(Np = Np, Nt = Nt, cells = Np * Nt)
+```
+
+Keep those numbers in mind.
+Every one of the four interaction types will have exactly $N_p \times N_t$ latent values.
+
+## The model
+
+Likelihood
+$$
+\begin{split}
+y_{jt} &\sim \text{Pois}(E_{jt} \mu_{jt}) \\
+\log(\mu_{jt}) &= \alpha + b_j + \gamma_t + \nu_{jt}
+\end{split}
+$$
+
+where $b_j$ is the BYM2 spatial baseline, $\gamma_t$ is a smooth RW2 trend across years, and $\nu_{jt}$ is the space–time interaction.
+We will specify $\nu_{jt}$ five different ways.
+
+::: aside
+Because the expected counts go in through `E =`, the linear predictor is the log *relative risk* directly.
+`exp()` of it is the SMR, with no offset to subtract.
+:::
+
+The priors are shared across every fit below.
+```{r}
+hyper_pc  <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)))
+hyper_int <- list(prec = list(prior = "pc.prec", param = c(0.5, 0.01)))
+
+hyper_bym2 <- list(
+  prec = list(prior = "pc.prec", param = c(1, 0.01)),
+  phi  = list(prior = "pc",      param = c(0.5, 0.5))
+)
+```
+
+To keep the fits comparable, let's wrap the `inla()` call so that only the formula changes.
+```{r}
+fit_model <- function(formula, ...) {
+  inla(
+    formula,
+    family = "poisson",
+    E      = expected,
+    data   = data,
+    control.fixed     = list(mean.intercept = 0, prec.intercept = 0.04),
+    control.predictor = list(compute = TRUE),
+    control.compute   = list(dic = TRUE, waic = TRUE, config = TRUE),
+    ...
+  )
+}
+```
+
+## Spatial baseline
+
+The starting point is the BYM2 model from the `INLA` lab, now running over every province–year.
+```{r}
+formula_1 <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2)
+
+t_1 <- system.time(m_1 <- fit_model(formula_1))
+t_1
+```
+
+```{r}
+m_1$summary.hyperpar
+```
+
+With only this term, the fitted SMR for a province is identical in every year.
+Let's map the first and last year to see that.
+```{r}
+smr_by_year <- function(m, yrs = range(data$year)) {
+  data |>
+    mutate(smr = exp(m$summary.linear.predictor$mean)) |>
+    filter(year %in% yrs) |>
+    left_join(shp_italy, by = "SIGLA") |>
+    st_as_sf() |>
+    ggplot(aes(fill = smr)) +
+    geom_sf(colour = NA) +
+    facet_wrap(~year) +
+    scale_fill_continuous_sequential(palette = "Reds", name = "SMR") +
+    theme_void()
+}
+
+smr_by_year(m_1)
+```
+
+Two identical maps, eh?
+
+## Common trend
+
+Now add a smooth trend across years, shared by every province.
+```{r}
+formula_2 <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc)
+
+t_2 <- system.time(m_2 <- fit_model(formula_2))
+t_2
+```
+
+Let's plot the national trend.
+```{r}
+m_2$summary.random$id_year |>
+  ggplot(aes(x = ID, y = mean)) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_ribbon(aes(ymin = `0.025quant`, ymax = `0.975quant`), alpha = 0.2) +
+  geom_line(colour = "darkcyan", linewidth = 1) +
+  labs(x = "Year index", y = expression(gamma[t]))
+```
+
+::: aside
+With only a handful of years, a RW2 has very little to work with and the trend will be close to a straight line.
+That is the model behaving correctly, not a mistake.
+Raising `n_years` gives it something to bend around.
+:::
+
+The maps now change from year to year.
+But every province rises and falls in exactly the same way, shifted by its own baseline.
+This is the separable model, and the rest of the lab relaxes it.
+
+## Type I interaction
+
+Priors
+$$
+\nu_{jt} \sim N(0, \sigma^2_\nu) \quad j = 1,..., N_p, \ t = 1,..., N_t
+$$
+
+Pure province–year noise, with no spatial or temporal structure.
+```{r}
+formula_I <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc) +
+  f(id_cell,  model = "iid", hyper = hyper_int)
+
+t_I <- system.time(m_I <- fit_model(formula_I))
+t_I
+```
+
+## Type II interaction
+
+$$
+\boldsymbol{\nu}_{j\cdot} \sim \text{RW1} \quad \text{independently for each } j
+$$
+
+Each province gets its own smooth trend, unrelated across the map.
+This is the `group =` construction: IID over provinces, RW1 across the grouped years.
+```{r}
+formula_II <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc) +
+  f(id_space_int, model = "iid", hyper = hyper_int,
+    group = id_year_int,
+    control.group = list(model = "rw1", scale.model = TRUE))
+
+t_II <- system.time(m_II <- fit_model(formula_II))
+t_II
+```
+
+## Type III interaction
+
+$$
+\boldsymbol{\nu}_{\cdot t} \sim \text{ICAR}(W) \quad \text{independently for each } t
+$$
+
+Each year gets its own spatial pattern, unrelated to the year before or after.
+The same construction with the roles swapped.
+```{r}
+formula_III <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc) +
+  f(id_space_int, model = "besag", graph = g,
+    scale.model = TRUE, hyper = hyper_int,
+    group = id_year_int,
+    control.group = list(model = "iid"))
+
+t_III <- system.time(m_III <- fit_model(formula_III))
+t_III
+```
+
+## Type IV interaction
+
+$$
+\boldsymbol{\nu} \sim \text{ICAR}(W) \otimes \text{RW1}
+$$
+
+Smooth in both dimensions at once: a province's departure resembles its neighbours' and its own value last year.
+```{r}
+formula_IV <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc) +
+  f(id_space_int, model = "besag", graph = g,
+    scale.model = TRUE, hyper = hyper_int,
+    group = id_year_int,
+    control.group = list(model = "rw1", scale.model = TRUE))
+
+t_IV <- system.time(m_IV <- fit_model(formula_IV))
+t_IV
+```
+
+::: aside
+Strictly, type IV needs extra sum-to-zero constraints to be fully identifiable alongside the main effects: one per province and one per year, supplied through `extraconstr`.
+Without them the interaction is partly confounded with the spatial and temporal main effects, so the split between them is not unique.
+Plenty of published type IV models are fitted exactly as above.
+It matters if you want to interpret the main effects separately; it matters much less for the fitted values, or for the comparison we are making here.
+:::
+
+## Comparing the interaction types
+
+```{r}
+comparison <- tibble(
+  model   = c("No interaction", "Type I", "Type II", "Type III", "Type IV"),
+  elapsed = c(t_2["elapsed"], t_I["elapsed"], t_II["elapsed"],
+              t_III["elapsed"], t_IV["elapsed"]),
+  dic     = map_dbl(list(m_2, m_I, m_II, m_III, m_IV), ~ .x$dic$dic),
+  waic    = map_dbl(list(m_2, m_I, m_II, m_III, m_IV), ~ .x$waic$waic),
+  p_eff   = map_dbl(list(m_2, m_I, m_II, m_III, m_IV), ~ .x$waic$p.eff)
+)
+
+comparison
+```
+
+Every interaction model has the same number of latent values, `r Np * Nt` of them.
+The differences in `p_eff` show how much each structure shrinks that back down, and the runtimes show what each structure costs.
+
+To map the interaction we need to line the random effects up with the data.
+For a grouped term the effects run province-fastest within each year, which is not the order our data is sorted in, so let's join on the indices rather than trusting position.
+```{r}
+add_nu <- function(m, term, grouped = TRUE) {
+  re <- m$summary.random[[term]]
+  if (grouped) {
+    key <- expand_grid(id_year_int = 1:Nt, id_space_int = 1:Np) |>
+      mutate(nu = re$mean[1:(Np * Nt)])
+    data |> left_join(key, by = c("id_space_int", "id_year_int"))
+  } else {
+    data |> mutate(nu = re$mean[id_cell])
+  }
+}
+
+int_maps <- function(m, term, label, grouped = TRUE) {
+  add_nu(m, term, grouped) |>
+    left_join(shp_italy, by = "SIGLA") |>
+    st_as_sf() |>
+    ggplot(aes(fill = nu)) +
+    geom_sf(colour = NA) +
+    facet_wrap(~year) +
+    scale_fill_continuous_diverging(palette = "Blue-Red 3",
+                                    name = expression(nu[jt])) +
+    labs(title = label) +
+    theme_void()
+}
+```
+
+```{r}
+int_maps(m_I,   "id_cell",      "Type I",   grouped = FALSE)
+int_maps(m_III, "id_space_int", "Type III")
+int_maps(m_IV,  "id_space_int", "Type IV")
+```
+
+Type I should look like noise.
+Type III should look smooth within each panel but unrelated between panels.
+Type IV should look smooth within panels and similar from one panel to the next.
+
+## Linear slopes
+
+All four types cost $N_p \times N_t$ latent values.
+The alternative gives each province a single linear departure from the common trend, with the slopes smoothed spatially.
+
+$$
+\nu_{jt} = \nu_j \cdot c_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W)
+$$
+
+The second argument to `f()` is a weight, so each province gets one coefficient on centred year.
+```{r}
+formula_slopes <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc) +
+  f(id_space_int, id_year_c, model = "besag", graph = g,
+    scale.model = TRUE, hyper = hyper_int)
+
+t_slopes <- system.time(m_slopes <- fit_model(formula_slopes))
+```
+
+```{r}
+tibble(
+  model   = c("Type IV", "Linear slopes"),
+  latent  = c(Np * Nt, Np),
+  elapsed = c(t_IV["elapsed"], t_slopes["elapsed"]),
+  dic     = c(m_IV$dic$dic, m_slopes$dic$dic),
+  waic    = c(m_IV$waic$waic, m_slopes$waic$waic)
+)
+```
+
+At 107 provinces and `r Nt` years the saving is real but not dramatic.
+The point of the exercise is what happens to that `latent` column at 3,100 counties and twenty years.
+
+Let's map the slopes: who is improving faster or slower than the country as a whole.
+```{r}
+shp_italy |>
+  mutate(slope = m_slopes$summary.random$id_space_int$mean) |>
+  ggplot(aes(fill = slope)) +
+  geom_sf(colour = NA) +
+  scale_fill_continuous_diverging(palette = "Blue-Red 3",
+                                  name = expression(nu[j])) +
+  theme_void()
+```
+
+And what the restriction assumes: the common trend, plus a straight line for each province.
+```{r}
+nat <- m_slopes$summary.random$id_year |> select(ID, gamma = mean)
+nu  <- m_slopes$summary.random$id_space_int$mean
+
+expand_grid(id_space = 1:Np, ID = 1:Nt) |>
+  left_join(nat, by = "ID") |>
+  mutate(y = gamma + nu[id_space] * (ID - mean(1:Nt))) |>
+  ggplot() +
+  geom_line(aes(x = ID, y = y, group = id_space),
+            colour = "grey70", linewidth = 0.3) +
+  geom_line(data = nat, aes(x = ID, y = gamma),
+            colour = "darkcyan", linewidth = 1.4) +
+  labs(x = "Year index", y = "Log relative risk")
+```
+
+From here on we use this as the working model.
+```{r}
+model_formula <- formula_slopes
+```
+
+## Computing only what we need
+
+Every quantity in `control.compute` costs time and memory.
+Let's fit the same model twice, once asking for everything and once for nothing.
+```{r}
+t_naive <- system.time(
+  m_naive <- inla(
+    model_formula,
+    family = "poisson",
+    E      = expected,
+    data   = data,
+    control.fixed     = list(mean.intercept = 0, prec.intercept = 0.04),
+    control.predictor = list(compute = TRUE),
+    control.compute   = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE)
+  )
+)
+
+t_lean <- system.time(
+  m_lean <- inla(
+    model_formula,
+    family = "poisson",
+    E      = expected,
+    data   = data,
+    control.fixed     = list(mean.intercept = 0, prec.intercept = 0.04),
+    control.predictor = list(compute = FALSE),
+    control.compute   = list(dic = FALSE, waic = FALSE, cpo = FALSE,
+                             config = FALSE, return.marginals = FALSE)
+  )
+)
+
+tibble(
+  fit     = c("everything", "nothing"),
+  elapsed = c(t_naive["elapsed"], t_lean["elapsed"]),
+  size_mb = c(as.numeric(object.size(m_naive)) / 1e6,
+              as.numeric(object.size(m_lean))  / 1e6)
+)
+```
+
+Same posterior for the hyperparameters, a fraction of the cost and of the size.
+The discipline is to ask, for each fit: what will I actually use from this one?
+
+```{r}
+bind_rows(
+  m_naive$summary.hyperpar |> rownames_to_column("par") |> mutate(fit = "everything"),
+  m_lean$summary.hyperpar  |> rownames_to_column("par") |> mutate(fit = "nothing")
+) |>
+  select(fit, par, mean, sd)
+```
+
+## The rough/full workflow
+
+The expensive part of a large fit is the optimisation over the hyperparameters.
+The location of the mode barely depends on how accurate the latent-field approximation is, so we can find it cheaply first.
+
+Stage 1 uses the Gaussian approximation and empirical Bayes, and computes nothing.
+```{r}
+t_rough <- system.time(
+  fit_rough <- inla(
+    model_formula,
+    family = "poisson",
+    E      = expected,
+    data   = data,
+    control.fixed     = list(mean.intercept = 0, prec.intercept = 0.04),
+    control.predictor = list(compute = FALSE),
+    control.inla      = list(strategy = "gaussian", int.strategy = "eb"),
+    control.compute   = list(dic = FALSE, config = FALSE)
+  )
+)
+
+fit_rough$mode$theta
+```
+
+Stage 2 warm-starts from that mode via `control.mode`, and only now pays for accuracy.
+```{r}
+t_full <- system.time(
+  fit <- inla(
+    model_formula,
+    family = "poisson",
+    E      = expected,
+    data   = data,
+    control.fixed     = list(mean.intercept = 0, prec.intercept = 0.04),
+    control.predictor = list(compute = TRUE),
+    control.mode      = list(theta = fit_rough$mode$theta, restart = TRUE),
+    control.inla      = list(strategy = "simplified.laplace", int.strategy = "auto"),
+    control.compute   = list(dic = TRUE, config = TRUE)
+  )
+)
+
+tibble(
+  workflow = c("one stage", "rough", "full", "rough + full"),
+  elapsed  = c(t_naive["elapsed"], t_rough["elapsed"], t_full["elapsed"],
+               t_rough["elapsed"] + t_full["elapsed"])
+)
+```
+
+On a model this small the staging may not win, because the fixed overhead of a second `inla()` call is a large share of the total.
+The gap opens up as models grow, which is why the national model uses it.
+
+::: aside
+This is worth seeing rather than being told.
+Raise `n_years`, re-run, and watch the two-stage total pull ahead of the one-stage fit.
+:::
+
+## Sampling from the posterior
+
+For quantities beyond what `summary.*` gives us, we need draws from the joint posterior.
+This is what `config = TRUE` was for.
+```{r}
+samples <- inla.posterior.sample(1000, fit)
+
+lrr_draws <- inla.posterior.sample.eval(function(...) Predictor, samples)
+
+dim(lrr_draws)
+```
+
+Each row is one province–year, each column one draw of the log relative risk.
+Let's summarise them into the tidy table we need downstream.
+```{r}
+smr_summary <- data |>
+  select(SIGLA, id_space, year) |>
+  mutate(
+    smr_med  = exp(apply(lrr_draws, 1, median)),
+    smr_lo   = exp(apply(lrr_draws, 1, quantile, 0.025)),
+    smr_hi   = exp(apply(lrr_draws, 1, quantile, 0.975)),
+    p_excess = apply(lrr_draws > 0, 1, mean)   # P(SMR > 1)
+  )
+
+head(smr_summary)
+```
+
+The last column is a probability statement no summary table could have given us.
+```{r}
+smr_summary |>
+  left_join(shp_italy, by = "SIGLA") |>
+  st_as_sf() |>
+  ggplot(aes(fill = p_excess)) +
+  geom_sf(colour = NA) +
+  facet_wrap(~year) +
+  scale_fill_continuous_sequential(palette = "Purples", limits = c(0, 1),
+                                   name = "P(SMR > 1)") +
+  theme_void()
+```
+
+## Saving summaries rather than fits
+
+```{r}
+# saveRDS(smr_summary, here("output", "smr_summary.rds"))
+
+tibble(
+  object = c("fitted object", "summary table"),
+  size   = c(format(object.size(fit), units = "MB"),
+             format(object.size(smr_summary), units = "MB"))
+)
+```
+
+For a national-scale model the fitted object runs to tens of gigabytes.
+The summary table, the posterior draws of anything we report, and a record of the formula and priors are what to keep.
+
+## From interactive session to script
+
+On a cluster there is no "Run current chunk".
+The model has to be a standalone script that loads what it needs, fits, saves and exits.
+```{r}
+#| eval: false
+# fit_spacetime.R
+library(here); library(tidyverse); library(INLA); library(sf); library(spdep)
+
+n_years <- 5
+
+data <- read_rds(here("data", "italy", "italy_mortality.rds")) |>
+  group_by(SIGLA, year) |>
+  summarise(deaths = sum(deaths), expected = sum(expected), .groups = "drop") |>
+  arrange(SIGLA, year) |>
+  filter(year %in% tail(sort(unique(year)), n_years)) |>
+  mutate(id_space     = as.integer(factor(SIGLA)),
+         id_year      = as.integer(factor(year)),
+         id_space_int = id_space,
+         id_year_int  = id_year,
+         id_cell      = row_number(),
+         id_year_c    = id_year - mean(unique(id_year)))
+
+g <- inla.read.graph(here("data", "italy", "italy.adj"))
+
+hyper_pc   <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)))
+hyper_int  <- list(prec = list(prior = "pc.prec", param = c(0.5, 0.01)))
+hyper_bym2 <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)),
+                   phi  = list(prior = "pc",      param = c(0.5, 0.5)))
+
+model_formula <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_pc) +
+  f(id_space_int, id_year_c, model = "besag", graph = g,
+    scale.model = TRUE, hyper = hyper_int)
+
+fit_rough <- inla(
+  model_formula, family = "poisson", E = expected, data = data,
+  control.fixed     = list(mean.intercept = 0, prec.intercept = 0.04),
+  control.predictor = list(compute = FALSE),
+  control.inla      = list(strategy = "gaussian", int.strategy = "eb"),
+  control.compute   = list(dic = FALSE, config = FALSE)
+)
+
+message("Rough done. Mode: ",
+        paste(round(fit_rough$mode$theta, 3), collapse = ", "))
+
+fit <- inla(
+  model_formula, family = "poisson", E = expected, data = data,
+  control.fixed     = list(mean.intercept = 0, prec.intercept = 0.04),
+  control.predictor = list(compute = TRUE),
+  control.mode      = list(theta = fit_rough$mode$theta, restart = TRUE),
+  control.inla      = list(strategy = "simplified.laplace", int.strategy = "auto"),
+  control.compute   = list(dic = TRUE, config = TRUE)
+)
+
+message("Full done.")
+
+# saveRDS(fit, here("output", paste0("fit_spacetime_", Sys.Date(), ".rds")))
+```
+
+This is exactly the code we ran above, in order, with `message()` markers between the stages.
+Those markers end up in the job's log file, so when a job dies we know which stage died.
+
+::: aside
+Note there is no `setwd()` and no absolute paths.
+Using `here()` means the script runs identically on a laptop and on a cluster.
+:::
+
+## The sbatch script
+
+The scheduler needs a short shell script describing what to run and what resources it needs.
+```{bash}
+#| eval: false
+#!/bin/bash
+#SBATCH --job-name=italy-spacetime
+#SBATCH --partition=short
+#SBATCH --time=02:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=16G
+#SBATCH --output=output/%x-%j.out
+#SBATCH --error=output/%x-%j.err
+
+set -euo pipefail
+
+module purge
+
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
+cd ~/repos/italy-spacetime
+
+apptainer exec --cleanenv \
+  --bind "$PWD":"$PWD" \
+  --pwd "$PWD" \
+  ~/r_spatial.sif \
+  Rscript fit_spacetime.R
+```
+
+Submission is then one line: `sbatch run_fit_spacetime.sbatch`.
+
+`--time` and `--mem` are a contract with the scheduler.
+Exceed either and the job is killed; request far too much and we wait much longer in the queue.
+A sensible approach is to run once at modest scale, check what was used with `seff <jobid>`, then request somewhat above that.
+
+The `apptainer exec` line runs the script inside a container: a single `.sif` file holding a frozen operating system, R, `INLA` and every dependency.
+That file is the computational environment, and archiving it with the paper means the analysis reruns identically in five years.
+
+::: aside
+For national-scale models the requests are much larger.
+Real jobs ask for things like `--mem=700G` on a high-memory node, with a 12-hour wall time.
+The structure of the script is identical; only the numbers change.
+:::
+
+## Job arrays
+
+We fitted the five interaction specifications one after another above.
+They share no state, so they can all run at once as a job array.
+
+Let's parameterise the script by a task ID.
+```{r}
+#| eval: false
+# fit_interaction.R
+task  <- as.integer(commandArgs(trailingOnly = TRUE)[1])
+label <- c("typeI", "typeII", "typeIII", "typeIV", "slopes")[task]
+message("Task ", task, ": interaction = ", label)
+
+# ... data, graph and priors exactly as in fit_spacetime.R ...
+
+base <- deaths ~ 1 +
+  f(id_space, model = "bym2", graph = g, scale.model = TRUE, hyper = hyper_bym2) +
+  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE, hyper = hyper_pc)
+
+model_formula <- switch(
+  label,
+  typeI   = update(base, ~ . + f(id_cell, model = "iid", hyper = hyper_int)),
+  typeII  = update(base, ~ . + f(id_space_int, model = "iid", hyper = hyper_int,
+                                 group = id_year_int,
+                                 control.group = list(model = "rw1",
+                                                      scale.model = TRUE))),
+  typeIII = update(base, ~ . + f(id_space_int, model = "besag", graph = g,
+                                 scale.model = TRUE, hyper = hyper_int,
+                                 group = id_year_int,
+                                 control.group = list(model = "iid"))),
+  typeIV  = update(base, ~ . + f(id_space_int, model = "besag", graph = g,
+                                 scale.model = TRUE, hyper = hyper_int,
+                                 group = id_year_int,
+                                 control.group = list(model = "rw1",
+                                                      scale.model = TRUE))),
+  slopes  = update(base, ~ . + f(id_space_int, id_year_c, model = "besag",
+                                 graph = g, scale.model = TRUE,
+                                 hyper = hyper_int))
+)
+
+# ... rough then full fit, exactly as in fit_spacetime.R ...
+
+message("Task ", task, ": done. DIC = ", round(fit$dic$dic, 1))
+
+# saveRDS(fit, here("output", paste0("fit_", label, "_", Sys.Date(), ".rds")))
+```
+
+The sbatch script then needs an `--array` line and the task ID passed through.
+```{bash}
+#| eval: false
+#SBATCH --array=1-5
+#SBATCH --output=output/%x-%A_%a.out
+#SBATCH --error=output/%x-%A_%a.err
+
+apptainer exec --cleanenv --bind "$PWD":"$PWD" --pwd "$PWD" \
+  ~/r_spatial.sif \
+  Rscript fit_interaction.R ${SLURM_ARRAY_TASK_ID}
+```
+
+One submission, five jobs running at the same time, five outputs.
+The log names use `%A_%a` so each task writes its own files.
+
+We can rehearse the pattern locally, no cluster required.
+```{bash}
+#| eval: false
+for i in 1 2 3 4 5; do Rscript fit_interaction.R $i; done
+```
+
+The same pattern covers models per sex, per cause of death, or per pollutant.
+In general, parallelise across models before parallelising within one.
+
+## Closing remarks
+
+In this lab session, we have built an annual space–time model for Italy one term at a time, and fitted every space–time interaction type in `INLA`.
+We then made the same model cheaper to fit, and packaged it as a script a cluster could run.
+
+At 107 provinces and a handful of years the choice between interaction types is a scientific one, because every one of them fits.
+The reason to know what each costs is that at 3,100 counties and twenty years the same choice becomes a computational one.
+
+::: aside
+If you have time, go back to the top, raise `n_years`, and re-run the whole document.
+Watch three things: the interaction parameter count, the runtimes of types II to IV, and whether the two-stage workflow starts to win.
+:::
+

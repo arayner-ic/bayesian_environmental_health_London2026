@@ -9,7 +9,7 @@
 <link href="scaling_models_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.8.25">
 
-  <meta name="author" content="Robbie M. Parks">
+  <meta name="author" content="Robbie M. Parks, Anna Y. Palmer">
   <title>Scaling Bayesian models</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -196,12 +196,12 @@
 
 <section id="title-slide" data-background-color="#f3f4f4" data-background-image="assets/bmeh_normal.png" data-background-position="60% 120%" data-background-size="80%" class="quarto-title-block center">
   <h1 class="title">Scaling Bayesian models</h1>
-  <p class="subtitle">Some considerations for larger model fits</p>
+  <p class="subtitle">Some considerations for larger and more complex model fits</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-Robbie M. Parks 
+Robbie M. Parks, Anna Y. Palmer 
 </div>
 <div class="quarto-title-author-email">
 <a href="mailto:robbie.parks@columbia.edu">robbie.parks@columbia.edu</a>
@@ -230,26 +230,16 @@ Robbie M. Parks
 <li>Both fitted on a Posit cloud, for 107 Italian provinces in previous sessions in this workshop</li>
 </ul>
 </section>
-<section id="this-session" class="slide level2">
+<section id="this-session" class="slide level2 smaller">
 <h2>This session</h2>
-<ul>
-<li>In this session we look at what changes when models and data get much bigger:
-<ul>
-<li>Optimizing models</li>
-<li>Running on more powerful computing systems</li>
-<li>Exploring model results interactively</li>
-</ul></li>
-</ul>
-</section>
-<section id="this-session-1" class="slide level2">
-<h2>This session</h2>
+<p>What changes when models and data get much bigger:</p>
 <ol type="1">
 <li>Building up an annual space–time model for Italy from the earlier sessions</li>
-<li>An example research model at full national scale in the US, and how each component builds on this workshop series</li>
+<li>An example research model at national scale in the US</li>
 <li>Specification choices that keep a large model tractable</li>
-<li><code>INLA</code> settings that can make large fits faster</li>
-<li>Scaling even further: what to do when that is not enough</li>
-<li>Outputs and exploration at scale</li>
+<li><code>INLA</code> settings that make large fits faster</li>
+<li>Scaling further: what to do when that is not enough</li>
+<li>Outputs at scale</li>
 <li>High-performance computing</li>
 </ol>
 </section>
@@ -260,16 +250,15 @@ Robbie M. Parks
 </section>
 <section id="from-the-earlier-labs-to-a-spacetime-model" class="slide level2">
 <h2>From the earlier labs to a space–time model</h2>
-<p>Before looking at anything at national scale, let’s build a full space–time model on data we already know: the Italian provinces.</p>
+<p>Before moving to national scale, we build a full space–time model on data we already know: the Italian provinces.</p>
 <ul>
-<li>Where the <code>INLA</code> lab left off: a BYM2 model for the provinces of Italy, for September 2018 only — 107 spatial units, one <code>f()</code> term, fitted in seconds</li>
-<li>Where we go now: <strong>all provinces, all years</strong> — an annual space–time model, built up one <code>f()</code> term at a time</li>
-<li>This is also the model you will build yourselves in this session’s lab</li>
+<li>Where the <code>INLA</code> lab left off: a BYM2 model for the provinces of Italy, for September 2018 only. 107 spatial units, one <code>f()</code> term, fitted in seconds.</li>
+<li>Where we go now: all provinces and all years, as an annual space–time model, built up one <code>f()</code> term at a time.</li>
 </ul>
 </section>
 <section id="building-the-italy-model-the-data" class="slide level2">
 <h2>Building the Italy model: the data</h2>
-<p>Step one is to stop throwing data away — but also to be deliberate about which dimensions we keep. Here we aggregate the months away and model <strong>annual</strong> counts per province:</p>
+<p>The first step is to keep more of the data, while being deliberate about which dimensions to keep. Here we aggregate over months and model annual counts per province:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>data <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"italy"</span>, <span class="st">"italy_mortality.rds"</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb1-2"><a href=""></a>  <span class="fu">group_by</span>(SIGLA, year) <span class="sc">|&gt;</span></span>
 <span id="cb1-3"><a href=""></a>  <span class="fu">summarise</span>(<span class="at">deaths   =</span> <span class="fu">sum</span>(deaths),</span>
@@ -289,8 +278,8 @@ Robbie M. Parks
 <span id="cb2-8"><a href=""></a>    <span class="at">id_year_c    =</span> id_year <span class="sc">-</span> <span class="fu">mean</span>(<span class="fu">unique</span>(id_year))  <span class="co"># centred year, for slopes</span></span>
 <span id="cb2-9"><a href=""></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
-<li>The adjacency graph <code>g</code> is rebuilt from the shapefile with <code>poly2nb()</code> and <code>nb2INLA()</code></li>
-<li><code>id_space_int</code> and <code>id_year_int</code> are duplicates</li>
+<li>The adjacency graph <code>g</code> is rebuilt from the shapefile with <code>poly2nb()</code> and <code>nb2INLA()</code>.</li>
+<li><code>id_space_int</code> and <code>id_year_int</code> are clones, because the same index cannot be reused across two <code>f()</code> terms.</li>
 </ul>
 </section>
 <section id="building-the-italy-model-in-symbols" class="slide level2">
@@ -302,9 +291,9 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 \end{split}
 \]</span></p>
 <ul>
-<li><span class="math inline">\(b_j\)</span>: BYM2 spatial baseline — 107 provinces (spatial session)</li>
+<li><span class="math inline">\(b_j\)</span>: BYM2 spatial baseline, 107 provinces (spatial session)</li>
 <li><span class="math inline">\(\gamma_t\)</span>: smooth trend across years, RW2 (non-linear session)</li>
-<li><span class="math inline">\({\nu_{jt}}\)</span>: the <strong>space–time interaction</strong> — how each province departs from the common trend</li>
+<li><span class="math inline">\({\nu_{jt}}\)</span>: the space–time interaction, or how each province departs from the common trend</li>
 </ul>
 </section>
 <section id="building-the-italy-model-baseline" class="slide level2">
@@ -320,9 +309,9 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <span id="cb3-8"><a href=""></a>formula_1 <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
 <span id="cb3-9"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb3-10"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>With only this term, every year gets the same map — the model cannot describe change over time at all.</p>
+<p>With only this term, every year gets the same map: the model cannot describe change over time.</p>
 </section>
-<section id="building-the-italy-model-the-common-trend" class="slide level2">
+<section id="building-the-italy-model-the-common-trend" class="slide level2 smaller">
 <h2>Building the Italy model: the common trend</h2>
 <p>Add the global temporal term: a smooth trend across years, shared by every province.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>formula_2 <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
@@ -331,31 +320,23 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <span id="cb4-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb4-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
-<li>RW2 gives a smooth, non-linear national trend — the smoothing idea from the non-linear regression session, as a random walk rather than a spline basis</li>
-<li><code>constr = TRUE</code> (sum-to-zero) keeps the trend identifiable alongside the intercept</li>
+<li>RW2 gives a smooth, non-linear national trend: the smoothing idea from the non-linear regression session, as a random walk rather than a spline basis.</li>
+<li><code>constr = TRUE</code> (sum-to-zero) keeps the trend identifiable alongside the intercept.</li>
+<li><code>scale.model = TRUE</code> rescales the structure (precision) matrix of an intrinsic GMRF so that its generalised variance is 1 (so you can use same pc prior, for example)</li>
+<li>Every province now rises and falls in the same way, so the maps for different years are identical up to a single common shift.</li>
 </ul>
 </section>
-<section id="building-the-italy-model-the-common-trend-1" class="slide level2">
-<h2>Building the Italy model: the common trend</h2>
-<p>Add the global temporal term: a smooth trend across years, shared by every province.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>formula_2 <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
-<span id="cb5-2"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb5-3"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
-<span id="cb5-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb5-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Now every province rises and falls <strong>in exactly the same way</strong>: the maps for different years are identical up to a single common shift.</p>
-</section>
-<section id="space-time-interaction" class="slide level2">
-<h2>Space-time interaction</h2>
-<p>The separable model says: province <span class="math inline">\(j\)</span> has its own level, year <span class="math inline">\(t\)</span> has its own level, and that is all.</p>
+<section id="spacetime-interaction" class="slide level2">
+<h2>Space–time interaction</h2>
+<p>In the separable model, province <span class="math inline">\(j\)</span> has its own level and year <span class="math inline">\(t\)</span> has its own level, and nothing more.</p>
 <ul>
-<li>Real data are rarely so obliging — provinces diverge, some improve faster than others, some years hit some regions harder</li>
+<li>Real data rarely behave this way: provinces diverge, some improve faster than others, and some years affect some regions more than others</li>
 <li>Anything the separable model cannot express ends up in the residuals</li>
 </ul>
 </section>
-<section id="space-time-interaction-1" class="slide level2">
-<h2>Space-time interaction</h2>
-<p>The fix is the <strong>interaction</strong> term <span class="math inline">\(\nu_{jt}\)</span>, and in the spatiotemporal session we saw four ways to structure it (Knorr-Held, 2000):</p>
+<section id="spacetime-interaction-1" class="slide level2">
+<h2>Space–time interaction</h2>
+<p>This is what the interaction term <span class="math inline">\(\nu_{jt}\)</span> is for. In the spatiotemporal session we saw four ways to structure it (Knorr-Held, 2000):</p>
 <p><span class="math display">\[
 \nu_{jt}: \quad \theta_j \otimes \gamma_t \ \ | \ \ \theta_j \otimes \xi_t \ \ | \ \ \phi_j \otimes \gamma_t \ \ | \ \ \phi_j \otimes \xi_t
 \]</span></p>
@@ -371,18 +352,18 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <p><span class="math display">\[
 \nu_{jt} = \theta_j \otimes \gamma_t, \qquad \nu_{jt} \overset{iid}{\sim} N(0, \sigma^2_\nu)
 \]</span></p>
-<p>Departures have <strong>no pattern at all</strong> — pure province–year noise, unrelated to neighbouring provinces or adjacent years.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href=""></a>hyper_int <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.01</span>)))</span>
-<span id="cb6-2"><a href=""></a></span>
-<span id="cb6-3"><a href=""></a>formula_I <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
-<span id="cb6-4"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb6-5"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
-<span id="cb6-6"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb6-7"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
-<span id="cb6-8"><a href=""></a>  <span class="fu">f</span>(id_cell,  <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_int)      <span class="co"># &lt;- the interaction</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Departures have no structure: province–year noise, unrelated to neighbouring provinces or adjacent years.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>hyper_int <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.01</span>)))</span>
+<span id="cb5-2"><a href=""></a></span>
+<span id="cb5-3"><a href=""></a>formula_I <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
+<span id="cb5-4"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-5"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
+<span id="cb5-6"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-7"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
+<span id="cb5-8"><a href=""></a>  <span class="fu">f</span>(id_cell,  <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_int)      <span class="co"># &lt;- the interaction</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>The cheapest structure to fit: no graph, no ordering, one precision</li>
-<li>Useful as a catch-all for overdispersion beyond the main effects, but it borrows no strength — a sparse cell is shrunk towards zero, not towards its neighbours</li>
+<li>Useful as a catch-all for overdispersion beyond the main effects, but it borrows no strength: a sparse cell is shrunk towards zero, not towards its neighbours</li>
 </ul>
 <p>Latent values: <span class="math inline">\(N_p \times N_t = 107 \times N_t\)</span>. Hyperparameters: 1.</p>
 </section>
@@ -391,18 +372,18 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <p><span class="math display">\[
 \nu_{jt} = \theta_j \otimes \xi_t, \qquad \boldsymbol{\nu}_{j\cdot} \sim \text{RW1 independently for each } j
 \]</span></p>
-<p><strong>Each province gets its own smooth trend</strong>, but the trends are unrelated across the map: Milan’s departure evolves smoothly year to year, and tells you nothing about Bergamo’s.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>formula_II <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
-<span id="cb7-2"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb7-3"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
-<span id="cb7-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb7-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
-<span id="cb7-6"><a href=""></a>  <span class="fu">f</span>(id_space_int, <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_int,  <span class="co"># &lt;- the interaction</span></span>
-<span id="cb7-7"><a href=""></a>    <span class="at">group =</span> id_year_int,</span>
-<span id="cb7-8"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Each province gets its own smooth trend, but the trends are unrelated across the map: Milan’s departure evolves smoothly year to year, and is uninformative about Bergamo’s.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href=""></a>formula_II <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
+<span id="cb6-2"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-3"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
+<span id="cb6-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
+<span id="cb6-6"><a href=""></a>  <span class="fu">f</span>(id_space_int, <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_int,  <span class="co"># &lt;- the interaction</span></span>
+<span id="cb6-7"><a href=""></a>    <span class="at">group =</span> id_year_int,</span>
+<span id="cb6-8"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>The <code>group =</code> Kronecker construction: IID over provinces, RW1 across the grouped years</li>
-<li>This is the fully flexible version of the linear slopes we come to shortly</li>
+<li>This is the fully flexible version of the linear slopes covered shortly</li>
 </ul>
 <p>Latent values: <span class="math inline">\(N_p \times N_t\)</span>. Hyperparameters: 1.</p>
 </section>
@@ -411,16 +392,16 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <p><span class="math display">\[
 \nu_{jt} = \phi_j \otimes \gamma_t, \qquad \boldsymbol{\nu}_{\cdot t} \sim \text{ICAR}(W) \text{ independently for each } t
 \]</span></p>
-<p><strong>Each year gets its own spatial pattern</strong> — smooth across the map within a year, but unrelated to the year before or after. Natural for events that strike different regions in different years.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>formula_III <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
-<span id="cb8-2"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb8-3"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
-<span id="cb8-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb8-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
-<span id="cb8-6"><a href=""></a>  <span class="fu">f</span>(id_space_int, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g,        <span class="co"># &lt;- the interaction</span></span>
-<span id="cb8-7"><a href=""></a>    <span class="at">scale.model =</span> <span class="cn">TRUE</span>, <span class="at">hyper =</span> hyper_int,</span>
-<span id="cb8-8"><a href=""></a>    <span class="at">group =</span> id_year_int,</span>
-<span id="cb8-9"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"iid"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Each year gets its own spatial pattern: smooth across the map within a year, but unrelated to the year before or after. Suited to events affecting different regions in different years.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>formula_III <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
+<span id="cb7-2"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb7-3"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
+<span id="cb7-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb7-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
+<span id="cb7-6"><a href=""></a>  <span class="fu">f</span>(id_space_int, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g,        <span class="co"># &lt;- the interaction</span></span>
+<span id="cb7-7"><a href=""></a>    <span class="at">scale.model =</span> <span class="cn">TRUE</span>, <span class="at">hyper =</span> hyper_int,</span>
+<span id="cb7-8"><a href=""></a>    <span class="at">group =</span> id_year_int,</span>
+<span id="cb7-9"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"iid"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>The same construction as Type II with the roles swapped: Besag over provinces, IID across the grouped years</li>
 </ul>
@@ -431,18 +412,18 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <p><span class="math display">\[
 \nu_{jt} = \phi_j \otimes \xi_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W) \otimes \text{RW1}
 \]</span></p>
-<p>Departures evolve <strong>smoothly in both dimensions at once</strong>: a province’s excess resembles its neighbours’ <em>and</em> its own value last year. The most realistic structure, and the hardest to identify.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>formula_IV <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
-<span id="cb9-2"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb9-3"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
-<span id="cb9-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb9-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
-<span id="cb9-6"><a href=""></a>  <span class="fu">f</span>(id_space_int, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g,        <span class="co"># &lt;- the interaction</span></span>
-<span id="cb9-7"><a href=""></a>    <span class="at">scale.model =</span> <span class="cn">TRUE</span>, <span class="at">hyper =</span> hyper_int,</span>
-<span id="cb9-8"><a href=""></a>    <span class="at">group =</span> id_year_int,</span>
-<span id="cb9-9"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Departures are smooth in both dimensions: a province’s excess resembles that of its neighbours, and its own value in the previous year. The most flexible of the four, and the hardest to identify.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>formula_IV <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
+<span id="cb8-2"><a href=""></a>  <span class="fu">f</span>(id_space, <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb8-3"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
+<span id="cb8-4"><a href=""></a>  <span class="fu">f</span>(id_year,  <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb8-5"><a href=""></a>    <span class="at">hyper =</span> hyper_pc) <span class="sc">+</span></span>
+<span id="cb8-6"><a href=""></a>  <span class="fu">f</span>(id_space_int, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g,        <span class="co"># &lt;- the interaction</span></span>
+<span id="cb8-7"><a href=""></a>    <span class="at">scale.model =</span> <span class="cn">TRUE</span>, <span class="at">hyper =</span> hyper_int,</span>
+<span id="cb8-8"><a href=""></a>    <span class="at">group =</span> id_year_int,</span>
+<span id="cb8-9"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
-<li>Type IV needs extra sum-to-zero constraints beyond <code>INLA</code>’s defaults to be identifiable alongside the main effects (via <code>extraconstr</code>) — worth knowing before using it in earnest</li>
+<li>Type IV needs extra sum-to-zero constraints beyond <code>INLA</code>’s defaults to be identifiable alongside the main effects (via <code>extraconstr</code>), which is worth knowing before using it</li>
 </ul>
 <p>Latent values: <span class="math inline">\(N_p \times N_t\)</span>. Hyperparameters: 1 (plus constraint bookkeeping).</p>
 </section>
@@ -490,23 +471,29 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 </tbody>
 </table>
 <ul>
-<li>All four cost the <strong>same</strong> <span class="math inline">\(N_p \times N_t\)</span> latent values and one hyperparameter — the difference is what they smooth, not how large they are</li>
+<li>All four cost the same <span class="math inline">\(N_p \times N_t\)</span> latent values and one hyperparameter: the difference is what they smooth, not how large they are</li>
 <li>In the South African cervical cancer example from the spatiotemporal session, that was 9 provinces × a handful of years, and a full type IV was comfortably fittable</li>
-<li>For Italy, <span class="math inline">\(107 \times N_t\)</span> is still potentially fittable — which is why the lab uses this data to demonstrate what happens next</li>
+<li>For Italy, <span class="math inline">\(107 \times N_t\)</span> is still fittable, which is why the lab uses these data</li>
 </ul>
 </section>
 <section id="summary-of-additional-model-terms" class="slide level2">
 <h2>Summary of additional model terms</h2>
 <ul>
 <li>An annual space–time model for Italy: three <code>f()</code> terms, a handful of hyperparameters, and it fits on a laptop in minutes</li>
-<li>Every term came from an earlier session: BYM2 (spatial), RW2 smoothing (non-linear regression), partial pooling (hierarchical), PC priors (INLA)</li>
-<li>We will revisit during the lab</li>
+<li>Every term came from an earlier session: BYM2 (spatial), RW2 smoothing (non-linear regression), partial pooling (hierarchical) and PC priors (INLA)</li>
+<li>We will revisit these in the lab</li>
 </ul>
 </section></section>
 <section>
-<section id="considerations-for-a-model-at-even-larger-scale" class="title-slide slide level1 center">
-<h1>Considerations for a model at even larger scale</h1>
+<section id="a-model-at-larger-scale" class="title-slide slide level1 center">
+<h1>A model at larger scale</h1>
 
+</section>
+<section id="a-model-at-larger-scale-1" class="slide level2">
+<h2>A model at larger scale</h2>
+<ul>
+<li>Compromises are part of scaling up modelling!</li>
+</ul>
 </section>
 <section id="a-united-states-model-real-example" class="slide level2">
 <h2>A United States model (real example)</h2>
@@ -541,13 +528,80 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 </tr>
 </tbody>
 </table>
-<p>That is around ~4.5 million rows, a spatial graph with thousands of nodes, and a dozen <code>f()</code> terms in <code>R-INLA</code>, each with its own hyperparameters.</p>
+<p>Around 4.5 million rows, a spatial graph with thousands of nodes, and a dozen <code>f()</code> terms in <code>R-INLA</code>, each with its own hyperparameters.</p>
 </section>
+<section id="a-united-states-model-real-example-1" class="slide level2">
+<h2>A United States model (real example)</h2>
+
+<img data-src="assets/Picture1.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<section id="a-united-states-model-real-example-2" class="slide level2">
+<h2>A United States model (real example)</h2>
+
+<img data-src="assets/Picture2.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<section id="a-united-states-model-real-example-3" class="slide level2">
+<h2>A United States model (real example)</h2>
+
+<img data-src="assets/Picture3.png" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="model-size-progression" class="slide level2">
 <h2>Model size progression</h2>
-<p>How far this is from where the workshop started:</p>
+<p>Compared with where the workshop started:</p>
 
 <img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-2-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"></section>
+<section id="a-united-states-model-real-example-4" class="slide level2">
+<h2>A United States model (real example)</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>model_formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
+<span id="cb9-2"><a href=""></a></span>
+<span id="cb9-3"><a href=""></a>  <span class="co"># Global temporal trend (RW2)</span></span>
+<span id="cb9-4"><a href=""></a>  <span class="fu">f</span>(id_year,    <span class="at">model =</span> <span class="st">"rw2"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-5"><a href=""></a>    <span class="at">hyper =</span> hyper_lg) <span class="sc">+</span></span>
+<span id="cb9-6"><a href=""></a></span>
+<span id="cb9-7"><a href=""></a>  <span class="co"># County-level baseline: spatial + unstructured (BYM2)</span></span>
+<span id="cb9-8"><a href=""></a>  <span class="fu">f</span>(id_county,  <span class="at">model =</span> <span class="st">"bym2"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-9"><a href=""></a>    <span class="at">hyper =</span> hyper_bym2) <span class="sc">+</span></span>
+<span id="cb9-10"><a href=""></a></span>
+<span id="cb9-11"><a href=""></a>  <span class="co"># Global age trend (RW1)</span></span>
+<span id="cb9-12"><a href=""></a>  <span class="fu">f</span>(id_age,     <span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-13"><a href=""></a>    <span class="at">hyper =</span> hyper_lg) <span class="sc">+</span></span>
+<span id="cb9-14"><a href=""></a></span>
+<span id="cb9-15"><a href=""></a>  <span class="co"># Global race effect (IID)</span></span>
+<span id="cb9-16"><a href=""></a>  <span class="fu">f</span>(id_race,    <span class="at">model =</span> <span class="st">"iid"</span>,</span>
+<span id="cb9-17"><a href=""></a>    <span class="at">hyper =</span> hyper_lg) <span class="sc">+</span></span>
+<span id="cb9-18"><a href=""></a></span>
+<span id="cb9-19"><a href=""></a>  <span class="co"># Linear space-time interaction: county-specific linear temporal slopes (Besag)</span></span>
+<span id="cb9-20"><a href=""></a>  <span class="fu">f</span>(id_county2, id_year_c, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-21"><a href=""></a>    <span class="at">hyper =</span> hyper_besag) <span class="sc">+</span></span>
+<span id="cb9-22"><a href=""></a></span>
+<span id="cb9-23"><a href=""></a>  <span class="co"># RT_lin: race-specific linear temporal trends (IID across race)</span></span>
+<span id="cb9-24"><a href=""></a>  <span class="fu">f</span>(id_race2,   id_year_c, <span class="at">model =</span> <span class="st">"iid"</span>,</span>
+<span id="cb9-25"><a href=""></a>    <span class="at">hyper =</span> hyper_lg) <span class="sc">+</span></span>
+<span id="cb9-26"><a href=""></a></span>
+<span id="cb9-27"><a href=""></a>  <span class="co"># AT_lin: age-specific linear temporal trends (RW1, smoothed across age)</span></span>
+<span id="cb9-28"><a href=""></a>  <span class="fu">f</span>(id_age2,    id_year_c, <span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-29"><a href=""></a>    <span class="at">hyper =</span> hyper_lg) <span class="sc">+</span></span>
+<span id="cb9-30"><a href=""></a></span>
+<span id="cb9-31"><a href=""></a>  <span class="co"># RS: race-specific spatial fields (Besag × IID)</span></span>
+<span id="cb9-32"><a href=""></a>  <span class="fu">f</span>(id_county3, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-33"><a href=""></a>    <span class="at">hyper =</span> hyper_besag,</span>
+<span id="cb9-34"><a href=""></a>    <span class="at">group =</span> id_race3, <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_lg)) <span class="sc">+</span></span>
+<span id="cb9-35"><a href=""></a></span>
+<span id="cb9-36"><a href=""></a>  <span class="co"># AS: age-specific spatial scaling via copy feature</span></span>
+<span id="cb9-37"><a href=""></a>  <span class="co"># Base field: age group 9 (85+), highest death count</span></span>
+<span id="cb9-38"><a href=""></a>  <span class="fu">f</span>(id_county_as9, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-39"><a href=""></a>    <span class="at">hyper =</span> hyper_besag) <span class="sc">+</span></span>
+<span id="cb9-40"><a href=""></a>  <span class="fu">f</span>(id_county_as1, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 1 (45-49)</span></span>
+<span id="cb9-41"><a href=""></a>  <span class="fu">f</span>(id_county_as2, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 2 (50-54)</span></span>
+<span id="cb9-42"><a href=""></a>  <span class="fu">f</span>(id_county_as3, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 3 (55-59)</span></span>
+<span id="cb9-43"><a href=""></a>  <span class="fu">f</span>(id_county_as4, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 4 (60-64)</span></span>
+<span id="cb9-44"><a href=""></a>  <span class="fu">f</span>(id_county_as5, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 5 (65-69)</span></span>
+<span id="cb9-45"><a href=""></a>  <span class="fu">f</span>(id_county_as6, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 6 (70-74)</span></span>
+<span id="cb9-46"><a href=""></a>  <span class="fu">f</span>(id_county_as7, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 7 (75-79)</span></span>
+<span id="cb9-47"><a href=""></a>  <span class="fu">f</span>(id_county_as8, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>   <span class="co"># age group 8 (80-84)</span></span>
+<span id="cb9-48"><a href=""></a></span>
+<span id="cb9-49"><a href=""></a>  <span class="co"># RA: race-specific age curves (RW1 × IID)</span></span>
+<span id="cb9-50"><a href=""></a>  <span class="fu">f</span>(id_age4,    <span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-51"><a href=""></a>    <span class="at">hyper =</span> hyper_lg,</span>
+<span id="cb9-52"><a href=""></a>    <span class="at">group =</span> id_race4, <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_lg))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="why-this-is-a-challenge-to-fit" class="slide level2">
 <h2>Why this is a challenge to fit</h2>
 <ul>
@@ -555,15 +609,10 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <li><strong>Time</strong>: hours rather than seconds, and a sensitivity analysis means refitting several times over.</li>
 <li><strong>Typical laptop</strong>: ~16–64 GB of memory.</li>
 </ul>
-</section></section>
-<section>
-<section id="the-model-term-by-term" class="title-slide slide level1 center">
-<h1>The model, term by term</h1>
-
 </section>
 <section id="the-us-model-data-and-indices" class="slide level2 smaller">
 <h2>The US model: data and indices</h2>
-<p>The same pattern as the Italy model — one index column per <code>f()</code> term, plus the weight variable for the slopes:</p>
+<p>The same pattern as the Italy model: one index column per <code>f()</code> term, plus the weight variable for the slopes.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href=""></a>dat <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">file.path</span>(adrd_data_prep, <span class="st">"dat_inla_ready.rds"</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb10-2"><a href=""></a>  <span class="fu">filter</span>(sex <span class="sc">==</span> <span class="st">"F"</span>)</span>
 <span id="cb10-3"><a href=""></a></span>
@@ -609,16 +658,16 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href=""></a><span class="co"># Weakly informative: RW, IID and group terms</span></span>
 <span id="cb11-2"><a href=""></a>hyper_lg    <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"loggamma"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.001</span>)))</span>
 <span id="cb11-3"><a href=""></a></span>
-<span id="cb11-4"><a href=""></a><span class="co"># Main effect — genuine large between-county variation expected</span></span>
+<span id="cb11-4"><a href=""></a><span class="co"># Main effect: large between-county variation expected</span></span>
 <span id="cb11-5"><a href=""></a>hyper_bym2  <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
 <span id="cb11-6"><a href=""></a>                    <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)))</span>
 <span id="cb11-7"><a href=""></a></span>
 <span id="cb11-8"><a href=""></a><span class="co"># Interactions — deviations from main effects, so should be smaller</span></span>
 <span id="cb11-9"><a href=""></a>hyper_besag <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.01</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>We come back to why the tiering matters for scaling later in the session.</p>
+<p>We return to why the tiering matters later in the session.</p>
 </section>
-<section id="step-1-main-effects" class="slide level2 smaller">
-<h2>Step 1: main effects</h2>
+<section id="main-effects" class="slide level2 smaller">
+<h2>Main effects</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href=""></a>model_formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
 <span id="cb12-2"><a href=""></a></span>
 <span id="cb12-3"><a href=""></a>  <span class="co"># Global temporal trend (RW2)</span></span>
@@ -637,18 +686,18 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <span id="cb12-16"><a href=""></a>  <span class="fu">f</span>(id_race,   <span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_lg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Fitted with <code>family = "nbinomial"</code> and <code>E = dat$population</code>.</p>
 </section>
-<section id="step-1-main-effects-1" class="slide level2 smaller">
-<h2>Step 1: main effects</h2>
+<section id="main-effects-1" class="slide level2 smaller">
+<h2>Main effects</h2>
 <ul>
-<li>The BYM2 county term is exactly the model from the spatial session — the Swiss childhood cancer example — at ~3,100 areas instead of 26 cantons</li>
+<li>The BYM2 county term is the model from the spatial session (the Swiss childhood cancer example) at ~3,100 areas rather than 26 cantons</li>
 <li>The RW2 year term is the smooth trend from the non-linear regression session, as a random walk rather than a spline basis</li>
 <li><code>constr = TRUE</code> (sum-to-zero) keeps each term identifiable alongside the intercept</li>
-<li><code>scale.model = TRUE</code> makes the precisions comparable across structured terms — and makes the PC priors mean what we think they mean</li>
+<li><code>scale.model = TRUE</code> makes the precisions comparable across structured terms, so the PC priors carry their intended interpretation</li>
 </ul>
 <p>As in Italy, this is a separable model: every county follows the same national trend, every race group the same age curve.</p>
 </section>
-<section id="step-2-linear-time-trend-interactions" class="slide level2 smaller">
-<h2>Step 2: linear time-trend interactions</h2>
+<section id="linear-time-trend-interactions" class="slide level2 smaller">
+<h2>Linear time-trend interactions</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href=""></a>model_formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
 <span id="cb13-2"><a href=""></a>  <span class="co"># ... four main effects as above ... +</span></span>
 <span id="cb13-3"><a href=""></a></span>
@@ -662,19 +711,19 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <span id="cb13-11"><a href=""></a>  <span class="co"># AT_lin: age-specific linear trends (RW1, smoothed across age)</span></span>
 <span id="cb13-12"><a href=""></a>  <span class="fu">f</span>(id_age2,    id_year_c, <span class="at">model =</span> <span class="st">"rw1"</span>, <span class="at">constr =</span> <span class="cn">TRUE</span>,</span>
 <span id="cb13-13"><a href=""></a>    <span class="at">scale.model =</span> <span class="cn">TRUE</span>, <span class="at">hyper =</span> hyper_lg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>All three take <code>id_year_c</code> as a <strong>weight</strong> — the same linear-slope device we just used for Italy, applied on three different dimensions.</p>
+<p>All three take <code>id_year_c</code> as a weight: the same linear-slope device used for Italy, applied on three dimensions.</p>
 </section>
-<section id="step-2-linear-time-trend-interactions-1" class="slide level2">
-<h2>Step 2: linear time-trend interactions</h2>
+<section id="linear-time-trend-interactions-1" class="slide level2">
+<h2>Linear time-trend interactions</h2>
 <ul>
-<li><code>f(id_county2, id_year_c, model = "besag")</code> is precisely the Italy interaction, at 3,100 counties</li>
-<li><code>f(id_race2, id_year_c, model = "iid")</code> is its unstructured cousin — the type II analogue, restricted to a line</li>
-<li><code>f(id_age2, id_year_c, model = "rw1")</code> smooths the slopes across <em>age groups</em>: adjacent ages should be trending similarly</li>
+<li><code>f(id_county2, id_year_c, model = "besag")</code> is the Italy interaction at 3,100 counties</li>
+<li><code>f(id_race2, id_year_c, model = "iid")</code> is the unstructured version: the type II analogue, restricted to a line</li>
+<li><code>f(id_age2, id_year_c, model = "rw1")</code> smooths the slopes across <em>age groups</em>, on the assumption that adjacent ages trend similarly</li>
 </ul>
 </section>
-<section id="step-3-race-specific-spatial-fields" class="slide level2 smaller">
-<h2>Step 3: race-specific spatial fields</h2>
-<p>Four maps, one per race/ethnicity group — but sharing one spatial precision:</p>
+<section id="race-specific-spatial-fields" class="slide level2 smaller">
+<h2>Race-specific spatial fields</h2>
+<p>Four maps, one per race/ethnicity group, sharing one spatial precision:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href=""></a>model_formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
 <span id="cb14-2"><a href=""></a>  <span class="co"># ... main effects and linear trends as above ... +</span></span>
 <span id="cb14-3"><a href=""></a></span>
@@ -684,13 +733,13 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <span id="cb14-7"><a href=""></a>    <span class="at">group =</span> id_race3,</span>
 <span id="cb14-8"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_lg))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
-<li>The <code>group =</code> Kronecker construction from the Italy build — Besag over counties, IID between race groups</li>
+<li>The <code>group =</code> Kronecker construction from the Italy build: Besag over counties, IID between race groups</li>
 <li>One precision estimated for all four maps, rather than four estimated separately</li>
 </ul>
 </section>
-<section id="step-4-age-specific-spatial-fields" class="slide level2 smaller">
-<h2>Step 4: age-specific spatial fields</h2>
-<p>Nine maps, one per age group — but only one is estimated:</p>
+<section id="age-specific-spatial-fields" class="slide level2 smaller">
+<h2>Age-specific spatial fields</h2>
+<p>Nine maps, one per age group, of which only one is estimated:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href=""></a>model_formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
 <span id="cb15-2"><a href=""></a>  <span class="co"># ... everything above ... +</span></span>
 <span id="cb15-3"><a href=""></a></span>
@@ -706,8 +755,8 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <li>The assumption: one shared spatial <em>shape</em>, different <em>amplitudes</em> by age</li>
 </ul>
 </section>
-<section id="step-5-race-specific-age-curves" class="slide level2">
-<h2>Step 5: race-specific age curves</h2>
+<section id="race-specific-age-curves" class="slide level2">
+<h2>Race-specific age curves</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href=""></a>model_formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
 <span id="cb16-2"><a href=""></a>  <span class="co"># ... everything above ... +</span></span>
 <span id="cb16-3"><a href=""></a></span>
@@ -718,7 +767,7 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <span id="cb16-8"><a href=""></a>    <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_lg))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>The same <code>group =</code> device as step 3, on a different pair of dimensions: a smooth age curve per race group, with the curves tied together by an estimated between-group variance</li>
-<li>Partial pooling from the hierarchical session — applied to entire curves rather than single parameters</li>
+<li>Partial pooling from the hierarchical session, applied to entire curves rather than single parameters</li>
 </ul>
 </section>
 <section id="where-each-term-comes-from" class="slide level2 smaller">
@@ -758,8 +807,8 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 </tbody>
 </table>
 </section>
-<section id="the-whole-model-real-example" class="slide level2">
-<h2>The whole model (real example)</h2>
+<section id="the-whole-model-again" class="slide level2">
+<h2>The whole model (again)</h2>
 <div style="font-size: 75%;">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href=""></a>model_formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span></span>
 <span id="cb17-2"><a href=""></a></span>
@@ -799,132 +848,128 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <section id="how-many-parameters-is-that" class="slide level2">
 <h2>How many parameters is that?</h2>
 
-<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-3-1.png" class="quarto-figure quarto-figure-center r-stretch" width="864"><p>Around 25,000 latent parameters in total — and the interaction terms dominate.</p>
+<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-3-1.png" class="quarto-figure quarto-figure-center r-stretch" width="864"><p>Around 25,000 latent parameters in total, dominated by the interaction terms.</p>
 </section>
 <section id="parameter-compromises" class="slide level2">
 <h2>Parameter compromises</h2>
-<p>The totals only stay at 25,000 because of how the interactions are specified:</p>
+<p>The total stays at 25,000 only because of how the interactions are specified:</p>
 
 <!-- The next few slides go through these choices one at a time. -->
-<!-- # Keeping the interactions affordable -->
-<!-- ## Space–time interactions, revisited {.smaller} -->
-<!-- We built all four interaction types on the Italian data earlier, and each cost the same: -->
-<!-- | Interaction | Structure | Latent values | -->
-<!-- |---|---|---| -->
-<!-- | Type I | $\theta_i \otimes \gamma_t$ (IID × IID) | $N_p \times N_t$ | -->
-<!-- | Type II | $\theta_i \otimes \xi_t$ (IID × RW) | $N_p \times N_t$ | -->
-<!-- | Type III | $\phi_i \otimes \gamma_t$ (ICAR × IID) | $N_p \times N_t$ | -->
-<!-- | Type IV | $\phi_i \otimes \xi_t$ (ICAR × RW) | $N_p \times N_t$ | -->
-<!-- At 107 provinces, $N_p \times N_t$ is a few thousand values and the choice between them is purely scientific. -->
-<!-- At 3,100 counties it stops being purely scientific. -->
-<!-- ## Space–time interactions, revisited -->
-<!-- At national scale, a fully flexible (type IV) interaction becomes: -->
-<!-- $$ -->
-<!-- 3{,}100 \text{ counties} \times 20 \text{ years} = 62{,}000 \text{ interaction parameters} -->
-<!-- $$ -->
-<!-- The big model instead uses **spatially smoothed linear slopes**: one parameter per county. -->
-<!-- $$ -->
-<!-- \nu_{it} = \nu_i \cdot c_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W) -->
-<!-- $$ -->
-<!-- 3,100 parameters instead of 62,000 — at the cost of assuming county-level *departures* from the national trend are linear in time. The national trend itself (RW2) remains fully non-linear. -->
-<!-- ## Space–time interactions, revisited -->
-<!-- What the linear-slope interaction looks like: -->
-<!-- ```{r} -->
-<!-- #| echo: false -->
-<!-- #| eval: true -->
-<!-- #| fig-align: "center" -->
-<!-- #| fig-width: 8 -->
-<!-- #| fig-height: 4.5 -->
-<!-- #| message: false -->
-<!-- #| warning: false -->
-<!-- library(dplyr) -->
-<!-- library(ggplot2) -->
-<!-- library(tidyr) -->
-<!-- set.seed(4) -->
-<!-- t <- 1:20 -->
-<!-- national <- tibble(t = t, -->
-<!--                    nat = -0.012 * (t - 1) + 0.08 * sin(2 * pi * t / 14)) -->
-<!-- nu <- rnorm(15, 0, 0.012) -->
-<!-- counties <- crossing(county = 1:15, t = t) |> -->
-<!--   left_join(national, by = "t") |> -->
-<!--   mutate(y = nat + nu[county] * (t - mean(t))) -->
-<!-- ggplot() + -->
-<!--   geom_line(data = counties, -->
-<!--             aes(x = t, y = y, group = county), -->
-<!--             colour = "grey60", linewidth = 0.4) + -->
-<!--   geom_line(data = national, aes(x = t, y = nat), -->
-<!--             colour = "darkcyan", linewidth = 1.5) + -->
-<!--   labs(x = "Year", y = "Log relative rate", -->
-<!--        subtitle = "National RW2 trend (bold) plus county-specific linear departures (grey)") + -->
-<!--   theme_bw() + -->
-<!--   theme(text = element_text(size = 15)) -->
-<!-- ``` -->
-<!-- Compare the spaghetti plot of crude rates from the spatial session: each county keeps its own trajectory, but its *departure* from the national curve is a straight line. -->
-<!-- ## Restricting flexibility is a modelling choice {.smaller} -->
-<!-- - The linear-slope interaction is a deliberate simplification, in the same spirit as choosing a spline basis in the non-linear regression session: spend the parameters where the data can support them -->
-<!-- - With ~20 annual observations per county × age × race cell, a county-specific *non-linear* trend is rarely identifiable anyway — the prior would dominate -->
-<!-- - If a richer interaction is needed, there is a middle ground: e.g. a spatial field grouped by a RW1 over time, which is still far cheaper than type IV -->
-<!-- At scale, every interaction term should be able to answer: *what would the data look like if this term were needed, and can the data at this resolution actually show it?* -->
-<!-- ## Grouped (Kronecker) models: `group =` {.smaller} -->
-<!-- Race-specific spatial fields — four maps, one per race/ethnicity group: -->
-<!-- ```{.r} -->
-<!-- f(id_county3, model = "besag", graph = g, scale.model = TRUE, -->
-<!--   hyper = hyper_besag, -->
-<!--   group = id_race3, control.group = list(model = "iid", hyper = hyper_lg)) -->
-<!-- ``` -->
-<!-- - One Besag field, replicated across race groups, with an IID structure *between* groups -->
-<!-- - The result is a Kronecker product: the same spatial dependence within each group, and an estimated variance for how much the groups differ -->
-<!-- ## Grouped (Kronecker) models: `group =` -->
-<!-- Compared with fitting four separate `f()` terms: -->
-<!-- - One shared spatial precision rather than four — fewer hyperparameters -->
-<!-- - The between-group variation gets its own, estimated, variance — partial pooling across groups, exactly as in the hierarchical session, but now for entire spatial fields -->
-<!-- - Sparse groups borrow strength from the others, so this is usually a statistical improvement as well as a computational one -->
-<!-- The reason fewer hyperparameters matters so much is on the next slide. -->
-<!-- ## Hyperparameters are the expensive dimension -->
-<!-- ```{r} -->
-<!-- #| echo: false -->
-<!-- #| eval: true -->
-<!-- #| fig-align: "center" -->
-<!-- #| fig-width: 8 -->
-<!-- #| fig-height: 4.5 -->
-<!-- #| message: false -->
-<!-- #| warning: false -->
-<!-- library(dplyr) -->
-<!-- library(ggplot2) -->
-<!-- library(tidyr) -->
-<!-- tibble(k = 1:12) |> -->
-<!--   mutate(`3 points per dimension` = 3^k, -->
-<!--          `5 points per dimension` = 5^k) |> -->
-<!--   pivot_longer(-k, names_to = "grid", values_to = "points") |> -->
-<!--   ggplot(aes(x = k, y = points, colour = grid)) + -->
-<!--   geom_line(linewidth = 1) + -->
-<!--   geom_point(size = 2) + -->
-<!--   geom_hline(yintercept = 1, linetype = 2) + -->
-<!--   annotate("text", x = 10.5, y = 1.8, label = "empirical Bayes: 1 point", size = 4.5) + -->
-<!--   scale_y_log10(labels = scales::comma) + -->
-<!--   scale_x_continuous(breaks = 1:12) + -->
-<!--   scale_colour_manual(values = c("darkcyan", "#D55E00")) + -->
-<!--   labs(x = expression("Number of hyperparameters, dim(" * theta * ")"), -->
-<!--        y = "Grid evaluations needed (log scale)", colour = NULL) + -->
-<!--   theme_bw() + -->
-<!--   theme(text = element_text(size = 15), legend.position = "bottom") -->
-<!-- ``` -->
-<!-- - From the INLA session: each evaluation point in $\boldsymbol{\theta}$ means factorising the full sparse precision matrix -->
-<!-- - A naive grid grows exponentially in dim($\boldsymbol{\theta}$); the CCD design and empirical Bayes exist precisely to avoid this — but keeping dim($\boldsymbol{\theta}$) down helps every strategy -->
 <img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-4-1.png" class="quarto-figure quarto-figure-center r-stretch" width="864"></section>
+<section id="another-example-inla-and-dlnm-for-sex-ratios-and-temperature" class="slide level2">
+<h2>Another example: INLA and DLNM for sex ratios and temperature</h2>
+
+<img data-src="assets/Picture4.png" class="quarto-figure quarto-figure-center r-stretch"></section></section>
+<section>
+<section id="keeping-the-interactions-affordable" class="title-slide slide level1 center">
+<h1>Keeping the interactions affordable</h1>
+
+</section>
+<section id="spacetime-interactions-revisited" class="slide level2 smaller">
+<h2>Space–time interactions, revisited</h2>
+<p>We built all four interaction types on the Italian data earlier, and each cost the same:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Interaction</th>
+<th>Structure</th>
+<th>Latent values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Type I</td>
+<td><span class="math inline">\(\theta_i \otimes \gamma_t\)</span> (IID × IID)</td>
+<td><span class="math inline">\(N_p \times N_t\)</span></td>
+</tr>
+<tr class="even">
+<td>Type II</td>
+<td><span class="math inline">\(\theta_i \otimes \xi_t\)</span> (IID × RW)</td>
+<td><span class="math inline">\(N_p \times N_t\)</span></td>
+</tr>
+<tr class="odd">
+<td>Type III</td>
+<td><span class="math inline">\(\phi_i \otimes \gamma_t\)</span> (ICAR × IID)</td>
+<td><span class="math inline">\(N_p \times N_t\)</span></td>
+</tr>
+<tr class="even">
+<td>Type IV</td>
+<td><span class="math inline">\(\phi_i \otimes \xi_t\)</span> (ICAR × RW)</td>
+<td><span class="math inline">\(N_p \times N_t\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>At 107 provinces, <span class="math inline">\(N_p \times N_t\)</span> is a few thousand values and the choice between them is purely scientific.</p>
+<p>At 3,100 counties it stops being purely scientific.</p>
+</section>
+<section id="spacetime-interactions-revisited-1" class="slide level2">
+<h2>Space–time interactions, revisited</h2>
+<p>At national scale, a fully flexible (type IV) interaction becomes:</p>
+<p><span class="math display">\[
+3{,}100 \text{ counties} \times 20 \text{ years} = 62{,}000 \text{ interaction parameters}
+\]</span></p>
+<p>The big model instead uses <strong>spatially smoothed linear slopes</strong>: one parameter per county.</p>
+<p><span class="math display">\[
+\nu_{it} = \nu_i \cdot c_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W)
+\]</span></p>
+<p>3,100 parameters instead of 62,000 — at the cost of assuming county-level <em>departures</em> from the national trend are linear in time. The national trend itself (RW2) remains fully non-linear.</p>
+</section>
+<section id="spacetime-interactions-revisited-2" class="slide level2">
+<h2>Space–time interactions, revisited</h2>
+<p>What the linear-slope interaction looks like:</p>
+
+<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-5-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"><p>Compare the spaghetti plot of crude rates from the spatial session: each county keeps its own trajectory, but its <em>departure</em> from the national curve is a straight line.</p>
+</section>
+<section id="restricting-flexibility-is-a-modelling-choice" class="slide level2 smaller">
+<h2>Restricting flexibility is a modelling choice</h2>
+<ul>
+<li>The linear-slope interaction is a deliberate simplification, in the same spirit as choosing a spline basis in the non-linear regression session: spend the parameters where the data can support them</li>
+<li>With ~20 annual observations per county × age × race cell, a county-specific <em>non-linear</em> trend is rarely identifiable anyway — the prior would dominate</li>
+<li>If a richer interaction is needed, there is a middle ground: e.g.&nbsp;a spatial field grouped by a RW1 over time, which is still far cheaper than type IV</li>
+</ul>
+<p>At scale, every interaction term should be able to answer: <em>what would the data look like if this term were needed, and can the data at this resolution actually show it?</em></p>
+</section>
+<section id="grouped-kronecker-models-group" class="slide level2 smaller">
+<h2>Grouped (Kronecker) models: <code>group =</code></h2>
+<p>Race-specific spatial fields — four maps, one per race/ethnicity group:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href=""></a><span class="fu">f</span>(id_county3, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb18-2"><a href=""></a>  <span class="at">hyper =</span> hyper_besag,</span>
+<span id="cb18-3"><a href=""></a>  <span class="at">group =</span> id_race3, <span class="at">control.group =</span> <span class="fu">list</span>(<span class="at">model =</span> <span class="st">"iid"</span>, <span class="at">hyper =</span> hyper_lg))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>One Besag field, replicated across race groups, with an IID structure <em>between</em> groups</li>
+<li>The result is a Kronecker product: the same spatial dependence within each group, and an estimated variance for how much the groups differ</li>
+</ul>
+</section>
+<section id="grouped-kronecker-models-group-1" class="slide level2">
+<h2>Grouped (Kronecker) models: <code>group =</code></h2>
+<p>Compared with fitting four separate <code>f()</code> terms:</p>
+<ul>
+<li>One shared spatial precision rather than four — fewer hyperparameters</li>
+<li>The between-group variation gets its own, estimated, variance — partial pooling across groups, exactly as in the hierarchical session, but now for entire spatial fields</li>
+<li>Sparse groups borrow strength from the others, so this is usually a statistical improvement as well as a computational one</li>
+</ul>
+<p>The reason fewer hyperparameters matters so much is on the next slide.</p>
+</section>
+<section id="hyperparameters-are-the-expensive-dimension" class="slide level2">
+<h2>Hyperparameters are the expensive dimension</h2>
+
+<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-6-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"><ul>
+<li>From the INLA session: each evaluation point in <span class="math inline">\(\boldsymbol{\theta}\)</span> means factorising the full sparse precision matrix</li>
+<li>A naive grid grows exponentially in dim(<span class="math inline">\(\boldsymbol{\theta}\)</span>); the CCD design and empirical Bayes exist precisely to avoid this — but keeping dim(<span class="math inline">\(\boldsymbol{\theta}\)</span>) down helps every strategy</li>
+</ul>
+</section>
 <section id="the-copy-feature" class="slide level2">
 <h2>The <code>copy</code> feature</h2>
-<p>Age-specific spatial patterns — nine maps, one per age group:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href=""></a><span class="co"># Base field: the age group with the most deaths (85+)</span></span>
-<span id="cb18-2"><a href=""></a><span class="fu">f</span>(id_county_as9, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb18-3"><a href=""></a>  <span class="at">hyper =</span> hyper_besag) <span class="sc">+</span></span>
-<span id="cb18-4"><a href=""></a><span class="fu">f</span>(id_county_as1, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>  <span class="co"># 45-49</span></span>
-<span id="cb18-5"><a href=""></a><span class="fu">f</span>(id_county_as2, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>  <span class="co"># 50-54</span></span>
-<span id="cb18-6"><a href=""></a>...</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Age-specific spatial patterns, as nine maps, one per age group:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href=""></a><span class="co"># Base field: the age group with the most deaths (85+)</span></span>
+<span id="cb19-2"><a href=""></a><span class="fu">f</span>(id_county_as9, <span class="at">model =</span> <span class="st">"besag"</span>, <span class="at">graph =</span> g, <span class="at">scale.model =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb19-3"><a href=""></a>  <span class="at">hyper =</span> hyper_besag) <span class="sc">+</span></span>
+<span id="cb19-4"><a href=""></a><span class="fu">f</span>(id_county_as1, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>  <span class="co"># 45-49</span></span>
+<span id="cb19-5"><a href=""></a><span class="fu">f</span>(id_county_as2, <span class="at">copy =</span> <span class="st">"id_county_as9"</span>, <span class="at">fixed =</span> <span class="cn">FALSE</span>) <span class="sc">+</span>  <span class="co"># 50-54</span></span>
+<span id="cb19-6"><a href=""></a>...</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
-<li>One spatial field is estimated properly, anchored to the age group with the most data</li>
-<li>The other eight age groups get a <strong>scaled copy</strong>: the same map, multiplied by an estimated constant (<code>fixed = FALSE</code>)</li>
-<li>Use with caution</li>
+<li>Only one spatial field is estimated, anchored to the age group with the most data</li>
+<li>The other eight age groups get a scaled copy: the same map, multiplied by an estimated constant (<code>fixed = FALSE</code>)</li>
 </ul>
 </section>
 <section id="the-copy-feature-1" class="slide level2">
@@ -946,7 +991,7 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <tr class="even">
 <td>One field + eight copies</td>
 <td>3,100</td>
-<td>1 precision + 8 scaling constants</td>
+<td>1 precision</td>
 </tr>
 </tbody>
 </table>
@@ -958,79 +1003,15 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <section id="the-copy-feature-2" class="slide level2">
 <h2>The <code>copy</code> feature</h2>
 
-<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-5-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"><p>This is the same idea as the <em>spline-by-constant</em> DLNM from the advanced models session: one shape, different amplitudes.</p>
+<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-7-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"><p>This is the same idea as the <em>spline-by-constant</em> DLNM from the advanced models session: one shape, different amplitudes.</p>
 </section>
 <section id="the-copy-feature-3" class="slide level2">
 <h2>The <code>copy</code> feature</h2>
 <ul>
-<li>Where the shared-shape assumption fails, it fails visibly: plot the base field against crude age-specific SMRs before committing to it</li>
-<li><code>group =</code> and <code>copy =</code> are the two main ways <code>R-INLA</code> lets you share structure across strata instead of re-estimating it</li>
-<li>Both trade a modelling assumption for a large reduction in cost — and both borrow strength for the sparse strata</li>
+<li>Check the shared-shape assumption before committing to it: plot the base field against crude age-specific SMRs</li>
+<li><code>group =</code> and <code>copy =</code> are the two main ways <code>R-INLA</code> allows structure to be shared across strata instead of re-estimated</li>
+<li>Both trade a modelling assumption for a reduction in cost, and both borrow strength for sparse strata</li>
 </ul>
-</section>
-<section id="priors-as-part-of-scaling" class="slide level2 smaller">
-<h2>Priors as part of scaling</h2>
-<p>The big model uses PC priors (INLA session) in deliberate tiers:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href=""></a><span class="co"># Main effect: county baseline (BYM2)</span></span>
-<span id="cb19-2"><a href=""></a><span class="co"># genuine large between-county variation expected</span></span>
-<span id="cb19-3"><a href=""></a>hyper_bym2  <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">0.01</span>)),</span>
-<span id="cb19-4"><a href=""></a>                    <span class="at">phi  =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc"</span>,      <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)))</span>
-<span id="cb19-5"><a href=""></a></span>
-<span id="cb19-6"><a href=""></a><span class="co"># Interaction terms (Besag slopes, race-spatial fields)</span></span>
-<span id="cb19-7"><a href=""></a><span class="co"># deviations from main effects, so should be smaller</span></span>
-<span id="cb19-8"><a href=""></a>hyper_besag <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">prior =</span> <span class="st">"pc.prec"</span>, <span class="at">param =</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.01</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<ul>
-<li><span class="math inline">\(P(\sigma &gt; 1) = 0.01\)</span> for the main effect; <span class="math inline">\(P(\sigma &gt; 0.5) = 0.01\)</span> for the interactions</li>
-<li>Read exactly as in the INLA session — only now the choice of <span class="math inline">\(U\)</span> differs by the <em>role</em> of the term</li>
-</ul>
-</section>
-<section id="priors-as-part-of-scaling-1" class="slide level2">
-<h2>Priors as part of scaling</h2>
-
-<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-6-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"><ul>
-<li>PC priors shrink towards the simpler base model (<span class="math inline">\(\sigma = 0\)</span>), so interaction terms the data do not support collapse towards zero rather than soaking up noise</li>
-<li>With a dozen variance components this shrinkage is doing real work: it is what stops a richly parameterised model from overfitting — and a well-shrunk model is also better behaved numerically</li>
-</ul>
-<!-- ## Why any of this is fittable {.smaller} -->
-<!-- From the INLA session: this whole model is still a **latent Gaussian model**, and every component (RW1, RW2, Besag, BYM2, IID, and their grouped/copied versions) is a **Gaussian Markov random field**. -->
-<!-- - The joint precision matrix of the latent field is huge but very sparse: each county talks only to its neighbours, each year only to adjacent years -->
-<!-- - `INLA` exploits this sparsity in every factorisation -->
-<!-- - Cost grows with the size and fill-in of that sparse matrix — far more slowly than the number of parameters would suggest -->
-<!-- ## Why any of this is fittable -->
-<!-- ```{r} -->
-<!-- #| echo: false -->
-<!-- #| eval: true -->
-<!-- #| fig-align: "center" -->
-<!-- #| fig-width: 6 -->
-<!-- #| fig-height: 5.5 -->
-<!-- #| message: false -->
-<!-- #| warning: false -->
-<!-- library(dplyr) -->
-<!-- library(ggplot2) -->
-<!-- n_side <- 8 -->
-<!-- N <- n_side^2 -->
-<!-- coords <- expand.grid(x = 1:n_side, y = 1:n_side) -->
-<!-- W <- matrix(0, N, N) -->
-<!-- for (i in 1:N) { -->
-<!--   for (j in 1:N) { -->
-<!--     if (abs(coords$x[i] - coords$x[j]) + -->
-<!--         abs(coords$y[i] - coords$y[j]) == 1) W[i, j] <- 1 -->
-<!--   } -->
-<!-- } -->
-<!-- Q <- diag(rowSums(W)) - W -->
-<!-- nz <- which(Q != 0, arr.ind = TRUE) |> as_tibble() -->
-<!-- pct <- round(100 * nrow(nz) / N^2) -->
-<!-- ggplot(nz, aes(x = col, y = row)) + -->
-<!--   geom_tile(fill = "darkcyan") + -->
-<!--   scale_y_reverse() + -->
-<!--   coord_equal() + -->
-<!--   labs(x = NULL, y = NULL, -->
-<!--        subtitle = paste0("Non-zero entries of the ICAR precision matrix, 8 \u00d7 8 lattice (", -->
-<!--                          pct, "% of entries non-zero)")) + -->
-<!--   theme_bw() + -->
-<!--   theme(text = element_text(size = 15)) -->
-<!-- ``` -->
-<!-- At 3,100 counties the picture is the same, only emptier — which is why the strategy throughout is: stay inside the GMRF world, keep the graph sparse, and keep the number of hyperparameters down. -->
 </section></section>
 <section>
 <section id="making-inla-run-faster" class="title-slide slide level1 center">
@@ -1039,7 +1020,7 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 </section>
 <section id="making-a-slow-fit-faster" class="slide level2 smaller">
 <h2>Making a slow fit faster</h2>
-<p>In rough order of how much they usually buy you:</p>
+<p>Roughly in order of how much time they usually save:</p>
 <table class="caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -1073,7 +1054,7 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 </section>
 <section id="making-a-slow-fit-faster-1" class="slide level2 smaller">
 <h2>Making a slow fit faster</h2>
-<p>In rough order of how much they usually buy you:</p>
+<p>Continued:</p>
 <table class="caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -1105,7 +1086,7 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 </tbody>
 </table>
 <div class="fragment">
-<p>Two habits worth forming: <strong>scale your covariates</strong>, because a badly conditioned latent field makes the <span class="math inline">\(\boldsymbol{\theta}\)</span> optimisation wander; and <strong>use PC priors</strong>, which keep the hyperparameters on a sensible scale and tend to make the mode easier to find.</p>
+<p>Two habits worth forming: scale covariates, since a badly conditioned latent field makes the <span class="math inline">\(\boldsymbol{\theta}\)</span> optimisation wander; and use PC priors, which keep the hyperparameters on a sensible scale and tend to make the mode easier to find.</p>
 <!-- . . . -->
 <!-- [If none of this helps, the model is probably not a good LGM. Check -->
 <!-- $\dim(\boldsymbol{\theta})$ first.]{style="color:#c0392b"} -->
@@ -1181,14 +1162,14 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <h2>Why this works</h2>
 <ul>
 <li>The expensive part of a large <code>INLA</code> fit is the numerical optimisation over the hyperparameters: each candidate value of <span class="math inline">\(\boldsymbol{\theta}\)</span> requires factorising a large sparse matrix</li>
-<li>The <em>location</em> of the mode barely depends on which approximation strategy is used</li>
-<li>So the mode can be found cheaply, and the expensive settings used for a single pass from there</li>
+<li>The <em>location</em> of the mode depends only weakly on which approximation strategy is used</li>
+<li>The mode can therefore be found cheaply, and the expensive settings used for a single pass from there</li>
 </ul>
 <!-- On large models this can cut the runtime substantially. It also means that if something is wrong with the model specification, the rough stage fails within minutes rather than hours into the full fit. -->
 </section>
 <section id="only-compute-what-you-need" class="slide level2">
 <h2>Only compute what you need</h2>
-<p>Every quantity requested in an <code>inla()</code> call costs time and memory, and at scale those costs add up.</p>
+<p>Every quantity requested in an <code>inla()</code> call costs time and memory, and at scale these add up.</p>
 <ul>
 <li><code>control.predictor = list(compute = FALSE)</code> unless you need fitted values from this particular fit</li>
 <li><code>dic</code>, <code>waic</code>, <code>cpo</code>: only in the fits where you will actually use them</li>
@@ -1201,18 +1182,18 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <h2>Threads and solvers</h2>
 <ul>
 <li><code>num.threads</code> in <code>inla()</code> controls parallelism within a fit; useful, but with diminishing returns, and more threads mean more memory in use at once</li>
-<li>The PARDISO sparse solver can speed up the factorisations considerably on large models — see <code>inla.pardiso()</code> for setup on your system</li>
-<li>Recent versions of <code>R-INLA</code> also include a reworked, lower-memory computational core — worth keeping the package up to date if you are fitting large models</li>
+<li>The PARDISO sparse solver can speed up the factorisations on large models; see <code>inla.pardiso()</code> for setup on your system</li>
+<li>Recent versions of <code>R-INLA</code> also include a reworked, lower-memory computational core, so keep the package up to date for large models</li>
 </ul>
 </section></section>
 <section>
-<section id="scaling-even-further" class="title-slide slide level1 center">
-<h1>Scaling even further</h1>
+<section id="scaling-further" class="title-slide slide level1 center">
+<h1>Scaling further</h1>
 
 </section>
 <section id="what-happens-if-the-model-grows-again" class="slide level2">
 <h2>What happens if the model grows again</h2>
-<p>Each of these is a real request that comes up in practice:</p>
+<p>Each of these comes up in practice:</p>
 <table class="caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -1248,24 +1229,24 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <h2>What happens if the model grows again</h2>
 <p>Just the space–time interaction term, under different choices:</p>
 
-<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-7-1.png" class="quarto-figure quarto-figure-center r-stretch" width="864"></section>
+<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-8-1.png" class="quarto-figure quarto-figure-center r-stretch" width="864"></section>
 <section id="the-options-roughly-in-order" class="slide level2">
 <h2>The options, roughly in order</h2>
 <ol type="1">
-<li><strong>Restrict the interaction structure</strong>: linear slopes, <code>group =</code>, <code>copy =</code> — as in the model we just walked through</li>
-<li><strong>Stratify into independent models</strong>: Smaller models, run in parallel, and simpler to debug than one enormous joint model</li>
+<li><strong>Restrict the interaction structure</strong>: linear slopes, <code>group =</code>, <code>copy =</code>, as in the model above</li>
+<li><strong>Stratify into independent models</strong>: smaller models, run in parallel, and simpler to debug than one large joint model</li>
 <li><strong>Aggregate a dimension you do not need</strong>: if the question is about counties and years, do not carry months</li>
 <li><strong>Reduce outputs</strong>: marginals only for the quantities you will report</li>
-<li>Only then: <strong>bigger hardware</strong></li>
+<li><strong>Bigger hardware</strong>: only once the options above are exhausted</li>
 </ol>
 </section>
 <section id="the-options-roughly-in-order-1" class="slide level2">
 <h2>The options, roughly in order</h2>
 <p>A note on stratifying (option 2):</p>
 <ul>
-<li>Splitting into independent models has a statistical cost — no borrowing of strength across the strata you split on</li>
-<li>So split on the dimensions where pooling was never intended (sex, cause definition), not the ones where it matters if you can help it (age, race, space)</li>
-<li>The bonus: independent fits can run simultaneously, which is what the job arrays at the end of this session are for</li>
+<li>Splitting into independent models has a statistical cost: no borrowing of strength across the strata you split on</li>
+<li>So split on the dimensions where pooling was never intended (sex, cause definition), and avoid splitting where it matters (age, race, space)</li>
+<li>Independent fits can also run simultaneously, which is what the job arrays later in this session are for</li>
 </ul>
 </section></section>
 <section>
@@ -1279,8 +1260,8 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <p>Save instead:</p>
 <ol type="1">
 <li><strong>Tidy summary tables</strong>: one row per county × year × group, with the posterior median and 95% credible interval</li>
-<li><strong>Posterior samples of the quantities you report</strong>, via <code>inla.posterior.sample()</code> (this is what <code>config = TRUE</code> is for), so that derived quantities carry proper uncertainty</li>
-<li><strong>Hyperparameter summaries</strong> and model metadata: the formula, priors, date, and software versions used</li>
+<li><strong>Posterior samples of the reported quantities</strong>: via <code>inla.posterior.sample()</code>, which is what <code>config = TRUE</code> is for, so that derived quantities carry their uncertainty</li>
+<li><strong>Hyperparameter summaries and metadata</strong>: the formula, priors, date, and software versions used</li>
 </ol>
 </section>
 <section id="what-to-save-1" class="slide level2">
@@ -1305,7 +1286,7 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <!-- - Co-authors can explore every stratum themselves, and odd results get spotted during exploration rather than after submission -->
 <!-- - An app can also be shared with reviewers as supplementary material -->
 <!-- We build one of these for the Italian province–month SMRs in the lab. -->
-<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-8-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"></section></section>
+<img data-src="scaling_models_files/figure-revealjs/unnamed-chunk-9-1.png" class="quarto-figure quarto-figure-center r-stretch" width="768"></section></section>
 <section>
 <section id="high-performance-computing" class="title-slide slide level1 center">
 <h1>High-performance computing</h1>
@@ -1313,13 +1294,13 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 </section>
 <section id="high-performance-computing-in-brief" class="slide level2">
 <h2>High-performance computing, in brief</h2>
-<p>Once the model is as lean as it can be, some fits genuinely need hundreds of GB of memory — and that means a high-performance computing (HPC) cluster.</p>
+<p>Once the model is as lean as it can be, some fits still need hundreds of GB of memory, which means a high-performance computing (HPC) cluster.</p>
 <ul>
 <li>You connect to a <strong>login node</strong>, and submit jobs to a <strong>scheduler</strong> (usually SLURM), which runs them on large <strong>compute nodes</strong></li>
 <li>A job is just a shell script with a resource request at the top, running the same R script you developed locally:</li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href=""></a><span class="co">#SBATCH --time=12:00:00</span></span>
-<span id="cb22-2"><a href=""></a><span class="co">#SBATCH --mem=700G          # a real request, for the model above</span></span>
+<span id="cb22-2"><a href=""></a><span class="co">#SBATCH --mem=700G          # as requested for the model above</span></span>
 <span id="cb22-3"><a href=""></a><span class="co">#SBATCH --array=1-4         # one job per sex x cause stratum</span></span>
 <span id="cb22-4"><a href=""></a></span>
 <span id="cb22-5"><a href=""></a><span class="ex">Rscript</span> fit_stratum.R <span class="va">${SLURM_ARRAY_TASK_ID}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1327,42 +1308,42 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <section id="high-performance-computing-in-brief-1" class="slide level2">
 <h2>High-performance computing, in brief</h2>
 <ul>
-<li>The <code>--array</code> line runs the four stratified models simultaneously — the payoff for stratifying into independent fits</li>
-<li>Request resources honestly: too little and the job is killed; far too much and you wait much longer in the queue</li>
-<li>A sensible approach: run a scaled-down version first, check what it actually used (<code>seff &lt;jobid&gt;</code>), then request somewhat above that</li>
+<li>The <code>--array</code> line runs the four stratified models simultaneously, which is the point of stratifying into independent fits</li>
+<li>Request resources realistically: too little and the job is killed; far too much and it waits longer in the queue</li>
+<li>One approach: run a scaled-down version first, check what it used (<code>seff &lt;jobid&gt;</code>), then request somewhat above that</li>
 </ul>
 </section>
 <section id="reproducibility-on-a-cluster" class="slide level2">
 <h2>Reproducibility on a cluster</h2>
 <ul>
 <li>The cluster runs a different Linux from your laptop, and <code>INLA</code> and <code>sf</code> depend on system libraries</li>
-<li>A <strong>container</strong> (Apptainer on most clusters) solves this: a single file holding the operating system, R, and every package at fixed versions</li>
+<li>A container (Apptainer on most clusters) solves this: a single file holding the operating system, R, and every package at fixed versions</li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode numberSource bash number-lines code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href=""></a><span class="ex">apptainer</span> exec <span class="at">--cleanenv</span> <span class="at">--bind</span> <span class="st">"</span><span class="va">$PWD</span><span class="st">"</span>:<span class="st">"</span><span class="va">$PWD</span><span class="st">"</span> <span class="dt">\</span></span>
 <span id="cb23-2"><a href=""></a>  ~/r_spatial.sif Rscript fit_stratum.R 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
-<li>The same container file gives the same results on the cluster now and on any machine years later — archive it alongside the paper</li>
+<li>The same container gives the same results on the cluster now and on another machine later; archive it alongside the paper</li>
 </ul>
 </section>
-<section id="getting-access-to-serious-computing" class="slide level2">
-<h2>Getting access to serious computing</h2>
-<p>Worth investigating early in a project, not when the first fit fails:</p>
+<section id="getting-access-to-large-scale-computing" class="slide level2">
+<h2>Getting access to large-scale computing</h2>
+<p>Worth investigating early in a project rather than when the first fit fails:</p>
 <ul>
 <li><strong>Your institution’s HPC cluster</strong>: most universities run one; access is often free or cheap for researchers, sometimes with priority or extra storage available to purchase. Start with your research computing group</li>
-<li><strong>National allocations</strong>: in the US, ACCESS (formerly XSEDE) awards free compute time on national systems through a lightweight application; many other countries have equivalents</li>
+<li><strong>National allocations</strong>: in the US, ACCESS (formerly XSEDE) awards free compute time on national systems through a short application; many other countries have equivalents</li>
 </ul>
 </section>
-<section id="getting-access-to-serious-computing-1" class="slide level2">
-<h2>Getting access to serious computing</h2>
+<section id="getting-access-to-large-scale-computing-1" class="slide level2">
+<h2>Getting access to large-scale computing</h2>
 <ul>
-<li><strong>Cloud computing</strong>: AWS, GCP and Azure rent high-memory machines by the hour — expensive for sustained use, but reasonable for occasional very large fits, and no queue</li>
+<li><strong>Cloud computing</strong>: AWS, GCP and Azure rent high-memory machines by the hour; expensive for sustained use, but reasonable for occasional large fits, and with no queue</li>
 <li><strong>Budget compute into grants</strong>: cluster allocations, cloud credits, or a share of a departmental high-memory node are all legitimate, and increasingly expected, direct costs</li>
 </ul>
-<p>For the models in this session, the single most useful specification to ask about is <strong>high-memory nodes</strong> (512 GB–1 TB) — for large <code>INLA</code> fits, memory matters much more than core count.</p>
+<p>For the models in this session, the specification to ask about is high-memory nodes (512 GB–1 TB): for large <code>INLA</code> fits, memory matters more than core count.</p>
 </section></section>
 <section>
-<section id="wrapping-up" class="title-slide slide level1 center">
-<h1>Wrapping up</h1>
+<section id="summary" class="title-slide slide level1 center">
+<h1>Summary</h1>
 
 </section>
 <section id="the-approach-end-to-end" class="slide level2 smaller">
@@ -1371,10 +1352,10 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <li><strong>Specify for scale</strong>: restricted interactions, shared structure via <code>group =</code> and <code>copy =</code>, tiered PC priors, as few hyperparameters as the science allows</li>
 <li><strong>Develop small, locally</strong>: subset the data, <code>strategy = "gaussian"</code>, iterate quickly</li>
 <li><strong>Stage the full fit</strong>: rough then full, warm-started, computing only what is needed</li>
-<li><strong>Stratify</strong> into independent fits where pooling was never intended, and run them in parallel</li>
-<li><strong>Save summaries and posterior samples</strong>, date-stamped, rather than whole fitted objects</li>
-<li><strong>Explore</strong> interactively; <strong>report</strong> the slices that matter</li>
-<li>Move to HPC only for the fits that genuinely need it — and know how to get access before you do</li>
+<li><strong>Stratify</strong>: independent fits where pooling was never intended, run in parallel</li>
+<li><strong>Save selectively</strong>: date-stamped summaries and posterior samples, rather than whole fitted objects</li>
+<li><strong>Explore and report</strong>: interactive exploration, and report the slices that matter</li>
+<li>Move to HPC only for the fits that need it, and arrange access before you do</li>
 </ol>
 </section></section>
 <section>
@@ -1388,7 +1369,7 @@ y_{jt} &amp;\sim \text{Pois}(\mu_{jt}) \\
 <li><p>This lab scales the Italian mortality data up from a single month to the full annual space–time dataset.</p></li>
 <li><p>During this lab session, we will:</p>
 <ol type="1">
-<li>Build an annual space–time model up term by term — BYM2 baseline, RW2 trend, then the interaction — comparing the Knorr-Held types against Besag linear slopes;</li>
+<li>Build an annual space–time model up term by term (BYM2 baseline, RW2 trend, then the interaction), comparing the Knorr-Held types against Besag linear slopes;</li>
 <li>Compare a fit with everything computed against a lean fit, and time the rough/full two-stage workflow;</li>
 <li>Turn the model into an <code>Rscript</code> and <code>sbatch</code> pair, with a job array for the prior sensitivity analysis; <!-- 4. Sample from the posterior with `inla.posterior.sample()` and save tidy summaries; and --> <!-- 5. Build a small `Shiny` app to browse the province–year SMRs. --></li>
 </ol></li>

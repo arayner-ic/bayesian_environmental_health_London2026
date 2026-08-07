@@ -1,8 +1,8 @@
 ---
 title: "Scaling Bayesian models"
-subtitle: "Some considerations for larger model fits"
+subtitle: "Some considerations for larger and more complex model fits"
 author:
- - name: "Robbie M. Parks"
+ - name: "Robbie M. Parks, Anna Y. Palmer"
    email: "robbie.parks@columbia.edu"
 institute: "Columbia University"
 date: 2026-08-07
@@ -36,36 +36,30 @@ editor:
   - Seconds rather than minutes
 - Both fitted on a Posit cloud, for 107 Italian provinces in previous sessions in this workshop
 
-## This session
+## This session {.smaller}
 
-- In this session we look at what changes when models and data get much bigger:
-  - Optimizing models
-  - Running on more powerful computing systems
-  - Exploring model results interactively
-
-## This session
+What changes when models and data get much bigger:
 
 1. Building up an annual space–time model for Italy from the earlier sessions
-2. An example research model at full national scale in the US, and how each component builds on this workshop series
+2. An example research model at national scale in the US
 3. Specification choices that keep a large model tractable
-4. `INLA` settings that can make large fits faster
-5. Scaling even further: what to do when that is not enough
-6. Outputs and exploration at scale
+4. `INLA` settings that make large fits faster
+5. Scaling further: what to do when that is not enough
+6. Outputs at scale
 7. High-performance computing
 
 # Building up a space–time model
 
 ## From the earlier labs to a space–time model
 
-Before looking at anything at national scale, let's build a full space–time model on data we already know: the Italian provinces.
+Before moving to national scale, we build a full space–time model on data we already know: the Italian provinces.
 
-- Where the `INLA` lab left off: a BYM2 model for the provinces of Italy, for September 2018 only — 107 spatial units, one `f()` term, fitted in seconds
-- Where we go now: **all provinces, all years** — an annual space–time model, built up one `f()` term at a time
-- This is also the model you will build yourselves in this session's lab
+- Where the `INLA` lab left off: a BYM2 model for the provinces of Italy, for September 2018 only. 107 spatial units, one `f()` term, fitted in seconds.
+- Where we go now: all provinces and all years, as an annual space–time model, built up one `f()` term at a time.
 
-## Building the Italy model: the data
+## Building the Italy model: the data 
 
-Step one is to stop throwing data away — but also to be deliberate about which dimensions we keep. Here we aggregate the months away and model **annual** counts per province:
+The first step is to keep more of the data, while being deliberate about which dimensions to keep. Here we aggregate over months and model annual counts per province:
 
 ```{.r}
 data <- read_rds(here("data", "italy", "italy_mortality.rds")) |>
@@ -91,8 +85,8 @@ data <- data |>
   )
 ```
 
-- The adjacency graph `g` is rebuilt from the shapefile with `poly2nb()` and `nb2INLA()`
-- `id_space_int` and `id_year_int` are duplicates 
+- The adjacency graph `g` is rebuilt from the shapefile with `poly2nb()` and `nb2INLA()`.
+- `id_space_int` and `id_year_int` are clones, because the same index cannot be reused across two `f()` terms.
 
 ## Building the Italy model: in symbols
 
@@ -103,9 +97,9 @@ y_{jt} &\sim \text{Pois}(\mu_{jt}) \\
 \end{split}
 $$
 
-- $b_j$: BYM2 spatial baseline — 107 provinces (spatial session)
+- $b_j$: BYM2 spatial baseline, 107 provinces (spatial session)
 - $\gamma_t$: smooth trend across years, RW2 (non-linear session)
-- ${\nu_{jt}}$: the **space–time interaction** — how each province departs from the common trend
+- ${\nu_{jt}}$: the space–time interaction, or how each province departs from the common trend
 
 ## Building the Italy model: baseline
 
@@ -124,24 +118,9 @@ formula_1 <- deaths ~ 1 +
     hyper = hyper_bym2)
 ```
 
-With only this term, every year gets the same map — the model cannot describe change over time at all.
+With only this term, every year gets the same map: the model cannot describe change over time.
 
-## Building the Italy model: the common trend
-
-Add the global temporal term: a smooth trend across years, shared by every province.
-
-```{.r}
-formula_2 <- deaths ~ 1 +
-  f(id_space, model = "bym2", graph = g, scale.model = TRUE,
-    hyper = hyper_bym2) +
-  f(id_year,  model = "rw2", constr = TRUE, scale.model = TRUE,
-    hyper = hyper_pc)
-```
-
-- RW2 gives a smooth, non-linear national trend — the smoothing idea from the non-linear regression session, as a random walk rather than a spline basis
-- `constr = TRUE` (sum-to-zero) keeps the trend identifiable alongside the intercept
-
-## Building the Italy model: the common trend
+## Building the Italy model: the common trend {.smaller}
 
 Add the global temporal term: a smooth trend across years, shared by every province.
 
@@ -153,18 +132,21 @@ formula_2 <- deaths ~ 1 +
     hyper = hyper_pc)
 ```
 
-Now every province rises and falls **in exactly the same way**: the maps for different years are identical up to a single common shift.
+- RW2 gives a smooth, non-linear national trend: the smoothing idea from the non-linear regression session, as a random walk rather than a spline basis.
+- `constr = TRUE` (sum-to-zero) keeps the trend identifiable alongside the intercept.
+- `scale.model = TRUE` rescales the structure (precision) matrix of an intrinsic GMRF so that its generalised variance is 1 (so you can use same pc prior, for example)
+- Every province now rises and falls in the same way, so the maps for different years are identical up to a single common shift.
 
-## Space-time interaction
+## Space–time interaction
 
-The separable model says: province $j$ has its own level, year $t$ has its own level, and that is all.
+In the separable model, province $j$ has its own level and year $t$ has its own level, and nothing more.
 
-- Real data are rarely so obliging — provinces diverge, some improve faster than others, some years hit some regions harder
+- Real data rarely behave this way: provinces diverge, some improve faster than others, and some years affect some regions more than others
 - Anything the separable model cannot express ends up in the residuals
 
-## Space-time interaction
+## Space–time interaction
 
-The fix is the **interaction** term $\nu_{jt}$, and in the spatiotemporal session we saw four ways to structure it (Knorr-Held, 2000):
+This is what the interaction term $\nu_{jt}$ is for. In the spatiotemporal session we saw four ways to structure it (Knorr-Held, 2000):
 
 $$
 \nu_{jt}: \quad \theta_j \otimes \gamma_t \ \ | \ \ \theta_j \otimes \xi_t \ \ | \ \ \phi_j \otimes \gamma_t \ \ | \ \ \phi_j \otimes \xi_t
@@ -230,7 +212,7 @@ $$
 \nu_{jt} = \theta_j \otimes \gamma_t, \qquad \nu_{jt} \overset{iid}{\sim} N(0, \sigma^2_\nu)
 $$
 
-Departures have **no pattern at all** — pure province–year noise, unrelated to neighbouring provinces or adjacent years.
+Departures have no structure: province–year noise, unrelated to neighbouring provinces or adjacent years.
 
 ```{.r}
 hyper_int <- list(prec = list(prior = "pc.prec", param = c(0.5, 0.01)))
@@ -244,7 +226,7 @@ formula_I <- deaths ~ 1 +
 ```
 
 - The cheapest structure to fit: no graph, no ordering, one precision
-- Useful as a catch-all for overdispersion beyond the main effects, but it borrows no strength — a sparse cell is shrunk towards zero, not towards its neighbours
+- Useful as a catch-all for overdispersion beyond the main effects, but it borrows no strength: a sparse cell is shrunk towards zero, not towards its neighbours
 
 Latent values: $N_p \times N_t = 107 \times N_t$. Hyperparameters: 1.
 
@@ -254,7 +236,7 @@ $$
 \nu_{jt} = \theta_j \otimes \xi_t, \qquad \boldsymbol{\nu}_{j\cdot} \sim \text{RW1 independently for each } j
 $$
 
-**Each province gets its own smooth trend**, but the trends are unrelated across the map: Milan's departure evolves smoothly year to year, and tells you nothing about Bergamo's.
+Each province gets its own smooth trend, but the trends are unrelated across the map: Milan's departure evolves smoothly year to year, and is uninformative about Bergamo's.
 
 ```{.r}
 formula_II <- deaths ~ 1 +
@@ -268,7 +250,7 @@ formula_II <- deaths ~ 1 +
 ```
 
 - The `group =` Kronecker construction: IID over provinces, RW1 across the grouped years
-- This is the fully flexible version of the linear slopes we come to shortly
+- This is the fully flexible version of the linear slopes covered shortly
 
 Latent values: $N_p \times N_t$. Hyperparameters: 1.
 
@@ -278,7 +260,7 @@ $$
 \nu_{jt} = \phi_j \otimes \gamma_t, \qquad \boldsymbol{\nu}_{\cdot t} \sim \text{ICAR}(W) \text{ independently for each } t
 $$
 
-**Each year gets its own spatial pattern** — smooth across the map within a year, but unrelated to the year before or after. Natural for events that strike different regions in different years.
+Each year gets its own spatial pattern: smooth across the map within a year, but unrelated to the year before or after. Suited to events affecting different regions in different years.
 
 ```{.r}
 formula_III <- deaths ~ 1 +
@@ -302,7 +284,7 @@ $$
 \nu_{jt} = \phi_j \otimes \xi_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W) \otimes \text{RW1}
 $$
 
-Departures evolve **smoothly in both dimensions at once**: a province's excess resembles its neighbours' *and* its own value last year. The most realistic structure, and the hardest to identify.
+Departures are smooth in both dimensions: a province's excess resembles that of its neighbours, and its own value in the previous year. The most flexible of the four, and the hardest to identify.
 
 ```{.r}
 formula_IV <- deaths ~ 1 +
@@ -316,7 +298,7 @@ formula_IV <- deaths ~ 1 +
     control.group = list(model = "rw1", scale.model = TRUE))
 ```
 
-- Type IV needs extra sum-to-zero constraints beyond `INLA`'s defaults to be identifiable alongside the main effects (via `extraconstr`) — worth knowing before using it in earnest
+- Type IV needs extra sum-to-zero constraints beyond `INLA`'s defaults to be identifiable alongside the main effects (via `extraconstr`), which is worth knowing before using it
 
 Latent values: $N_p \times N_t$. Hyperparameters: 1 (plus constraint bookkeeping).
 
@@ -329,17 +311,21 @@ Latent values: $N_p \times N_t$. Hyperparameters: 1 (plus constraint bookkeeping
 | III | ICAR | IID | provinces, within year | year-specific maps |
 | IV | ICAR | RW | both | genuinely evolving spatial patterns |
 
-- All four cost the **same** $N_p \times N_t$ latent values and one hyperparameter — the difference is what they smooth, not how large they are
+- All four cost the same $N_p \times N_t$ latent values and one hyperparameter: the difference is what they smooth, not how large they are
 - In the South African cervical cancer example from the spatiotemporal session, that was 9 provinces × a handful of years, and a full type IV was comfortably fittable
-- For Italy, $107 \times N_t$ is still potentially fittable — which is why the lab uses this data to demonstrate what happens next
+- For Italy, $107 \times N_t$ is still fittable, which is why the lab uses these data
 
 ## Summary of additional model terms
 
 - An annual space–time model for Italy: three `f()` terms, a handful of hyperparameters, and it fits on a laptop in minutes
-- Every term came from an earlier session: BYM2 (spatial), RW2 smoothing (non-linear regression), partial pooling (hierarchical), PC priors (INLA)
-- We will revisit during the lab
+- Every term came from an earlier session: BYM2 (spatial), RW2 smoothing (non-linear regression), partial pooling (hierarchical) and PC priors (INLA)
+- We will revisit these in the lab
 
-# Considerations for a model at even larger scale
+# A model at larger scale
+
+## A model at larger scale
+
+- Compromises are part of scaling up modelling!
 
 ## A United States model (real example)
 
@@ -353,11 +339,25 @@ Now the entire United States at county level:
 | Race/ethnicity groups | 4+ |
 | Sexes | 2 |
 
-That is around ~4.5 million rows, a spatial graph with thousands of nodes, and a dozen `f()` terms in `R-INLA`, each with its own hyperparameters.
+Around 4.5 million rows, a spatial graph with thousands of nodes, and a dozen `f()` terms in `R-INLA`, each with its own hyperparameters.
+
+
+## A United States model (real example)
+
+![](assets/Picture1.png){fig-align="center"}
+
+
+## A United States model (real example)
+
+![](assets/Picture2.png){fig-align="center"}
+
+## A United States model (real example)
+
+![](assets/Picture3.png){fig-align="center"}
 
 ## Model size progression
 
-How far this is from where the workshop started:
+Compared with where the workshop started:
 
 ```{r}
 #| echo: false
@@ -391,17 +391,74 @@ tibble(
   theme(text = element_text(size = 15))
 ```
 
+## A United States model (real example)
+
+```{.r}
+model_formula <- deaths ~ 1 +
+
+  # Global temporal trend (RW2)
+  f(id_year,    model = "rw2", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_lg) +
+
+  # County-level baseline: spatial + unstructured (BYM2)
+  f(id_county,  model = "bym2", graph = g, scale.model = TRUE,
+    hyper = hyper_bym2) +
+
+  # Global age trend (RW1)
+  f(id_age,     model = "rw1", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_lg) +
+
+  # Global race effect (IID)
+  f(id_race,    model = "iid",
+    hyper = hyper_lg) +
+
+  # Linear space-time interaction: county-specific linear temporal slopes (Besag)
+  f(id_county2, id_year_c, model = "besag", graph = g, scale.model = TRUE,
+    hyper = hyper_besag) +
+
+  # RT_lin: race-specific linear temporal trends (IID across race)
+  f(id_race2,   id_year_c, model = "iid",
+    hyper = hyper_lg) +
+
+  # AT_lin: age-specific linear temporal trends (RW1, smoothed across age)
+  f(id_age2,    id_year_c, model = "rw1", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_lg) +
+
+  # RS: race-specific spatial fields (Besag × IID)
+  f(id_county3, model = "besag", graph = g, scale.model = TRUE,
+    hyper = hyper_besag,
+    group = id_race3, control.group = list(model = "iid", hyper = hyper_lg)) +
+
+  # AS: age-specific spatial scaling via copy feature
+  # Base field: age group 9 (85+), highest death count
+  f(id_county_as9, model = "besag", graph = g, scale.model = TRUE,
+    hyper = hyper_besag) +
+  f(id_county_as1, copy = "id_county_as9", fixed = FALSE) +   # age group 1 (45-49)
+  f(id_county_as2, copy = "id_county_as9", fixed = FALSE) +   # age group 2 (50-54)
+  f(id_county_as3, copy = "id_county_as9", fixed = FALSE) +   # age group 3 (55-59)
+  f(id_county_as4, copy = "id_county_as9", fixed = FALSE) +   # age group 4 (60-64)
+  f(id_county_as5, copy = "id_county_as9", fixed = FALSE) +   # age group 5 (65-69)
+  f(id_county_as6, copy = "id_county_as9", fixed = FALSE) +   # age group 6 (70-74)
+  f(id_county_as7, copy = "id_county_as9", fixed = FALSE) +   # age group 7 (75-79)
+  f(id_county_as8, copy = "id_county_as9", fixed = FALSE) +   # age group 8 (80-84)
+
+  # RA: race-specific age curves (RW1 × IID)
+  f(id_age4,    model = "rw1", constr = TRUE, scale.model = TRUE,
+    hyper = hyper_lg,
+    group = id_race4, control.group = list(model = "iid", hyper = hyper_lg))
+
+```
+
 ## Why this is a challenge to fit
 
 - **Memory**: the sparse precision matrix of the latent field, its Cholesky factor, and every posterior marginal all sit in RAM. Large spatiotemporal `INLA` models can need hundreds of GB.
 - **Time**: hours rather than seconds, and a sensitivity analysis means refitting several times over.
-- **Typical laptop**:  ~16–64 GB of memory.
+- **Typical laptop**: ~16–64 GB of memory.
 
-# The model, term by term
 
 ## The US model: data and indices {.smaller}
 
-The same pattern as the Italy model — one index column per `f()` term, plus the weight variable for the slopes:
+The same pattern as the Italy model: one index column per `f()` term, plus the weight variable for the slopes.
 
 ```{.r}
 dat <- readRDS(file.path(adrd_data_prep, "dat_inla_ready.rds")) |>
@@ -427,7 +484,7 @@ Three tiers, by the role each term plays:
 # Weakly informative: RW, IID and group terms
 hyper_lg    <- list(prec = list(prior = "loggamma", param = c(1, 0.001)))
 
-# Main effect — genuine large between-county variation expected
+# Main effect: large between-county variation expected
 hyper_bym2  <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)),
                     phi  = list(prior = "pc",      param = c(0.5, 2/3)))
 
@@ -435,9 +492,9 @@ hyper_bym2  <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)),
 hyper_besag <- list(prec = list(prior = "pc.prec", param = c(0.5, 0.01)))
 ```
 
-We come back to why the tiering matters for scaling later in the session.
+We return to why the tiering matters later in the session.
 
-## Step 1: main effects {.smaller}
+## Main effects {.smaller}
 
 ```{.r}
 model_formula <- deaths ~ 1 +
@@ -460,16 +517,16 @@ model_formula <- deaths ~ 1 +
 
 Fitted with `family = "nbinomial"` and `E = dat$population`.
 
-## Step 1: main effects {.smaller}
+## Main effects {.smaller}
 
-- The BYM2 county term is exactly the model from the spatial session — the Swiss childhood cancer example — at ~3,100 areas instead of 26 cantons
+- The BYM2 county term is the model from the spatial session (the Swiss childhood cancer example) at ~3,100 areas rather than 26 cantons
 - The RW2 year term is the smooth trend from the non-linear regression session, as a random walk rather than a spline basis
 - `constr = TRUE` (sum-to-zero) keeps each term identifiable alongside the intercept
-- `scale.model = TRUE` makes the precisions comparable across structured terms — and makes the PC priors mean what we think they mean
+- `scale.model = TRUE` makes the precisions comparable across structured terms, so the PC priors carry their intended interpretation
 
 As in Italy, this is a separable model: every county follows the same national trend, every race group the same age curve.
 
-## Step 2: linear time-trend interactions {.smaller}
+## Linear time-trend interactions {.smaller}
 
 ```{.r}
 model_formula <- deaths ~ 1 +
@@ -487,17 +544,17 @@ model_formula <- deaths ~ 1 +
     scale.model = TRUE, hyper = hyper_lg)
 ```
 
-All three take `id_year_c` as a **weight** — the same linear-slope device we just used for Italy, applied on three different dimensions.
+All three take `id_year_c` as a weight: the same linear-slope device used for Italy, applied on three dimensions.
 
-## Step 2: linear time-trend interactions
+## Linear time-trend interactions
 
-- `f(id_county2, id_year_c, model = "besag")` is precisely the Italy interaction, at 3,100 counties
-- `f(id_race2, id_year_c, model = "iid")` is its unstructured cousin — the type II analogue, restricted to a line
-- `f(id_age2, id_year_c, model = "rw1")` smooths the slopes across *age groups*: adjacent ages should be trending similarly
+- `f(id_county2, id_year_c, model = "besag")` is the Italy interaction at 3,100 counties
+- `f(id_race2, id_year_c, model = "iid")` is the unstructured version: the type II analogue, restricted to a line
+- `f(id_age2, id_year_c, model = "rw1")` smooths the slopes across *age groups*, on the assumption that adjacent ages trend similarly
 
-## Step 3: race-specific spatial fields {.smaller}
+## Race-specific spatial fields {.smaller}
 
-Four maps, one per race/ethnicity group — but sharing one spatial precision:
+Four maps, one per race/ethnicity group, sharing one spatial precision:
 
 ```{.r}
 model_formula <- deaths ~ 1 +
@@ -510,12 +567,12 @@ model_formula <- deaths ~ 1 +
     control.group = list(model = "iid", hyper = hyper_lg))
 ```
 
-- The `group =` Kronecker construction from the Italy build — Besag over counties, IID between race groups
+- The `group =` Kronecker construction from the Italy build: Besag over counties, IID between race groups
 - One precision estimated for all four maps, rather than four estimated separately
 
-## Step 4: age-specific spatial fields {.smaller}
+## Age-specific spatial fields {.smaller}
 
-Nine maps, one per age group — but only one is estimated:
+Nine maps, one per age group, of which only one is estimated:
 
 ```{.r}
 model_formula <- deaths ~ 1 +
@@ -533,7 +590,7 @@ model_formula <- deaths ~ 1 +
 - `copy =` re-uses the base field, scaled by an estimated constant (`fixed = FALSE`)
 - The assumption: one shared spatial *shape*, different *amplitudes* by age
 
-## Step 5: race-specific age curves
+## Race-specific age curves
 
 ```{.r}
 model_formula <- deaths ~ 1 +
@@ -547,7 +604,7 @@ model_formula <- deaths ~ 1 +
 ```
 
 - The same `group =` device as step 3, on a different pair of dimensions: a smooth age curve per race group, with the curves tied together by an estimated between-group variance
-- Partial pooling from the hierarchical session — applied to entire curves rather than single parameters
+- Partial pooling from the hierarchical session, applied to entire curves rather than single parameters
 
 ## Where each term comes from {.smaller}
 
@@ -559,7 +616,7 @@ model_formula <- deaths ~ 1 +
 | `f(id_county2, id_year_c, model = "besag")` | Spatial modelling; Italy build |
 | `hyper = list(prec = list(prior = "pc.prec", ...))` | INLA |
 
-## The whole model (real example)
+## The whole model (again)
 
 ::: {style="font-size: 75%;"}
 ```{.r}
@@ -639,11 +696,11 @@ comp |>
   theme(text = element_text(size = 15), legend.position = "bottom")
 ```
 
-Around 25,000 latent parameters in total — and the interaction terms dominate.
+Around 25,000 latent parameters in total, dominated by the interaction terms.
 
 ## Parameter compromises
 
-The totals only stay at 25,000 because of how the interactions are specified:
+The total stays at 25,000 only because of how the interactions are specified:
 
 ```{r}
 #| echo: false
@@ -678,151 +735,156 @@ tribble(
 
 <!-- The next few slides go through these choices one at a time. -->
 
-<!-- # Keeping the interactions affordable -->
 
-<!-- ## Space–time interactions, revisited {.smaller} -->
+## Another example: INLA and DLNM for sex ratios and temperature 
 
-<!-- We built all four interaction types on the Italian data earlier, and each cost the same: -->
+![](assets/Picture4.png){fig-align="center"}
 
-<!-- | Interaction | Structure | Latent values | -->
-<!-- |---|---|---| -->
-<!-- | Type I | $\theta_i \otimes \gamma_t$ (IID × IID) | $N_p \times N_t$ | -->
-<!-- | Type II | $\theta_i \otimes \xi_t$ (IID × RW) | $N_p \times N_t$ | -->
-<!-- | Type III | $\phi_i \otimes \gamma_t$ (ICAR × IID) | $N_p \times N_t$ | -->
-<!-- | Type IV | $\phi_i \otimes \xi_t$ (ICAR × RW) | $N_p \times N_t$ | -->
+# Keeping the interactions affordable
 
-<!-- At 107 provinces, $N_p \times N_t$ is a few thousand values and the choice between them is purely scientific. -->
+## Space–time interactions, revisited {.smaller}
 
-<!-- At 3,100 counties it stops being purely scientific. -->
+We built all four interaction types on the Italian data earlier, and each cost the same:
 
-<!-- ## Space–time interactions, revisited -->
+| Interaction | Structure | Latent values |
+|---|---|---|
+| Type I | $\theta_i \otimes \gamma_t$ (IID × IID) | $N_p \times N_t$ |
+| Type II | $\theta_i \otimes \xi_t$ (IID × RW) | $N_p \times N_t$ |
+| Type III | $\phi_i \otimes \gamma_t$ (ICAR × IID) | $N_p \times N_t$ |
+| Type IV | $\phi_i \otimes \xi_t$ (ICAR × RW) | $N_p \times N_t$ |
 
-<!-- At national scale, a fully flexible (type IV) interaction becomes: -->
+At 107 provinces, $N_p \times N_t$ is a few thousand values and the choice between them is purely scientific.
 
-<!-- $$ -->
-<!-- 3{,}100 \text{ counties} \times 20 \text{ years} = 62{,}000 \text{ interaction parameters} -->
-<!-- $$ -->
+At 3,100 counties it stops being purely scientific.
 
-<!-- The big model instead uses **spatially smoothed linear slopes**: one parameter per county. -->
+## Space–time interactions, revisited
 
-<!-- $$ -->
-<!-- \nu_{it} = \nu_i \cdot c_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W) -->
-<!-- $$ -->
+At national scale, a fully flexible (type IV) interaction becomes:
 
-<!-- 3,100 parameters instead of 62,000 — at the cost of assuming county-level *departures* from the national trend are linear in time. The national trend itself (RW2) remains fully non-linear. -->
+$$
+3{,}100 \text{ counties} \times 20 \text{ years} = 62{,}000 \text{ interaction parameters}
+$$
 
-<!-- ## Space–time interactions, revisited -->
+The big model instead uses **spatially smoothed linear slopes**: one parameter per county.
 
-<!-- What the linear-slope interaction looks like: -->
+$$
+\nu_{it} = \nu_i \cdot c_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W)
+$$
 
-<!-- ```{r} -->
-<!-- #| echo: false -->
-<!-- #| eval: true -->
-<!-- #| fig-align: "center" -->
-<!-- #| fig-width: 8 -->
-<!-- #| fig-height: 4.5 -->
-<!-- #| message: false -->
-<!-- #| warning: false -->
+3,100 parameters instead of 62,000 — at the cost of assuming county-level *departures* from the national trend are linear in time. The national trend itself (RW2) remains fully non-linear.
 
-<!-- library(dplyr) -->
-<!-- library(ggplot2) -->
-<!-- library(tidyr) -->
+## Space–time interactions, revisited
 
-<!-- set.seed(4) -->
-<!-- t <- 1:20 -->
-<!-- national <- tibble(t = t, -->
-<!--                    nat = -0.012 * (t - 1) + 0.08 * sin(2 * pi * t / 14)) -->
+What the linear-slope interaction looks like:
 
-<!-- nu <- rnorm(15, 0, 0.012) -->
+```{r}
+#| echo: false
+#| eval: true
+#| fig-align: "center"
+#| fig-width: 8
+#| fig-height: 4.5
+#| message: false
+#| warning: false
 
-<!-- counties <- crossing(county = 1:15, t = t) |> -->
-<!--   left_join(national, by = "t") |> -->
-<!--   mutate(y = nat + nu[county] * (t - mean(t))) -->
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 
-<!-- ggplot() + -->
-<!--   geom_line(data = counties, -->
-<!--             aes(x = t, y = y, group = county), -->
-<!--             colour = "grey60", linewidth = 0.4) + -->
-<!--   geom_line(data = national, aes(x = t, y = nat), -->
-<!--             colour = "darkcyan", linewidth = 1.5) + -->
-<!--   labs(x = "Year", y = "Log relative rate", -->
-<!--        subtitle = "National RW2 trend (bold) plus county-specific linear departures (grey)") + -->
-<!--   theme_bw() + -->
-<!--   theme(text = element_text(size = 15)) -->
-<!-- ``` -->
+set.seed(4)
+t <- 1:20
+national <- tibble(t = t,
+                   nat = -0.012 * (t - 1) + 0.08 * sin(2 * pi * t / 14))
 
-<!-- Compare the spaghetti plot of crude rates from the spatial session: each county keeps its own trajectory, but its *departure* from the national curve is a straight line. -->
+nu <- rnorm(15, 0, 0.012)
 
-<!-- ## Restricting flexibility is a modelling choice {.smaller} -->
+counties <- crossing(county = 1:15, t = t) |>
+  left_join(national, by = "t") |>
+  mutate(y = nat + nu[county] * (t - mean(t)))
 
-<!-- - The linear-slope interaction is a deliberate simplification, in the same spirit as choosing a spline basis in the non-linear regression session: spend the parameters where the data can support them -->
-<!-- - With ~20 annual observations per county × age × race cell, a county-specific *non-linear* trend is rarely identifiable anyway — the prior would dominate -->
-<!-- - If a richer interaction is needed, there is a middle ground: e.g. a spatial field grouped by a RW1 over time, which is still far cheaper than type IV -->
+ggplot() +
+  geom_line(data = counties,
+            aes(x = t, y = y, group = county),
+            colour = "grey60", linewidth = 0.4) +
+  geom_line(data = national, aes(x = t, y = nat),
+            colour = "darkcyan", linewidth = 1.5) +
+  labs(x = "Year", y = "Log relative rate",
+       subtitle = "National RW2 trend (bold) plus county-specific linear departures (grey)") +
+  theme_bw() +
+  theme(text = element_text(size = 15))
+```
 
-<!-- At scale, every interaction term should be able to answer: *what would the data look like if this term were needed, and can the data at this resolution actually show it?* -->
+Compare the spaghetti plot of crude rates from the spatial session: each county keeps its own trajectory, but its *departure* from the national curve is a straight line.
 
-<!-- ## Grouped (Kronecker) models: `group =` {.smaller} -->
+## Restricting flexibility is a modelling choice {.smaller}
 
-<!-- Race-specific spatial fields — four maps, one per race/ethnicity group: -->
+- The linear-slope interaction is a deliberate simplification, in the same spirit as choosing a spline basis in the non-linear regression session: spend the parameters where the data can support them
+- With ~20 annual observations per county × age × race cell, a county-specific *non-linear* trend is rarely identifiable anyway — the prior would dominate
+- If a richer interaction is needed, there is a middle ground: e.g. a spatial field grouped by a RW1 over time, which is still far cheaper than type IV
 
-<!-- ```{.r} -->
-<!-- f(id_county3, model = "besag", graph = g, scale.model = TRUE, -->
-<!--   hyper = hyper_besag, -->
-<!--   group = id_race3, control.group = list(model = "iid", hyper = hyper_lg)) -->
-<!-- ``` -->
+At scale, every interaction term should be able to answer: *what would the data look like if this term were needed, and can the data at this resolution actually show it?*
 
-<!-- - One Besag field, replicated across race groups, with an IID structure *between* groups -->
-<!-- - The result is a Kronecker product: the same spatial dependence within each group, and an estimated variance for how much the groups differ -->
+## Grouped (Kronecker) models: `group =` {.smaller}
 
-<!-- ## Grouped (Kronecker) models: `group =` -->
+Race-specific spatial fields — four maps, one per race/ethnicity group:
 
-<!-- Compared with fitting four separate `f()` terms: -->
+```{.r}
+f(id_county3, model = "besag", graph = g, scale.model = TRUE,
+  hyper = hyper_besag,
+  group = id_race3, control.group = list(model = "iid", hyper = hyper_lg))
+```
 
-<!-- - One shared spatial precision rather than four — fewer hyperparameters -->
-<!-- - The between-group variation gets its own, estimated, variance — partial pooling across groups, exactly as in the hierarchical session, but now for entire spatial fields -->
-<!-- - Sparse groups borrow strength from the others, so this is usually a statistical improvement as well as a computational one -->
+- One Besag field, replicated across race groups, with an IID structure *between* groups
+- The result is a Kronecker product: the same spatial dependence within each group, and an estimated variance for how much the groups differ
 
-<!-- The reason fewer hyperparameters matters so much is on the next slide. -->
+## Grouped (Kronecker) models: `group =`
 
-<!-- ## Hyperparameters are the expensive dimension -->
+Compared with fitting four separate `f()` terms:
 
-<!-- ```{r} -->
-<!-- #| echo: false -->
-<!-- #| eval: true -->
-<!-- #| fig-align: "center" -->
-<!-- #| fig-width: 8 -->
-<!-- #| fig-height: 4.5 -->
-<!-- #| message: false -->
-<!-- #| warning: false -->
+- One shared spatial precision rather than four — fewer hyperparameters
+- The between-group variation gets its own, estimated, variance — partial pooling across groups, exactly as in the hierarchical session, but now for entire spatial fields
+- Sparse groups borrow strength from the others, so this is usually a statistical improvement as well as a computational one
 
-<!-- library(dplyr) -->
-<!-- library(ggplot2) -->
-<!-- library(tidyr) -->
+The reason fewer hyperparameters matters so much is on the next slide.
 
-<!-- tibble(k = 1:12) |> -->
-<!--   mutate(`3 points per dimension` = 3^k, -->
-<!--          `5 points per dimension` = 5^k) |> -->
-<!--   pivot_longer(-k, names_to = "grid", values_to = "points") |> -->
-<!--   ggplot(aes(x = k, y = points, colour = grid)) + -->
-<!--   geom_line(linewidth = 1) + -->
-<!--   geom_point(size = 2) + -->
-<!--   geom_hline(yintercept = 1, linetype = 2) + -->
-<!--   annotate("text", x = 10.5, y = 1.8, label = "empirical Bayes: 1 point", size = 4.5) + -->
-<!--   scale_y_log10(labels = scales::comma) + -->
-<!--   scale_x_continuous(breaks = 1:12) + -->
-<!--   scale_colour_manual(values = c("darkcyan", "#D55E00")) + -->
-<!--   labs(x = expression("Number of hyperparameters, dim(" * theta * ")"), -->
-<!--        y = "Grid evaluations needed (log scale)", colour = NULL) + -->
-<!--   theme_bw() + -->
-<!--   theme(text = element_text(size = 15), legend.position = "bottom") -->
-<!-- ``` -->
+## Hyperparameters are the expensive dimension
 
-<!-- - From the INLA session: each evaluation point in $\boldsymbol{\theta}$ means factorising the full sparse precision matrix -->
-<!-- - A naive grid grows exponentially in dim($\boldsymbol{\theta}$); the CCD design and empirical Bayes exist precisely to avoid this — but keeping dim($\boldsymbol{\theta}$) down helps every strategy -->
+```{r}
+#| echo: false
+#| eval: true
+#| fig-align: "center"
+#| fig-width: 8
+#| fig-height: 4.5
+#| message: false
+#| warning: false
 
-## The `copy` feature 
+library(dplyr)
+library(ggplot2)
+library(tidyr)
 
-Age-specific spatial patterns — nine maps, one per age group:
+tibble(k = 1:12) |>
+  mutate(`3 points per dimension` = 3^k,
+         `5 points per dimension` = 5^k) |>
+  pivot_longer(-k, names_to = "grid", values_to = "points") |>
+  ggplot(aes(x = k, y = points, colour = grid)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  geom_hline(yintercept = 1, linetype = 2) +
+  annotate("text", x = 10.5, y = 1.8, label = "empirical Bayes: 1 point", size = 4.5) +
+  scale_y_log10(labels = scales::comma) +
+  scale_x_continuous(breaks = 1:12) +
+  scale_colour_manual(values = c("darkcyan", "#D55E00")) +
+  labs(x = expression("Number of hyperparameters, dim(" * theta * ")"),
+       y = "Grid evaluations needed (log scale)", colour = NULL) +
+  theme_bw() +
+  theme(text = element_text(size = 15), legend.position = "bottom")
+```
+
+- From the INLA session: each evaluation point in $\boldsymbol{\theta}$ means factorising the full sparse precision matrix
+- A naive grid grows exponentially in dim($\boldsymbol{\theta}$); the CCD design and empirical Bayes exist precisely to avoid this — but keeping dim($\boldsymbol{\theta}$) down helps every strategy
+
+## The `copy` feature
+
+Age-specific spatial patterns, as nine maps, one per age group:
 
 ```{.r}
 # Base field: the age group with the most deaths (85+)
@@ -833,16 +895,15 @@ f(id_county_as2, copy = "id_county_as9", fixed = FALSE) +  # 50-54
 ...
 ```
 
-- One spatial field is estimated properly, anchored to the age group with the most data
-- The other eight age groups get a **scaled copy**: the same map, multiplied by an estimated constant (`fixed = FALSE`)
-- Use with caution
+- Only one spatial field is estimated, anchored to the age group with the most data
+- The other eight age groups get a scaled copy: the same map, multiplied by an estimated constant (`fixed = FALSE`)
 
 ## The `copy` feature
 
 | Specification | Latent field | Hyperparameters |
 |---|---|---|
 | Nine independent Besag fields | 9 × 3,100 | 9 precisions |
-| One field + eight copies | 3,100 | 1 precision + 8 scaling constants |
+| One field + eight copies | 3,100 | 1 precision|
 
 - The assumption: the *shape* of the age-specific spatial pattern is shared, and only its *amplitude* varies by age
 - Use with caution
@@ -888,116 +949,15 @@ This is the same idea as the *spline-by-constant* DLNM from the advanced models 
 
 ## The `copy` feature
 
-- Where the shared-shape assumption fails, it fails visibly: plot the base field against crude age-specific SMRs before committing to it
-- `group =` and `copy =` are the two main ways `R-INLA` lets you share structure across strata instead of re-estimating it
-- Both trade a modelling assumption for a large reduction in cost — and both borrow strength for the sparse strata
-
-## Priors as part of scaling {.smaller}
-
-The big model uses PC priors (INLA session) in deliberate tiers:
-
-```{.r}
-# Main effect: county baseline (BYM2)
-# genuine large between-county variation expected
-hyper_bym2  <- list(prec = list(prior = "pc.prec", param = c(1, 0.01)),
-                    phi  = list(prior = "pc",      param = c(0.5, 2/3)))
-
-# Interaction terms (Besag slopes, race-spatial fields)
-# deviations from main effects, so should be smaller
-hyper_besag <- list(prec = list(prior = "pc.prec", param = c(0.5, 0.01)))
-```
-
-- $P(\sigma > 1) = 0.01$ for the main effect; $P(\sigma > 0.5) = 0.01$ for the interactions
-- Read exactly as in the INLA session — only now the choice of $U$ differs by the *role* of the term
-
-## Priors as part of scaling
-
-```{r}
-#| echo: false
-#| eval: true
-#| fig-align: "center"
-#| fig-width: 8
-#| fig-height: 4.5
-#| message: false
-#| warning: false
-
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-
-sigma <- seq(0.001, 1.6, length.out = 400)
-
-tibble(sigma = sigma,
-       `Main effects: P(sigma > 1) = 0.01`      = dexp(sigma, rate = -log(0.01) / 1),
-       `Interactions: P(sigma > 0.5) = 0.01`    = dexp(sigma, rate = -log(0.01) / 0.5)) |>
-  pivot_longer(-sigma, names_to = "prior", values_to = "density") |>
-  ggplot(aes(x = sigma, y = density, colour = prior)) +
-  geom_line(linewidth = 1) +
-  scale_colour_manual(values = c("#D55E00", "darkcyan")) +
-  labs(x = expression(sigma), y = "Prior density", colour = NULL) +
-  theme_bw() +
-  theme(text = element_text(size = 15), legend.position = "bottom")
-```
-
-- PC priors shrink towards the simpler base model ($\sigma = 0$), so interaction terms the data do not support collapse towards zero rather than soaking up noise
-- With a dozen variance components this shrinkage is doing real work: it is what stops a richly parameterised model from overfitting — and a well-shrunk model is also better behaved numerically
-
-<!-- ## Why any of this is fittable {.smaller} -->
-
-<!-- From the INLA session: this whole model is still a **latent Gaussian model**, and every component (RW1, RW2, Besag, BYM2, IID, and their grouped/copied versions) is a **Gaussian Markov random field**. -->
-
-<!-- - The joint precision matrix of the latent field is huge but very sparse: each county talks only to its neighbours, each year only to adjacent years -->
-<!-- - `INLA` exploits this sparsity in every factorisation -->
-<!-- - Cost grows with the size and fill-in of that sparse matrix — far more slowly than the number of parameters would suggest -->
-
-<!-- ## Why any of this is fittable -->
-
-<!-- ```{r} -->
-<!-- #| echo: false -->
-<!-- #| eval: true -->
-<!-- #| fig-align: "center" -->
-<!-- #| fig-width: 6 -->
-<!-- #| fig-height: 5.5 -->
-<!-- #| message: false -->
-<!-- #| warning: false -->
-
-<!-- library(dplyr) -->
-<!-- library(ggplot2) -->
-
-<!-- n_side <- 8 -->
-<!-- N <- n_side^2 -->
-<!-- coords <- expand.grid(x = 1:n_side, y = 1:n_side) -->
-
-<!-- W <- matrix(0, N, N) -->
-<!-- for (i in 1:N) { -->
-<!--   for (j in 1:N) { -->
-<!--     if (abs(coords$x[i] - coords$x[j]) + -->
-<!--         abs(coords$y[i] - coords$y[j]) == 1) W[i, j] <- 1 -->
-<!--   } -->
-<!-- } -->
-<!-- Q <- diag(rowSums(W)) - W -->
-
-<!-- nz <- which(Q != 0, arr.ind = TRUE) |> as_tibble() -->
-<!-- pct <- round(100 * nrow(nz) / N^2) -->
-
-<!-- ggplot(nz, aes(x = col, y = row)) + -->
-<!--   geom_tile(fill = "darkcyan") + -->
-<!--   scale_y_reverse() + -->
-<!--   coord_equal() + -->
-<!--   labs(x = NULL, y = NULL, -->
-<!--        subtitle = paste0("Non-zero entries of the ICAR precision matrix, 8 \u00d7 8 lattice (", -->
-<!--                          pct, "% of entries non-zero)")) + -->
-<!--   theme_bw() + -->
-<!--   theme(text = element_text(size = 15)) -->
-<!-- ``` -->
-
-<!-- At 3,100 counties the picture is the same, only emptier — which is why the strategy throughout is: stay inside the GMRF world, keep the graph sparse, and keep the number of hyperparameters down. -->
+- Check the shared-shape assumption before committing to it: plot the base field against crude age-specific SMRs
+- `group =` and `copy =` are the two main ways `R-INLA` allows structure to be shared across strata instead of re-estimated
+- Both trade a modelling assumption for a reduction in cost, and both borrow strength for sparse strata
 
 # Making `INLA` run faster
 
 ## Making a slow fit faster {.smaller}
 
-In rough order of how much they usually buy you:
+Roughly in order of how much time they usually save:
 
 | Lever | Code |
 |---|---|
@@ -1008,7 +968,7 @@ In rough order of how much they usually buy you:
 
 ## Making a slow fit faster {.smaller}
 
-In rough order of how much they usually buy you:
+Continued:
 
 | Lever | Code |
 |---|---|
@@ -1019,10 +979,10 @@ In rough order of how much they usually buy you:
 
 . . .
 
-Two habits worth forming: **scale your covariates**, because a badly conditioned
-latent field makes the $\boldsymbol{\theta}$ optimisation wander; and **use PC
-priors**, which keep the hyperparameters on a sensible scale and tend to make
-the mode easier to find.
+Two habits worth forming: scale covariates, since a badly conditioned latent
+field makes the $\boldsymbol{\theta}$ optimisation wander; and use PC priors,
+which keep the hyperparameters on a sensible scale and tend to make the mode
+easier to find.
 
 <!-- . . . -->
 
@@ -1074,14 +1034,14 @@ fit <- inla(model_formula, ...,
 ## Why this works
 
 - The expensive part of a large `INLA` fit is the numerical optimisation over the hyperparameters: each candidate value of $\boldsymbol{\theta}$ requires factorising a large sparse matrix
-- The *location* of the mode barely depends on which approximation strategy is used
-- So the mode can be found cheaply, and the expensive settings used for a single pass from there
+- The *location* of the mode depends only weakly on which approximation strategy is used
+- The mode can therefore be found cheaply, and the expensive settings used for a single pass from there
 
 <!-- On large models this can cut the runtime substantially. It also means that if something is wrong with the model specification, the rough stage fails within minutes rather than hours into the full fit. -->
 
 ## Only compute what you need
 
-Every quantity requested in an `inla()` call costs time and memory, and at scale those costs add up.
+Every quantity requested in an `inla()` call costs time and memory, and at scale these add up.
 
 - `control.predictor = list(compute = FALSE)` unless you need fitted values from this particular fit
 - `dic`, `waic`, `cpo`: only in the fits where you will actually use them
@@ -1093,14 +1053,14 @@ Every quantity requested in an `inla()` call costs time and memory, and at scale
 ## Threads and solvers
 
 - `num.threads` in `inla()` controls parallelism within a fit; useful, but with diminishing returns, and more threads mean more memory in use at once
-- The PARDISO sparse solver can speed up the factorisations considerably on large models — see `inla.pardiso()` for setup on your system
-- Recent versions of `R-INLA` also include a reworked, lower-memory computational core — worth keeping the package up to date if you are fitting large models
+- The PARDISO sparse solver can speed up the factorisations on large models; see `inla.pardiso()` for setup on your system
+- Recent versions of `R-INLA` also include a reworked, lower-memory computational core, so keep the package up to date for large models
 
-# Scaling even further
+# Scaling further
 
 ## What happens if the model grows again
 
-Each of these is a real request that comes up in practice:
+Each of these comes up in practice:
 
 | Change | What it multiplies |
 |---|---|
@@ -1149,19 +1109,19 @@ tribble(
 
 ## The options, roughly in order
 
-1. **Restrict the interaction structure**: linear slopes, `group =`, `copy =` — as in the model we just walked through
-2. **Stratify into independent models**: Smaller models, run in parallel, and simpler to debug than one enormous joint model
+1. **Restrict the interaction structure**: linear slopes, `group =`, `copy =`, as in the model above
+2. **Stratify into independent models**: smaller models, run in parallel, and simpler to debug than one large joint model
 3. **Aggregate a dimension you do not need**: if the question is about counties and years, do not carry months
 4. **Reduce outputs**: marginals only for the quantities you will report
-5. Only then: **bigger hardware**
+5. **Bigger hardware**: only once the options above are exhausted
 
 ## The options, roughly in order
 
 A note on stratifying (option 2):
 
-- Splitting into independent models has a statistical cost — no borrowing of strength across the strata you split on
-- So split on the dimensions where pooling was never intended (sex, cause definition), not the ones where it matters if you can help it (age, race, space)
-- The bonus: independent fits can run simultaneously, which is what the job arrays at the end of this session are for
+- Splitting into independent models has a statistical cost: no borrowing of strength across the strata you split on
+- So split on the dimensions where pooling was never intended (sex, cause definition), and avoid splitting where it matters (age, race, space)
+- Independent fits can also run simultaneously, which is what the job arrays later in this session are for
 
 # Outputs at scale
 
@@ -1172,8 +1132,8 @@ A full fitted object from a national-scale model can run to tens of GB.
 Save instead:
 
 1. **Tidy summary tables**: one row per county × year × group, with the posterior median and 95% credible interval
-2. **Posterior samples of the quantities you report**, via `inla.posterior.sample()` (this is what `config = TRUE` is for), so that derived quantities carry proper uncertainty
-3. **Hyperparameter summaries** and model metadata: the formula, priors, date, and software versions used
+2. **Posterior samples of the reported quantities**: via `inla.posterior.sample()`, which is what `config = TRUE` is for, so that derived quantities carry their uncertainty
+3. **Hyperparameter summaries and metadata**: the formula, priors, date, and software versions used
 
 ## What to save
 
@@ -1238,14 +1198,14 @@ tribble(
 
 ## High-performance computing, in brief
 
-Once the model is as lean as it can be, some fits genuinely need hundreds of GB of memory — and that means a high-performance computing (HPC) cluster.
+Once the model is as lean as it can be, some fits still need hundreds of GB of memory, which means a high-performance computing (HPC) cluster.
 
 - You connect to a **login node**, and submit jobs to a **scheduler** (usually SLURM), which runs them on large **compute nodes**
 - A job is just a shell script with a resource request at the top, running the same R script you developed locally:
 
 ```{.bash}
 #SBATCH --time=12:00:00
-#SBATCH --mem=700G          # a real request, for the model above
+#SBATCH --mem=700G          # as requested for the model above
 #SBATCH --array=1-4         # one job per sex x cause stratum
 
 Rscript fit_stratum.R ${SLURM_ARRAY_TASK_ID}
@@ -1253,47 +1213,47 @@ Rscript fit_stratum.R ${SLURM_ARRAY_TASK_ID}
 
 ## High-performance computing, in brief
 
-- The `--array` line runs the four stratified models simultaneously — the payoff for stratifying into independent fits
-- Request resources honestly: too little and the job is killed; far too much and you wait much longer in the queue
-- A sensible approach: run a scaled-down version first, check what it actually used (`seff <jobid>`), then request somewhat above that
+- The `--array` line runs the four stratified models simultaneously, which is the point of stratifying into independent fits
+- Request resources realistically: too little and the job is killed; far too much and it waits longer in the queue
+- One approach: run a scaled-down version first, check what it used (`seff <jobid>`), then request somewhat above that
 
 ## Reproducibility on a cluster
 
 - The cluster runs a different Linux from your laptop, and `INLA` and `sf` depend on system libraries
-- A **container** (Apptainer on most clusters) solves this: a single file holding the operating system, R, and every package at fixed versions
+- A container (Apptainer on most clusters) solves this: a single file holding the operating system, R, and every package at fixed versions
 
 ```{.bash}
 apptainer exec --cleanenv --bind "$PWD":"$PWD" \
   ~/r_spatial.sif Rscript fit_stratum.R 1
 ```
 
-- The same container file gives the same results on the cluster now and on any machine years later — archive it alongside the paper
+- The same container gives the same results on the cluster now and on another machine later; archive it alongside the paper
 
-## Getting access to serious computing 
+## Getting access to large-scale computing
 
-Worth investigating early in a project, not when the first fit fails:
+Worth investigating early in a project rather than when the first fit fails:
 
 - **Your institution's HPC cluster**: most universities run one; access is often free or cheap for researchers, sometimes with priority or extra storage available to purchase. Start with your research computing group
-- **National allocations**: in the US, ACCESS (formerly XSEDE) awards free compute time on national systems through a lightweight application; many other countries have equivalents
+- **National allocations**: in the US, ACCESS (formerly XSEDE) awards free compute time on national systems through a short application; many other countries have equivalents
 
-## Getting access to serious computing
+## Getting access to large-scale computing
 
-- **Cloud computing**: AWS, GCP and Azure rent high-memory machines by the hour — expensive for sustained use, but reasonable for occasional very large fits, and no queue
+- **Cloud computing**: AWS, GCP and Azure rent high-memory machines by the hour; expensive for sustained use, but reasonable for occasional large fits, and with no queue
 - **Budget compute into grants**: cluster allocations, cloud credits, or a share of a departmental high-memory node are all legitimate, and increasingly expected, direct costs
 
-For the models in this session, the single most useful specification to ask about is **high-memory nodes** (512 GB–1 TB) — for large `INLA` fits, memory matters much more than core count.
+For the models in this session, the specification to ask about is high-memory nodes (512 GB–1 TB): for large `INLA` fits, memory matters more than core count.
 
-# Wrapping up
+# Summary
 
 ## The approach, end to end {.smaller}
 
 1. **Specify for scale**: restricted interactions, shared structure via `group =` and `copy =`, tiered PC priors, as few hyperparameters as the science allows
 2. **Develop small, locally**: subset the data, `strategy = "gaussian"`, iterate quickly
 3. **Stage the full fit**: rough then full, warm-started, computing only what is needed
-4. **Stratify** into independent fits where pooling was never intended, and run them in parallel
-5. **Save summaries and posterior samples**, date-stamped, rather than whole fitted objects
-6. **Explore** interactively; **report** the slices that matter
-7. Move to HPC only for the fits that genuinely need it — and know how to get access before you do
+4. **Stratify**: independent fits where pooling was never intended, run in parallel
+5. **Save selectively**: date-stamped summaries and posterior samples, rather than whole fitted objects
+6. **Explore and report**: interactive exploration, and report the slices that matter
+7. Move to HPC only for the fits that need it, and arrange access before you do
 
 # Getting ready for the lab
 
@@ -1303,7 +1263,7 @@ For the models in this session, the single most useful specification to ask abou
 
 - During this lab session, we will:
 
-  1. Build an annual space–time model up term by term — BYM2 baseline, RW2 trend, then the interaction — comparing the Knorr-Held types against Besag linear slopes;
+  1. Build an annual space–time model up term by term (BYM2 baseline, RW2 trend, then the interaction), comparing the Knorr-Held types against Besag linear slopes;
   2. Compare a fit with everything computed against a lean fit, and time the rough/full two-stage workflow;
   3. Turn the model into an `Rscript` and `sbatch` pair, with a job array for the prior sensitivity analysis;
   <!-- 4. Sample from the posterior with `inla.posterior.sample()` and save tidy summaries; and -->
