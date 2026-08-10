@@ -7,7 +7,7 @@
 
 GitHub repo through which we're developing and sharing materials for the Imperial College London Bayesian Modelling for Environmental Health Workshop, taking place in person during August 19th-21st 2026. 
 
-This workshop is delivered as one of two, within a [5-day Summer School](https://www.imperial.ac.uk/lifelong-learning/courses/advanced-methods-climate-and-health-attribution/) on Advanced methods for climate and health attribution. Resources for the second module, on probabilistic climate attribution, can also be [found here](https://github.com/WorldWeatherAttribution/probabilistic-climate-attribution-workshop_2026).
+This workshop is delivered as one of two modules that make up a [5-day Summer School](https://www.imperial.ac.uk/lifelong-learning/courses/advanced-methods-climate-and-health-attribution/) on Advanced methods for climate and health attribution. Resources for the second module, on probabilistic climate attribution, can also be [found here](https://github.com/WorldWeatherAttribution/probabilistic-climate-attribution-workshop_2026).
 
 The material here builds from Columbia University's [SHARP: Bayesian Modeling for Environmental Health Workshop](https://github.com/sparklabnyc/sharp_bayesian_environmental_health_2026).
 
