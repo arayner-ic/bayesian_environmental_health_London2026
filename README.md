@@ -1,12 +1,14 @@
-# SHARP: Bayesian Modeling for Environmental Health Workshop
+# Bayesian Modelling for Environmental Health Workshop: Imperial College London 2026
 
-![](assets/bmeh-1200x630.jpg)
+![](assets/Grantham with Roundel 1.jpg)
 
 ## Introduction
 
-GitHub repo through which we're developing and sharing materials for the Imperial College London Bayesian Modeling for Environmental Health Workshop, taking place in person during August 19th-21st 2026.
+GitHub repo through which we're developing and sharing materials for the Imperial College London Bayesian Modelling for Environmental Health Workshop, taking place in person during August 19th-21st 2026. 
 
-The material here builds from Columbia University's....
+This workshop is delivered as one of two, within a [5-day Summer School](https://www.imperial.ac.uk/lifelong-learning/courses/advanced-methods-climate-and-health-attribution/) on Advanced methods for climate and health attribution. Resources for the second module, on probabilistic climate attribution, can also be [found here](https://github.com/WorldWeatherAttribution/probabilistic-climate-attribution-workshop_2026).
+
+The material here builds from Columbia University's [SHARP: Bayesian Modeling for Environmental Health Workshop](https://github.com/sparklabnyc/sharp_bayesian_environmental_health_2026).
 
 ## Notes for attendees
 
@@ -66,7 +68,7 @@ Below is the set of lectures and labs to follow throughout the three days:
 | 10:15 - 11:15 | [Advanced environmental modelling](/labs/advanced_models/advanced_models.qmd) (Lab) |
 | 11:15 - 12:15 | [Scaling Bayesian models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
 | 12:15 - 12:30 | Group photo |
-| 12:30 - 13:30 | Lunch |
+| 12:30 - 1:30 | Lunch |
 | 1:30 - 2:00 | [Scaling Bayesian models](/labs/scaling_models/scaling_models.qmd) (Lab) |
 | 2:00 - 2:30 | [Tropical cyclone attribution](lectures/attribution/tc_attribution.pptx) (Lecture) |
 | 2:30 - 3:00 | [Heat attribution](lectures/attribution/attribution.pptx) (Lecture) |
