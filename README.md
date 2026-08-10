@@ -1,4 +1,5 @@
-# Bayesian Modelling for Environmental Health Workshop: Imperial College London 2026
+# Bayesian Modelling for Environmental Health Workshop 
+# Imperial College London 2026
 
 ![](assets/Grantham_with_roundel.jpg)
 
