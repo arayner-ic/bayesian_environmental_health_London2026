@@ -4,7 +4,9 @@
 
 ## Introduction
 
-GitHub repo through which we're developing and sharing materials for the SHARP Bayesian Modeling for Environmental Health Workshop, taking place in person during August 5th-7th 2026.
+GitHub repo through which we're developing and sharing materials for the Imperial College London Bayesian Modeling for Environmental Health Workshop, taking place in person during August 19th-21st 2026.
+
+The material here builds from Columbia University's....
 
 ## Notes for attendees
 
@@ -14,13 +16,13 @@ We will be using `Posit (RStudio) Cloud`, which assumes knowledge of `R` and `RS
 
 This workshop is written partly in [`NIMBLE`](https://r-nimble.org/). There are also several elements later on in [`R-INLA`](https://www.r-inla.org/).
 
-Below is the set of lectures and labs to follow throughout the two days:
+Below is the set of lectures and labs to follow throughout the three days:
 
-### Day 1 (August 5th 2026)
+### Day 1 (August 19th 2026)
 
 | Time | Activity |
 |------------------------------------|------------------------------------|
-| 8:30 - 9:00 | Check in and breakfast |
+| 8:30 - 9:00 | Check in |
 | 9:00 - 9:15 | [Welcome and introduction](/lectures/welcome_and_introduction/welcome_and_introduction.qmd) |
 | 9:15 - 10:00 | [Principles of Bayesian statistics](/lectures/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lecture) |
 | 10:00 - 10:45 | [Principles of Bayesian statistics](/labs/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lab) |
@@ -36,11 +38,11 @@ Below is the set of lectures and labs to follow throughout the two days:
 | 4:15 - 4:45 | [Priors](/labs/priors/priors.qmd) (Lab) |
 | 4:45 - 5:00 | Questions and wrap-up |
 
-### Day 2 (August 6th 2026)
+### Day 2 (August 20th 2026)
 
 | Time | Activity |
 |------------------------------------|------------------------------------|
-| 8:30 - 9:00 | Check in and breakfast |
+| 8:30 - 9:00 | Check in |
 | 9:00 - 9:45 | [Regression with non-linear terms](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
 | 9:45 - 10:30 | [Regression with non-linear terms](/labs/non_linear_regression/non_linear_regression.qmd) (Lab) |
 | 10:30 - 10:45 | Break |
@@ -54,23 +56,24 @@ Below is the set of lectures and labs to follow throughout the two days:
 | 3:45 - 4:30 | [INLA and R-INLA](/labs/inla/inla.qmd) (Lab) |
 | 4:30 - 5:00 | Questions, survey on projects, and wrap-up |
 
-### Day 3 (August 7th 2026)
+### Day 3 (August 21st 2026)
 
 | Time | Activity |
 |------------------------------------|------------------------------------|
-| 8:30 - 9:00 | Check in and breakfast |
+| 8:30 - 9:00 | Check in |
 | 9:00 - 10:00 | [Advanced environmental modelling](lectures/advanced_models/advanced_models.qmd) (Lecture) |
 | 10:00 - 10:15 | Break |
 | 10:15 - 11:15 | [Advanced environmental modelling](/labs/advanced_models/advanced_models.qmd) (Lab) |
-| 11:15 - 11:45 | [Attribution](lectures/attribution/attribution.pptx) (Lecture) |
-| 11:45 - 12:45 | Lunch |
-| 12:45 - 1:45 | [Scaling Bayesian models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
-| 1:45 - 2:15 | [Scaling Bayesian models](/labs/scaling_models/scaling_models.qmd) (Lab) |
-| 2:15 - 2:30 | Break |
-| 2:30 - 3:30 | Potential projects discussion |
-| 3:30 - 4:00 | Panel discussion |
-| 4:00 - 4:15 | Group photo |
-| 4:15 - 5:00 | Final farewell |
+| 11:15 - 12:15 | [Scaling Bayesian models](/lectures/scaling_models/scaling_models.qmd) (Lecture) |
+| 12:15 - 12:30 | Group photo |
+| 12:30 - 13:30 | Lunch |
+| 1:30 - 2:00 | [Scaling Bayesian models](/labs/scaling_models/scaling_models.qmd) (Lab) |
+| 2:00 - 2:30 | [Tropical cyclone attribution](lectures/attribution/tc_attribution.pptx) (Lecture) |
+| 2:30 - 3:00 | [Heat attribution](lectures/attribution/attribution.pptx) (Lecture) |
+| 3:00 - 3:15 | Break |
+| 3:15 - 4:15 | Potential projects discussion |
+| 4:15 - 4:45 | Panel discussion |
+| 4:45 - 5:00 | Final farewell |
 
 ## Notes for those working on the repo
 
