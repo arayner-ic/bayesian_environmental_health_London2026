@@ -25,7 +25,7 @@ Below is the set of lectures and labs to follow throughout the three days:
 
 | Time | Activity |
 |------------------------------------|------------------------------------|
-| 8:30 - 9:00 | Check in |
+| 8:30 - 9:00 | Check in and coffee|
 | 9:00 - 9:15 | [Welcome and introduction](/lectures/welcome_and_introduction/welcome_and_introduction.qmd) |
 | 9:15 - 10:00 | [Principles of Bayesian statistics](/lectures/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lecture) |
 | 10:00 - 10:45 | [Principles of Bayesian statistics](/labs/principles_of_bayesian_statistics/principles_of_bayesian_statistics.qmd) (Lab) |
@@ -45,7 +45,7 @@ Below is the set of lectures and labs to follow throughout the three days:
 
 | Time | Activity |
 |------------------------------------|------------------------------------|
-| 8:30 - 9:00 | Check in |
+| 8:30 - 9:00 | Check in and coffee|
 | 9:00 - 9:45 | [Regression with non-linear terms](/lectures/non_linear_regression/non_linear_regression.qmd) (Lecture) |
 | 9:45 - 10:30 | [Regression with non-linear terms](/labs/non_linear_regression/non_linear_regression.qmd) (Lab) |
 | 10:30 - 10:45 | Break |
@@ -63,7 +63,7 @@ Below is the set of lectures and labs to follow throughout the three days:
 
 | Time | Activity |
 |------------------------------------|------------------------------------|
-| 8:30 - 9:00 | Check in |
+| 8:30 - 9:00 | Check in and coffee|
 | 9:00 - 10:00 | [Advanced environmental modelling](lectures/advanced_models/advanced_models.qmd) (Lecture) |
 | 10:00 - 10:15 | Break |
 | 10:15 - 11:15 | [Advanced environmental modelling](/labs/advanced_models/advanced_models.qmd) (Lab) |
