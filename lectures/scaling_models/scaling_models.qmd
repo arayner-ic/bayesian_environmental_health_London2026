@@ -5,7 +5,7 @@ author:
  - name: "Robbie M. Parks, Anna Y. Palmer"
    email: "robbie.parks@columbia.edu"
 institute: "Columbia University"
-date: 2026-08-07
+date: 2026-08-21
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"

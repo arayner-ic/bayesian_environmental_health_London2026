@@ -5,7 +5,7 @@ author:
  - name: "Garyfallos Konstantinoudis, Robbie M. Parks, Elizaveta Semenova"
    email: "g.konstantinoudis@imperial.ac.uk"
 institute: "Imperial College London"
-date: 2026-08-05
+date: 2026-08-19
 date-format: medium
 title-slide-attributes:
   data-background-color: "#f3f4f4"
