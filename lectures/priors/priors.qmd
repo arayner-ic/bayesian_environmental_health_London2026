@@ -12,13 +12,12 @@ title-slide-attributes:
   data-background-image: "assets/bmeh_normal.png"
   data-background-size: 80%
   data-background-position: 60% 120%
+  subparagraph: yes
 format:
   revealjs:
     slide-number: true
-    incremental: true
-    chalkboard:
-      buttons: true
-      preview-links: auto
+    embed-resources: true
+    preview-links: auto
     logo: "assets/bmeh_normal.png"
     theme: [default, ../../assets/style.scss]
 editor: 
