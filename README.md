@@ -71,7 +71,7 @@ Below is the set of lectures and labs to follow throughout the three days:
 | 12:15 - 12:30 | Group photo |
 | 12:30 - 1:30 | Lunch |
 | 1:30 - 2:00 | [Scaling Bayesian models](/labs/scaling_models/scaling_models.qmd) (Lab) |
-| 2:00 - 2:30 | [Heat attribution](/lectures/attribution/attribution.pptx) (Lecture) |
+| 2:00 - 2:30 | [Heat attribution](/lectures/attribution/temperature_attribution.pptx) (Lecture) |
 | 2:30 - 3:00 | [Tropical cyclone attribution](/lectures/attribution/tc_attribution.pptx) (Lecture) |
 | 3:00 - 3:15 | Break |
 | 3:15 - 4:15 | Potential projects discussion |

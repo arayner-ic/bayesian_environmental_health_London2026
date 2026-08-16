@@ -6,8 +6,8 @@
 <script src="software_options_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="software_options_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="software_options_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="software_options_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.37">
+<link href="software_options_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.25">
 
   <meta name="author" content="Robbie M. Parks, Theo Rashid">
   <title>Software options</title>
@@ -17,9 +17,6 @@
   <link rel="stylesheet" href="software_options_files/libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="software_options_files/libs/revealjs/dist/reveal.css">
   <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -98,7 +95,7 @@
     code span.vs { color: #20794d; } /* VerbatimString */
     code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="software_options_files/libs/revealjs/dist/theme/quarto-a9c8bb9b1e4d83a4aac19a41acc88a24.css">
+  <link rel="stylesheet" href="software_options_files/libs/revealjs/dist/theme/quarto-227af3a145c1d7f81fd1cd640f5fdb4e.css">
   <link href="software_options_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="software_options_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="software_options_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -222,11 +219,11 @@ Robbie M. Parks, Theo Rashid
 <ul>
 <li>Why the software matters (and where it does not).</li>
 <li>A running example to translate.</li>
+<li>The inference algorithms: sampling and approximation.</li>
 <li>The sampling-based options.</li>
 <li>What goes wrong when you translate.</li>
 <li>A different paradigm: approximate inference.</li>
 <li>How to choose.</li>
-<li>Getting ready for the lab.</li>
 </ul>
 </section>
 <section>
@@ -237,7 +234,7 @@ Robbie M. Parks, Theo Rashid
 <section id="the-model-and-the-software-are-different-things" class="slide level2">
 <h2>The model and the software are different things</h2>
 <ul>
-<li>So far we have written models in <code>NIMBLE</code>, but nothing we have done is <em>about</em> <code>NIMBLE</code>.</li>
+<li>So far we have written models in <code>NIMBLE</code>, but nothing we have done is exclusive to <code>NIMBLE</code>.</li>
 <li>The Poisson likelihood, the priors, the random effects: all of that is the <strong>model</strong>.</li>
 <li>The software is the machinery that turns that model into a posterior.</li>
 <li>A good habit: write the model down in math(s) first, then decide what to fit it with.</li>
@@ -248,7 +245,7 @@ Robbie M. Parks, Theo Rashid
 <ul>
 <li>This matters practically:
 <ul>
-<li>Reviewers ask about the model, not the package.</li>
+<li>Reviewers typically ask about the model, not the package.</li>
 <li>Collaborators may use a different language than you do.</li>
 <li>The right tool for a pilot analysis is often not the right tool for the final one.</li>
 <li>Software changes far faster than statistics does.</li>
@@ -261,7 +258,7 @@ Robbie M. Parks, Theo Rashid
 <ul>
 <li>You specify: the likelihood, the priors, the structure.</li>
 <li>It handles: gradients, samplers, tuning, and bookkeeping.</li>
-<li>You are spared writing a Metropolis-Hastings step by hand for every new model.</li>
+<li>You are spared writing a Metropolis-Hastings step by hand for every new model (this is a good thing).</li>
 </ul>
 </section>
 <section id="what-you-write-and-what-the-ppl-does" class="slide level2">
@@ -317,8 +314,13 @@ Robbie M. Parks, Theo Rashid
 <section id="the-italy-provincial-mortality-model" class="slide level2">
 <h2>The Italy provincial mortality model</h2>
 <ul>
-<li>We will translate one model into several languages.</li>
-<li>It is the partial pooling model from the hierarchical modelling lab: monthly deaths by Italian province, with an expected count as offset and a province-level random effect.</li>
+<li>Let’s translate one model into several languages.</li>
+<li>It is the partial pooling model from the hierarchical modelling lab:
+<ul>
+<li>Deaths by Italian province in September</li>
+<li>An expected count as offset</li>
+<li>A province-level random effect.</li>
+</ul></li>
 </ul>
 </section>
 <section id="the-model-as-maths" class="slide level2">
@@ -333,7 +335,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 \end{split}
 \]</span></p>
 <div class="fragment">
-<p>Everything that follows is this model, written in five different PPLs.</p>
+<p>Everything that follows is this model, written in different PPLs.</p>
 </div>
 </section>
 <section id="the-model-in-nimble" class="slide level2">
@@ -367,9 +369,429 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 </div>
 </section></section>
 <section>
+<section id="inference-algorithms" class="title-slide slide level1 center">
+<h1>Inference algorithms</h1>
+
+</section>
+<section id="algorithms-and-packages" class="slide level2">
+<h2>Algorithms and packages</h2>
+<ul>
+<li>The languages in this session are front-ends to a small number of inference algorithms.</li>
+<li>Which algorithm is assigned to which parameter, and how it is tuned, accounts for most of the difference in performance between packages.</li>
+<li>This section covers the algorithms by name, before we return to the packages themselves.</li>
+</ul>
+</section>
+<section id="families-of-algorithm" class="slide level2 smaller">
+<h2>Families of algorithm</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Family</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Metropolis-Hastings</td>
+<td>propose a move, accept or reject it</td>
+</tr>
+<tr class="even">
+<td>Gibbs</td>
+<td>draw each parameter from its full conditional</td>
+</tr>
+<tr class="odd">
+<td>Slice</td>
+<td>draw uniformly from underneath the density</td>
+</tr>
+<tr class="even">
+<td>HMC and NUTS</td>
+<td>follow the gradient, with added momentum</td>
+</tr>
+<tr class="odd">
+<td>Sequential Monte Carlo</td>
+<td>reweight and resample a population of particles</td>
+</tr>
+<tr class="even">
+<td>Laplace</td>
+<td>a Gaussian at the mode</td>
+</tr>
+<tr class="odd">
+<td>Variational</td>
+<td>optimise within a chosen family</td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>The first five produce draws from the posterior. The last two return a fitted approximation instead, and are covered in the approximation section.</p>
+</div>
+</section>
+<section id="a-toy-posterior-to-compare-them-on" class="slide level2 smaller">
+<h2>A toy posterior to compare them on</h2>
+
+<img data-src="software_options_files/figure-revealjs/toy-target-1.png" class="quarto-figure quarto-figure-center r-stretch" width="499"><ul>
+<li>A two-dimensional Gaussian with correlation 0.95. The answer is known exactly, so the only thing that varies below is the algorithm.</li>
+<li>Effective sample size (ESS) is reported for <span class="math inline">\(\theta_1\)</span>, and counts how many independent draws the chain is worth.</li>
+</ul>
+</section>
+<section id="metropolis-hastings" class="slide level2 smaller">
+<h2>Metropolis-Hastings</h2>
+<p>Propose <span class="math inline">\(\theta^{*}\)</span> from <span class="math inline">\(q(\cdot \mid \theta^{(t)})\)</span>, and accept it with probability</p>
+<p><span class="math display">\[
+a = \min\left(1,\; \frac{p(\theta^{*} \mid y)\; q(\theta^{(t)} \mid \theta^{*})}{p(\theta^{(t)} \mid y)\; q(\theta^{*} \mid \theta^{(t)})}\right)
+\]</span></p>
+<ul>
+<li>With a symmetric random-walk proposal the two <span class="math inline">\(q\)</span> terms cancel, leaving the ratio of the posterior densities.</li>
+<li>The normalising constant cancels as well, so an unnormalised posterior is sufficient.</li>
+<li>The proposal scale is the only quantity to tune. A small scale gives slow movement, a large scale gives a high rejection rate.</li>
+<li>Adaptive versions tune the scale during burn-in, targeting an acceptance rate of about 0.44 for a single parameter and about 0.23 for a large block.</li>
+</ul>
+</section>
+<section id="random-walk-metropolis" class="slide level2 smaller">
+<h2>Random-walk Metropolis</h2>
+<p>The usual choice of <span class="math inline">\(q\)</span> is a Gaussian step centred on the current value:</p>
+<p><span class="math display">\[
+\theta^{*} = \theta^{(t)} + \varepsilon, \qquad \varepsilon \sim \text{Normal}\left(0,\; s^{2} \boldsymbol{I}\right)
+\]</span></p>
+<p>This proposal is symmetric, so <span class="math inline">\(q(\theta^{*} \mid \theta^{(t)}) = q(\theta^{(t)} \mid \theta^{*})\)</span> and the two terms cancel:</p>
+<p><span class="math display">\[
+a = \min\left(1,\; \frac{p(\theta^{*} \mid y)}{p(\theta^{(t)} \mid y)}\right),
+\qquad
+\theta^{(t+1)} =
+\begin{cases}
+\theta^{*} &amp; \text{with probability } a \\[2pt]
+\theta^{(t)} &amp; \text{otherwise}
+\end{cases}
+\]</span></p>
+<ul>
+<li>A rejected proposal is not a wasted iteration: the current value is written to the chain again.</li>
+<li>The scale <span class="math inline">\(s\)</span> is the only quantity to set.</li>
+</ul>
+</section>
+<section id="random-walk-metropolis-the-effect-of-the-scale" class="slide level2 smaller">
+<h2>Random-walk Metropolis: the effect of the scale</h2>
+
+<img data-src="software_options_files/figure-revealjs/mh-scale-1.png" class="quarto-figure quarto-figure-center r-stretch" width="1056"><p>1000 iterations from the same starting point. A small scale accepts nearly everything and moves nowhere; a large scale is rejected nearly always and stays put for long stretches.</p>
+</section>
+<section id="metropolis-hastings-limitations" class="slide level2">
+<h2>Metropolis-Hastings: limitations</h2>
+<ul>
+<li>When the posterior is correlated, only short moves are accepted.</li>
+<li>The cost per effectively independent draw increases roughly in proportion to the number of parameters.</li>
+<li>It requires nothing beyond the ability to evaluate the density, which is why it is the general fallback.</li>
+<li><code>NIMBLE</code> assigns it by default to continuous nodes with no conjugate form. <code>JAGS</code> uses it where nothing else applies.</li>
+</ul>
+</section>
+<section id="gibbs-sampling" class="slide level2">
+<h2>Gibbs sampling</h2>
+<p>Update one parameter, or one block, at a time from its full conditional:</p>
+<p><span class="math display">\[
+\theta_j^{(t+1)} \sim p\left(\theta_j \mid \boldsymbol{\theta}_{-j}, y\right)
+\]</span></p>
+<ul>
+<li>Every draw is accepted, since it comes from the exact conditional. There is no acceptance rate and no proposal scale.</li>
+<li>The conditional must be available in closed form. Conjugate pairs (normal-normal, Poisson-gamma, beta-binomial) are the reason classical <code>BUGS</code> models are written as they are. <!-- - Where no conjugate form exists, `BUGS` and `JAGS` use adaptive rejection sampling for log-concave conditionals, and slice or Metropolis otherwise. --></li>
+</ul>
+</section>
+<section id="gibbs-sampling-one-coordinate-at-a-time" class="slide level2 smaller">
+<h2>Gibbs sampling: one coordinate at a time</h2>
+
+<img data-src="software_options_files/figure-revealjs/gibbs-stair-1.png" class="quarto-figure quarto-figure-center r-stretch" width="537"><p>Forty sweeps. Each segment is one conditional draw, so every move is horizontal or vertical, and the chain works along the ridge in small steps.</p>
+</section>
+<section id="gibbs-sampling-limitations" class="slide level2 smaller">
+<h2>Gibbs sampling: limitations</h2>
+<ul>
+<li>Updates move along the coordinate axes one at a time, so a correlated posterior is covered slowly.</li>
+<li>In a hierarchical model <span class="math inline">\(\sigma_p\)</span> and the <span class="math inline">\(\theta_j\)</span> are strongly dependent, and the chain moves through that pair slowly.</li>
+<li>Two standard responses:
+<ul>
+<li>Block the correlated parameters and update them together.</li>
+<li>Reparameterise, usually to the non-centred form <span class="math inline">\(\theta_j = \sigma_p z_j\)</span> with <span class="math inline">\(z_j \sim \text{Normal}(0, 1)\)</span>.</li>
+</ul></li>
+<li>Neither is applied automatically. A model of this kind can run without error and still return a very low effective sample size.</li>
+</ul>
+</section>
+<section id="gibbs-sampling-the-cost-of-correlation" class="slide level2 smaller">
+<h2>Gibbs sampling: the cost of correlation</h2>
+
+<img data-src="software_options_files/figure-revealjs/gibbs-trace-1.png" class="quarto-figure quarto-figure-center r-stretch" width="1056"><p>The same sampler and the same number of sweeps. Only the correlation between the two parameters has changed.</p>
+</section>
+<section id="adaptive-rejection-sampling" class="slide level2 smaller">
+<h2>Adaptive rejection sampling</h2>
+<ul>
+<li>Used within Gibbs when the full conditional is log-concave but not a standard distribution.</li>
+<li>Constructs an envelope above the log density from tangent lines at a few points, samples from the envelope, and rejects against the true density.</li>
+<li>Each rejection adds a tangent, so the envelope tightens and the rejection rate falls as sampling proceeds.</li>
+<li>Exact, with nothing to tune. It requires log-concavity, which <code>JAGS</code> checks before assigning it.</li>
+<li><code>ARMS</code> extends the method to non-log-concave conditionals by adding a Metropolis correction step.</li>
+</ul>
+</section>
+<section id="adaptive-rejection-sampling-the-envelope" class="slide level2 smaller">
+<h2>Adaptive rejection sampling: the envelope</h2>
+
+<img data-src="software_options_files/figure-revealjs/ars-envelope-1.png" class="quarto-figure quarto-figure-center r-stretch" width="1056"><p>On the log scale a log-concave density lies below every one of its tangents, so the lowest tangent at each point is an envelope. The shaded gap is the rejection region, and each rejected draw adds a tangent point.</p>
+</section>
+<section id="slice-sampling" class="slide level2 smaller">
+<h2>Slice sampling</h2>
+<p>Introduce an auxiliary height, then alternate:</p>
+<p><span class="math display">\[
+u \mid \theta \sim \text{Uniform}\left(0,\, f(\theta)\right), \qquad \theta \mid u \sim \text{Uniform}\left\{\theta : f(\theta) &gt; u\right\}
+\]</span></p>
+<ul>
+<li>To find the slice: step out from the current point in increments of width <span class="math inline">\(w\)</span> until both ends lie below the density, draw from the interval, and shrink it after each rejection.</li>
+<li>No acceptance rate and no gradient. The width <span class="math inline">\(w\)</span> is the only quantity to set, and a poor choice affects speed rather than correctness.</li>
+<li>Each update requires several density evaluations, so an iteration costs more than a Metropolis iteration, and mixing is generally better.</li>
+<li><code>JAGS</code> uses it for non-conjugate continuous nodes. <code>NIMBLE</code> uses it by default for discrete nodes.</li>
+</ul>
+</section>
+<section id="slice-sampling-one-update" class="slide level2 smaller">
+<h2>Slice sampling: one update</h2>
+
+<img data-src="software_options_files/figure-revealjs/slice-update-1.png" class="quarto-figure quarto-figure-center r-stretch" width="614"><p>The height <span class="math inline">\(u\)</span> is drawn below the current density value, the interval is widened by <span class="math inline">\(w\)</span> until both ends fall below <span class="math inline">\(u\)</span>, and the next value is drawn uniformly from it.</p>
+</section>
+<section id="hamiltonian-monte-carlo" class="slide level2 smaller">
+<h2>Hamiltonian Monte Carlo</h2>
+<p>Add a momentum <span class="math inline">\(\boldsymbol{p}\)</span>, and treat the negative log posterior as a potential energy surface:</p>
+<p><span class="math display">\[
+H(\boldsymbol{\theta}, \boldsymbol{p}) = -\log p(\boldsymbol{\theta} \mid y) + \tfrac{1}{2}\boldsymbol{p}^{\top}\boldsymbol{M}^{-1}\boldsymbol{p}
+\]</span></p>
+<ul>
+<li>Draw a momentum, simulate the dynamics with the leapfrog integrator for <span class="math inline">\(L\)</span> steps of size <span class="math inline">\(\varepsilon\)</span>, then accept or reject to correct for integrator error.</li>
+<li>Using the gradient, a proposal can move a long way across the posterior and still be accepted, so successive draws are much less correlated.</li>
+<li>Three quantities to set: the step size <span class="math inline">\(\varepsilon\)</span>, the trajectory length <span class="math inline">\(L\)</span>, and the mass matrix <span class="math inline">\(\boldsymbol{M}\)</span>, which rescales the parameters.</li>
+<li>Each leapfrog step requires a gradient evaluation, so an iteration costs much more than a Metropolis iteration and returns many more effective samples.</li>
+<li>Requires continuous parameters and a differentiable log density. Discrete parameters must be summed out.</li>
+</ul>
+</section>
+<section id="hamiltonian-monte-carlo-six-trajectories" class="slide level2 smaller">
+<h2>Hamiltonian Monte Carlo: six trajectories</h2>
+
+<img data-src="software_options_files/figure-revealjs/hmc-paths-1.png" class="quarto-figure quarto-figure-center r-stretch" width="480"></section>
+<section id="hamiltonian-monte-carlo-six-trajectories-1" class="slide level2 smaller">
+<h2>Hamiltonian Monte Carlo: six trajectories</h2>
+<ul>
+<li>Six consecutive iterations, each following the gradient for between 12 and 29 leapfrog steps. Grey marks where the trajectory started, red where it ended.</li>
+<li>Compare the distance covered against 1000 random-walk iterations on the earlier slide.</li>
+<li>The number of steps is varied because a fixed length can land on the same two points every time, as the next slide shows.</li>
+</ul>
+</section>
+<section id="choosing-the-trajectory-length" class="slide level2 smaller">
+<h2>Choosing the trajectory length</h2>
+
+<img data-src="software_options_files/figure-revealjs/hmc-length-1.png" class="quarto-figure quarto-figure-center r-stretch" width="1056"><p>The same starting point and the same momentum. Too few steps and the sampler barely moves; too many and the trajectory curves back to where it began, at full cost. This is the choice NUTS removes.</p>
+</section>
+<section id="the-no-u-turn-sampler" class="slide level2">
+<h2>The No-U-Turn Sampler</h2>
+<ul>
+<li>NUTS sets <span class="math inline">\(L\)</span> automatically. The trajectory is doubled forwards or backwards in time until the path begins to turn back on itself, and a draw is taken from it.</li>
+<li><span class="math inline">\(\varepsilon\)</span> is set during warm-up by dual averaging against a target acceptance statistic, 0.8 by default in <code>Stan</code>.</li>
+<li>The mass matrix is estimated during warm-up from the draws, usually as a diagonal.</li>
+<li>In ordinary use there is nothing left to tune. It is the default sampler in <code>Stan</code>, <code>PyMC</code>, <code>numpyro</code>, <code>Turing.jl</code> and <code>greta</code>.</li>
+</ul>
+</section>
+<section id="nuts-the-warnings-and-what-they-mean" class="slide level2 smaller">
+<h2>NUTS: the warnings and what they mean</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Warning</th>
+<th>What it means</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Divergent transitions</td>
+<td>the integrator broke down where the posterior narrows sharply</td>
+<td>reparameterise first, then raise <code>adapt_delta</code></td>
+</tr>
+<tr class="even">
+<td>Maximum treedepth</td>
+<td>the trajectory hit its cap before turning back</td>
+<td>inefficiency rather than bias: raise the cap, or rescale</td>
+</tr>
+<tr class="odd">
+<td>Low E-BFMI</td>
+<td>momentum resampling is not exploring the energy distribution</td>
+<td>usually a heavy-tailed hyperparameter</td>
+</tr>
+<tr class="even">
+<td>High <span class="math inline">\(\hat{R}\)</span>, low ESS</td>
+<td>chains disagree, or are mixing slowly</td>
+<td>the usual MCMC checks, read alongside the rows above</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sequential-monte-carlo" class="slide level2 smaller">
+<h2>Sequential Monte Carlo</h2>
+<ul>
+<li>A population of weighted particles is carried through a sequence of distributions: forwards in time in a state-space model, or along a tempering ladder from prior to posterior.</li>
+<li>Weights are updated at each step, and the population is resampled when the weight concentrates on a small number of particles.</li>
+<li>Suited to multimodal targets, and to sequential structure that a single chain covers poorly.</li>
+<li>Particle MCMC uses the particle filter’s likelihood estimate within a Metropolis step, which is the standard approach for state-space models with unknown parameters.</li>
+<li><code>nimbleSMC</code> in <code>NIMBLE</code>, <code>pm.sample_smc()</code> in <code>PyMC</code>, particle Gibbs in <code>Turing.jl</code>.</li>
+</ul>
+</section>
+<section id="sequential-monte-carlo-a-tempering-ladder" class="slide level2 smaller">
+<h2>Sequential Monte Carlo: a tempering ladder</h2>
+
+<img data-src="software_options_files/figure-revealjs/smc-ladder-1.png" class="quarto-figure quarto-figure-center r-stretch" width="806"><p>Each row is the same 200 particles, sized by weight, as the likelihood is introduced a quarter at a time. The first step is where the weight concentrates, and where resampling is needed. The dashed line is the exact posterior mean.</p>
+</section>
+<section id="requirements-of-each-family" class="slide level2 smaller">
+<h2>Requirements of each family</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Family</th>
+<th>Gradients</th>
+<th>Discrete parameters</th>
+<th>Main tuning parameter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Metropolis-Hastings</td>
+<td>no</td>
+<td>yes</td>
+<td>proposal scale</td>
+</tr>
+<tr class="even">
+<td>Gibbs</td>
+<td>no</td>
+<td>yes</td>
+<td>blocking and parameterisation</td>
+</tr>
+<tr class="odd">
+<td>Slice</td>
+<td>no</td>
+<td>yes</td>
+<td>slice width</td>
+</tr>
+<tr class="even">
+<td>HMC and NUTS</td>
+<td>yes</td>
+<td>no</td>
+<td>step size and mass matrix, set automatically</td>
+</tr>
+<tr class="odd">
+<td>Sequential Monte Carlo</td>
+<td>no</td>
+<td>yes</td>
+<td>number of particles</td>
+</tr>
+<tr class="even">
+<td>Laplace</td>
+<td>Hessian</td>
+<td>no</td>
+<td>model class</td>
+</tr>
+<tr class="odd">
+<td>Variational</td>
+<td>yes</td>
+<td>with care</td>
+<td>family and optimiser</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="common-symptoms-and-likely-causes" class="slide level2 smaller">
+<h2>Common symptoms and likely causes</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symptom</th>
+<th>Likely cause</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>High acceptance, very small moves</td>
+<td>proposal scale too small, or Gibbs moving one parameter at a time through a correlated posterior</td>
+</tr>
+<tr class="even">
+<td>Low acceptance, long flat stretches</td>
+<td>proposal scale too large</td>
+</tr>
+<tr class="odd">
+<td>One parameter mixes badly, the rest are fine</td>
+<td>it is strongly correlated with another parameter, and the two are being updated separately rather than together</td>
+</tr>
+<tr class="even">
+<td>Divergences whenever <span class="math inline">\(\sigma\)</span> is small</td>
+<td>funnel geometry, so reparameterise before anything else</td>
+</tr>
+<tr class="odd">
+<td>Uniformly slow, with no other warning</td>
+<td>the model is larger than the sampler suits</td>
+</tr>
+</tbody>
+</table>
+</section></section>
+<section>
 <section id="the-sampling-based-options" class="title-slide slide level1 center">
 <h1>The sampling-based options</h1>
 
+</section>
+<section id="bugs-overview" class="slide level2">
+<h2><code>BUGS</code>: overview</h2>
+<ul>
+<li>The language survives in <code>JAGS</code> and <code>NIMBLE</code>, and in a large body of published epidemiological code, so it is worth being able to read.</li>
+<li>Development has stopped, and its samplers are the ones that cope least well with correlated hierarchical models.</li>
+</ul>
+</section>
+<section id="bugs-inference-methods" class="slide level2">
+<h2><code>BUGS</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Origin</td>
+<td>MRC Biostatistics Unit, Cambridge, late 1980s</td>
+</tr>
+<tr class="even">
+<td>Primary sampler</td>
+<td>Gibbs, from full conditionals</td>
+</tr>
+<tr class="odd">
+<td>Fallbacks</td>
+<td>adaptive rejection sampling, slice sampling, random-walk Metropolis</td>
+</tr>
+<tr class="even">
+<td>Gradients</td>
+<td>none</td>
+</tr>
+<tr class="odd">
+<td>Approximation methods</td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td>Sampler control</td>
+<td>not available</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="bugs-where-all-of-this-came-from" class="slide level2">
 <h2><code>BUGS</code>: where all of this came from</h2>
@@ -380,6 +802,49 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li>Largely superseded now, but its syntax is the ancestor of everything in this section.</li>
 </ul>
 </section>
+<section id="jags-overview" class="slide level2">
+<h2><code>JAGS</code>: overview</h2>
+<ul>
+<li>Sampler assignment happens at compile time and is largely outside your control.</li>
+<li>Adequate for conjugate hierarchical models of moderate size. Mixing deteriorates once the latent field is correlated, which is the usual situation in disease mapping.</li>
+<li>The <code>glm</code> module is worth loading before concluding that a Poisson or binomial model is too slow.</li>
+</ul>
+</section>
+<section id="jags-inference-methods" class="slide level2 smaller">
+<h2><code>JAGS</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Origin</td>
+<td>Martyn Plummer, 2003</td>
+</tr>
+<tr class="even">
+<td>Primary sampler</td>
+<td>Gibbs, where a conjugate conditional exists</td>
+</tr>
+<tr class="odd">
+<td>Fallbacks</td>
+<td>adaptive rejection for log-concave conditionals, then slice, then Metropolis</td>
+</tr>
+<tr class="even">
+<td><code>glm</code> module</td>
+<td>block updates of GLM coefficients using auxiliary-variable data augmentation</td>
+</tr>
+<tr class="odd">
+<td>Gradients</td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td>Sampler control</td>
+<td>modules and factories only, no custom samplers</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="jags" class="slide level2">
 <h2><code>JAGS</code></h2>
 <ul>
@@ -388,6 +853,53 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li>Very stable, very well documented, and a lot of published epidemiological code is written in it.</li>
 <li>Weakness: Gibbs and slice sampling only, so it struggles with the correlated posteriors that arise in complex hierarchical models.</li>
 </ul>
+</section>
+<section id="nimble-overview" class="slide level2">
+<h2><code>NIMBLE</code>: overview</h2>
+<ul>
+<li>The default configuration uses conjugate samplers where available and adaptive Metropolis elsewhere, which is adequate for small models and slow for correlated ones.</li>
+<li>Slow runs are usually a question of sampler assignment, and the assignment can be inspected before anything is run.</li>
+<li><code>nimbleHMC</code> provides NUTS on the same model code where the default samplers do not mix.</li>
+</ul>
+</section>
+<section id="nimble-inference-methods" class="slide level2 smaller">
+<h2><code>NIMBLE</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Origin</td>
+<td>Berkeley, 2014 onwards</td>
+</tr>
+<tr class="even">
+<td>Primary sampler</td>
+<td>conjugate where detected, adaptive random-walk Metropolis elsewhere</td>
+</tr>
+<tr class="odd">
+<td>Discrete parameters</td>
+<td>slice samplers, and a dedicated sampler for binary nodes</td>
+</tr>
+<tr class="even">
+<td>Blocking</td>
+<td><code>RW_block</code> for correlated groups, <code>AF_slice</code> for automated factor slice sampling</td>
+</tr>
+<tr class="odd">
+<td>Gradient-based</td>
+<td>NUTS through <code>nimbleHMC</code></td>
+</tr>
+<tr class="even">
+<td>Other methods</td>
+<td>particle filters and particle MCMC (<code>nimbleSMC</code>), Laplace and adaptive Gauss-Hermite quadrature (<code>buildLaplace</code>), reversible jump for variable selection (<code>configureRJ</code>)</td>
+</tr>
+<tr class="odd">
+<td>Sampler control</td>
+<td>complete</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="nimble" class="slide level2">
 <h2><code>NIMBLE</code></h2>
@@ -418,6 +930,66 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 </ul>
 </div>
 </section>
+<section id="nimble-inspecting-and-changing-the-sampler" class="slide level2">
+<h2><code>NIMBLE</code>: inspecting and changing the sampler</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a>conf <span class="ot">&lt;-</span> <span class="fu">configureMCMC</span>(model)</span>
+<span id="cb2-2"><a href=""></a>conf<span class="sc">$</span><span class="fu">printSamplers</span>()                          <span class="co"># what was assigned, node by node</span></span>
+<span id="cb2-3"><a href=""></a></span>
+<span id="cb2-4"><a href=""></a>conf<span class="sc">$</span><span class="fu">removeSamplers</span>(<span class="fu">c</span>(<span class="st">"alpha"</span>, <span class="st">"sigma_p"</span>))    <span class="co"># these two are correlated</span></span>
+<span id="cb2-5"><a href=""></a>conf<span class="sc">$</span><span class="fu">addSampler</span>(<span class="at">target =</span> <span class="fu">c</span>(<span class="st">"alpha"</span>, <span class="st">"sigma_p"</span>), <span class="at">type =</span> <span class="st">"RW_block"</span>)</span>
+<span id="cb2-6"><a href=""></a></span>
+<span id="cb2-7"><a href=""></a>mcmc <span class="ot">&lt;-</span> <span class="fu">buildMCMC</span>(conf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="fragment">
+<p>This is worth checking for any model that mixes badly, before changing the model itself.</p>
+</div>
+</section>
+<section id="stan-overview" class="slide level2">
+<h2><code>Stan</code>: overview</h2>
+<ul>
+<li><code>Stan</code> provides a single sampler, well tuned, with more developed diagnostics than any of the alternatives.</li>
+<li>Divergences are the diagnostic to check first. They usually indicate difficult geometry, and the response is a non-centred parameterisation rather than a longer run.</li>
+<li>The approximation methods are provided mainly for initialisation and for quick first fits.</li>
+</ul>
+</section>
+<section id="stan-inference-methods" class="slide level2 smaller">
+<h2><code>Stan</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Origin</td>
+<td>Columbia, 2012 onwards</td>
+</tr>
+<tr class="even">
+<td>Primary sampler</td>
+<td>dynamic HMC with the no-U-turn criterion</td>
+</tr>
+<tr class="odd">
+<td>Trajectory</td>
+<td>doubled until the path turns back on itself, then a draw taken from it</td>
+</tr>
+<tr class="even">
+<td>Warm-up</td>
+<td>dual averaging for the step size, windowed estimation of the mass matrix</td>
+</tr>
+<tr class="odd">
+<td>Diagnostics</td>
+<td>divergences, treedepth, E-BFMI, split <span class="math inline">\(\hat{R}\)</span>, bulk and tail ESS</td>
+</tr>
+<tr class="even">
+<td>Approximation methods</td>
+<td>ADVI, Pathfinder, Laplace at the mode, L-BFGS optimisation</td>
+</tr>
+<tr class="odd">
+<td>Discrete parameters</td>
+<td>not supported, must be marginalised out by hand</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="stan" class="slide level2">
 <h2><code>Stan</code></h2>
 <ul>
@@ -429,27 +1001,27 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 </section>
 <section id="the-model-in-stan" class="slide level2 smaller">
 <h2>The model in <code>Stan</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode numberSource stan number-lines code-with-copy"><code class="sourceCode stan"><span id="cb2-1"><a href=""></a><span class="kw">data</span> {</span>
-<span id="cb2-2"><a href=""></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; N;                         <span class="co">// number of observations</span></span>
-<span id="cb2-3"><a href=""></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; Np;                        <span class="co">// number of provinces</span></span>
-<span id="cb2-4"><a href=""></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>, <span class="kw">upper</span>=Np&gt; province;</span>
-<span id="cb2-5"><a href=""></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; y;                <span class="co">// deaths</span></span>
-<span id="cb2-6"><a href=""></a>  <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[N] E;                   <span class="co">// expected counts</span></span>
-<span id="cb2-7"><a href=""></a>}</span>
-<span id="cb2-8"><a href=""></a></span>
-<span id="cb2-9"><a href=""></a><span class="kw">parameters</span> {</span>
-<span id="cb2-10"><a href=""></a>  <span class="dt">real</span> alpha;</span>
-<span id="cb2-11"><a href=""></a>  <span class="dt">vector</span>[Np] theta;</span>
-<span id="cb2-12"><a href=""></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma_p;</span>
-<span id="cb2-13"><a href=""></a>}</span>
-<span id="cb2-14"><a href=""></a></span>
-<span id="cb2-15"><a href=""></a><span class="kw">model</span> {</span>
-<span id="cb2-16"><a href=""></a>  alpha ~ normal(<span class="dv">0</span>, <span class="dv">5</span>);</span>
-<span id="cb2-17"><a href=""></a>  sigma_p ~ normal(<span class="dv">0</span>, <span class="dv">1</span>);                 <span class="co">// half-normal via the lower bound above</span></span>
-<span id="cb2-18"><a href=""></a>  theta ~ normal(<span class="dv">0</span>, sigma_p);</span>
-<span id="cb2-19"><a href=""></a></span>
-<span id="cb2-20"><a href=""></a>  y ~ poisson_log(log(E) + alpha + theta[province]);</span>
-<span id="cb2-21"><a href=""></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource stan number-lines code-with-copy"><code class="sourceCode stan"><span id="cb3-1"><a href=""></a><span class="kw">data</span> {</span>
+<span id="cb3-2"><a href=""></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; N;                         <span class="co">// number of observations</span></span>
+<span id="cb3-3"><a href=""></a>  <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; Np;                        <span class="co">// number of provinces</span></span>
+<span id="cb3-4"><a href=""></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>, <span class="kw">upper</span>=Np&gt; province;</span>
+<span id="cb3-5"><a href=""></a>  <span class="dt">array</span>[N] <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; y;                <span class="co">// deaths</span></span>
+<span id="cb3-6"><a href=""></a>  <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[N] E;                   <span class="co">// expected counts</span></span>
+<span id="cb3-7"><a href=""></a>}</span>
+<span id="cb3-8"><a href=""></a></span>
+<span id="cb3-9"><a href=""></a><span class="kw">parameters</span> {</span>
+<span id="cb3-10"><a href=""></a>  <span class="dt">real</span> alpha;</span>
+<span id="cb3-11"><a href=""></a>  <span class="dt">vector</span>[Np] theta;</span>
+<span id="cb3-12"><a href=""></a>  <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma_p;</span>
+<span id="cb3-13"><a href=""></a>}</span>
+<span id="cb3-14"><a href=""></a></span>
+<span id="cb3-15"><a href=""></a><span class="kw">model</span> {</span>
+<span id="cb3-16"><a href=""></a>  alpha ~ normal(<span class="dv">0</span>, <span class="dv">5</span>);</span>
+<span id="cb3-17"><a href=""></a>  sigma_p ~ normal(<span class="dv">0</span>, <span class="dv">1</span>);                 <span class="co">// half-normal via the lower bound above</span></span>
+<span id="cb3-18"><a href=""></a>  theta ~ normal(<span class="dv">0</span>, sigma_p);</span>
+<span id="cb3-19"><a href=""></a></span>
+<span id="cb3-20"><a href=""></a>  y ~ poisson_log(log(E) + alpha + theta[province]);</span>
+<span id="cb3-21"><a href=""></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="stan-what-it-is-good-at" class="slide level2 smaller">
 <h2><code>Stan</code>: what it is good at</h2>
@@ -471,6 +1043,45 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 </ul>
 </div>
 </section>
+<section id="brms-overview" class="slide level2">
+<h2><code>brms</code>: overview</h2>
+<ul>
+<li>The sampler is the same as in hand-written <code>Stan</code>, so the diagnostics and the failure modes are the same.</li>
+<li>The difference is in the time to a first fit, and in the cost of varying the model afterwards.</li>
+<li>Where something looks wrong, read the generated <code>Stan</code> code before assuming the problem is in <code>brms</code>.</li>
+</ul>
+</section>
+<section id="brms-and-rstanarm-inference-methods" class="slide level2 smaller">
+<h2><code>brms</code> and <code>rstanarm</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>What they are</td>
+<td><code>R</code> formula front-ends that write <code>Stan</code> code</td>
+</tr>
+<tr class="even">
+<td>Primary sampler</td>
+<td>NUTS, through <code>Stan</code></td>
+</tr>
+<tr class="odd">
+<td>Switchable</td>
+<td><code>algorithm = "meanfield"</code>, <code>"fullrank"</code>, <code>"pathfinder"</code>, <code>"laplace"</code></td>
+</tr>
+<tr class="even">
+<td>Backend</td>
+<td><code>rstan</code> or <code>cmdstanr</code>; the last two algorithms require <code>cmdstanr</code></td>
+</tr>
+<tr class="odd">
+<td>Generated code</td>
+<td><code>stancode()</code> and <code>standata()</code> return the model for editing by hand</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="formula-front-ends-brms-and-rstanarm" class="slide level2">
 <h2>Formula front-ends: <code>brms</code> and <code>rstanarm</code></h2>
 <ul>
@@ -482,19 +1093,89 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 </section>
 <section id="the-model-in-brms" class="slide level2">
 <h2>The model in <code>brms</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">library</span>(brms)</span>
-<span id="cb3-2"><a href=""></a></span>
-<span id="cb3-3"><a href=""></a>fit <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
-<span id="cb3-4"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">offset</span>(<span class="fu">log</span>(expected)) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> SIGLA),</span>
-<span id="cb3-5"><a href=""></a>  <span class="at">data =</span> data,</span>
-<span id="cb3-6"><a href=""></a>  <span class="at">family =</span> <span class="fu">poisson</span>(),</span>
-<span id="cb3-7"><a href=""></a>  <span class="at">prior =</span> <span class="fu">c</span>(</span>
-<span id="cb3-8"><a href=""></a>    <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">5</span>), <span class="at">class =</span> <span class="st">"Intercept"</span>),</span>
-<span id="cb3-9"><a href=""></a>    <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">class =</span> <span class="st">"sd"</span>)</span>
-<span id="cb3-10"><a href=""></a>  )</span>
-<span id="cb3-11"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a><span class="fu">library</span>(brms)</span>
+<span id="cb4-2"><a href=""></a></span>
+<span id="cb4-3"><a href=""></a>fit <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
+<span id="cb4-4"><a href=""></a>  deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">offset</span>(<span class="fu">log</span>(expected)) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> SIGLA),</span>
+<span id="cb4-5"><a href=""></a>  <span class="at">data =</span> data,</span>
+<span id="cb4-6"><a href=""></a>  <span class="at">family =</span> <span class="fu">poisson</span>(),</span>
+<span id="cb4-7"><a href=""></a>  <span class="at">prior =</span> <span class="fu">c</span>(</span>
+<span id="cb4-8"><a href=""></a>    <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">5</span>), <span class="at">class =</span> <span class="st">"Intercept"</span>),</span>
+<span id="cb4-9"><a href=""></a>    <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">class =</span> <span class="st">"sd"</span>)</span>
+<span id="cb4-10"><a href=""></a>  )</span>
+<span id="cb4-11"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <!-- . . . -->
 <!-- The same model, in fewer lines. -->
+</section>
+<section id="pymc-and-numpyro-overview" class="slide level2">
+<h2><code>PyMC</code> and <code>numpyro</code>: overview</h2>
+<ul>
+<li>Both use the same algorithm as <code>Stan</code>, and differ in compilation and in hardware support.</li>
+<li>Coming from <code>R</code>, <code>PyMC</code> is the more familiar of the two, and it handles discrete parameters, which <code>Stan</code> does not.</li>
+<li><code>numpyro</code> is the one to consider where the model is large enough to need a GPU.</li>
+</ul>
+</section>
+<section id="pymc-inference-methods" class="slide level2 smaller">
+<h2><code>PyMC</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Primary sampler</td>
+<td>NUTS</td>
+</tr>
+<tr class="even">
+<td>Implementations</td>
+<td><code>PyMC</code>’s own, <code>nutpie</code>, or BlackJAX and <code>numpyro</code> through the JAX backend</td>
+</tr>
+<tr class="odd">
+<td>Compound steps</td>
+<td>NUTS assigned to continuous parameters, Metropolis and Gibbs variants to discrete ones, automatically</td>
+</tr>
+<tr class="even">
+<td>Other methods</td>
+<td><code>pm.sample_smc()</code> for sequential Monte Carlo, ADVI and full-rank ADVI through <code>pm.fit()</code></td>
+</tr>
+<tr class="odd">
+<td>Discrete parameters</td>
+<td>supported, unlike <code>Stan</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="numpyro-inference-methods" class="slide level2 smaller">
+<h2><code>numpyro</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Primary sampler</td>
+<td>NUTS on <code>jax</code></td>
+</tr>
+<tr class="even">
+<td>Chains</td>
+<td>run in parallel, or vectorised onto a single device</td>
+</tr>
+<tr class="odd">
+<td>Variants</td>
+<td>HMC with fixed <span class="math inline">\(L\)</span>, HMCECS for subsampled data, <code>DiscreteHMCGibbs</code> and <code>MixedHMC</code> for discrete parameters</td>
+</tr>
+<tr class="even">
+<td>Approximation methods</td>
+<td>SVI with autoguides: <code>AutoNormal</code>, <code>AutoMultivariateNormal</code>, <code>AutoLaplaceApproximation</code>, <code>AutoDelta</code> for MAP</td>
+</tr>
+<tr class="odd">
+<td>Hardware</td>
+<td>GPU and TPU through <code>jax</code></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="python-pymc-and-numpyro" class="slide level2">
 <h2>Python: <code>PyMC</code> and <code>numpyro</code></h2>
@@ -507,16 +1188,16 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 </section>
 <section id="the-model-in-numpyro" class="slide level2">
 <h2>The model in <code>numpyro</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href=""></a><span class="kw">def</span> model(Np, province, E, y<span class="op">=</span><span class="va">None</span>):</span>
-<span id="cb4-2"><a href=""></a>    alpha <span class="op">=</span> numpyro.sample(<span class="st">"alpha"</span>, dist.Normal(<span class="fl">0.0</span>, <span class="fl">5.0</span>))</span>
-<span id="cb4-3"><a href=""></a>    sigma_p <span class="op">=</span> numpyro.sample(<span class="st">"sigma_p"</span>, dist.HalfNormal(<span class="fl">1.0</span>))</span>
-<span id="cb4-4"><a href=""></a></span>
-<span id="cb4-5"><a href=""></a>    <span class="cf">with</span> numpyro.plate(<span class="st">"provinces"</span>, Np):</span>
-<span id="cb4-6"><a href=""></a>        theta <span class="op">=</span> numpyro.sample(<span class="st">"theta"</span>, dist.Normal(<span class="fl">0.0</span>, sigma_p))</span>
-<span id="cb4-7"><a href=""></a></span>
-<span id="cb4-8"><a href=""></a>    <span class="cf">with</span> numpyro.plate(<span class="st">"data"</span>, <span class="bu">len</span>(province)):</span>
-<span id="cb4-9"><a href=""></a>        log_rate <span class="op">=</span> jnp.log(E) <span class="op">+</span> alpha <span class="op">+</span> theta[province]</span>
-<span id="cb4-10"><a href=""></a>        numpyro.sample(<span class="st">"y"</span>, dist.Poisson(jnp.exp(log_rate)), obs<span class="op">=</span>y)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href=""></a><span class="kw">def</span> model(Np, province, E, y<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb5-2"><a href=""></a>    alpha <span class="op">=</span> numpyro.sample(<span class="st">"alpha"</span>, dist.Normal(<span class="fl">0.0</span>, <span class="fl">5.0</span>))</span>
+<span id="cb5-3"><a href=""></a>    sigma_p <span class="op">=</span> numpyro.sample(<span class="st">"sigma_p"</span>, dist.HalfNormal(<span class="fl">1.0</span>))</span>
+<span id="cb5-4"><a href=""></a></span>
+<span id="cb5-5"><a href=""></a>    <span class="cf">with</span> numpyro.plate(<span class="st">"provinces"</span>, Np):</span>
+<span id="cb5-6"><a href=""></a>        theta <span class="op">=</span> numpyro.sample(<span class="st">"theta"</span>, dist.Normal(<span class="fl">0.0</span>, sigma_p))</span>
+<span id="cb5-7"><a href=""></a></span>
+<span id="cb5-8"><a href=""></a>    <span class="cf">with</span> numpyro.plate(<span class="st">"data"</span>, <span class="bu">len</span>(province)):</span>
+<span id="cb5-9"><a href=""></a>        log_rate <span class="op">=</span> jnp.log(E) <span class="op">+</span> alpha <span class="op">+</span> theta[province]</span>
+<span id="cb5-10"><a href=""></a>        numpyro.sample(<span class="st">"y"</span>, dist.Poisson(jnp.exp(log_rate)), obs<span class="op">=</span>y)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="fragment">
 <p>Note how close this is in structure to the <code>NIMBLE</code> code, despite sharing no syntax at all.</p>
 </div>
@@ -529,9 +1210,33 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li><code>greta</code> — an <code>R</code> front-end on TensorFlow.</li>
 <li><code>Pyro</code> — the PyTorch sibling of <code>numpyro</code>.</li>
 </ul>
-<div class="fragment">
-<p>None of these are the wrong answer. The list is here so the names are not unfamiliar when you meet them.</p>
-</div>
+</section>
+<section id="other-packages-inference-methods" class="slide level2 smaller">
+<h2>Other packages: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td><code>Turing.jl</code></td>
+<td>NUTS, particle Gibbs, and a <code>Gibbs</code> composer that mixes samplers across parameter blocks</td>
+</tr>
+<tr class="even">
+<td><code>TMB</code> and <code>RTMB</code></td>
+<td>Laplace approximation with automatic differentiation; <code>tmbstan</code> passes the same model to NUTS</td>
+</tr>
+<tr class="odd">
+<td><code>greta</code></td>
+<td>HMC and NUTS on TensorFlow</td>
+</tr>
+<tr class="even">
+<td><code>Pyro</code></td>
+<td>stochastic variational inference, with NUTS also available</td>
+</tr>
+</tbody>
+</table>
 </section></section>
 <section>
 <section id="translating-between-languages" class="title-slide slide level1 center">
@@ -544,6 +1249,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li>The five versions above look different but describe the same object.</li>
 <li>Once you can read one, you can mostly read all of them.</li>
 <li>What actually causes trouble is not the syntax.</li>
+<li>AI obviously can help with this a lot (but please take great care).</li>
 </ul>
 </section>
 <section id="the-most-common-translation-bug" class="slide level2">
@@ -551,8 +1257,8 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <ul>
 <li>Compare these two lines:</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">5</span>)      <span class="co"># NIMBLE: precision, so sd = 1/sqrt(5) = 0.45</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource stan number-lines code-with-copy"><code class="sourceCode stan"><span id="cb6-1"><a href=""></a>alpha ~ normal(<span class="dv">0</span>, <span class="dv">5</span>);    <span class="co">// Stan: standard deviation, so sd = 5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href=""></a>alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">5</span>)      <span class="co"># NIMBLE: precision, so sd = 1/sqrt(5) = 0.45</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource stan number-lines code-with-copy"><code class="sourceCode stan"><span id="cb7-1"><a href=""></a>alpha ~ normal(<span class="dv">0</span>, <span class="dv">5</span>);    <span class="co">// Stan: standard deviation, so sd = 5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="fragment">
 <p><strong>These are not the same prior.</strong> One is eleven times tighter than the other.</p>
 </div>
@@ -619,14 +1325,51 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li>Two approaches: variational inference (VI), and <code>INLA</code>.</li>
 </ul>
 </section>
-<section id="variational-inference-briefly" class="slide level2">
-<h2>Variational inference, briefly</h2>
+<section id="the-laplace-approximation" class="slide level2 smaller">
+<h2>The Laplace approximation</h2>
+<p>Find the mode <span class="math inline">\(\theta^{*}\)</span> of the log posterior, take the curvature there, and report the Gaussian with that mean and variance:</p>
+<p><span class="math display">\[
+\theta \;\approx\; \text{Normal}\left(\theta^{*},\, H^{-1}\right), \qquad
+H = -\left.\frac{\partial^{2}}{\partial \theta^{2}} \log p(\theta \mid y)\right|_{\theta = \theta^{*}}
+\]</span></p>
 <ul>
-<li>Pick a simple family of distributions, then find the member closest to the posterior.</li>
-<li>Turns integration into optimisation, which is much faster.</li>
-<li>The approximation is often poor in the tails, and tends to understate uncertainty.</li>
-<li>Widely used in machine learning; used with care in epidemiology.</li>
+<li>The approximation consists of two quantities per parameter: the location of the mode, and the curvature there.</li>
+<li>Exact when the target is Gaussian, and more accurate the more data there are per parameter.</li>
+<li>No chains, no seed, and no Monte Carlo error. The approximation error is fixed and does not decrease with more computation.</li>
+<li>Used on its own in <code>TMB</code> and <code>RTMB</code>, and by <code>nimble::buildLaplace()</code>. <code>INLA</code> nests it, which is the subject of the next session.</li>
 </ul>
+</section>
+<section id="variational-inference" class="slide level2 smaller">
+<h2>Variational inference</h2>
+<p>Choose a family <span class="math inline">\(q_{\lambda}\)</span>, then find the member closest to the posterior by maximising the evidence lower bound:</p>
+<p><span class="math display">\[
+\text{ELBO}(\lambda) = \mathbb{E}_{q_{\lambda}}\left[\log p(y, \theta)\right] - \mathbb{E}_{q_{\lambda}}\left[\log q_{\lambda}(\theta)\right]
+\]</span></p>
+<ul>
+<li>Maximising the ELBO is equivalent to minimising <span class="math inline">\(\text{KL}(q \,\|\, p)\)</span>. The direction of that divergence, rather than <span class="math inline">\(\text{KL}(p \,\|\, q)\)</span>, accounts for the properties on the next slide.</li>
+<li>Integration is replaced by optimisation, so it runs in seconds on data sizes where sampling is not feasible.</li>
+<li>Implementations use stochastic gradients, so fitting is a noisy optimisation with a learning rate and a stopping rule.</li>
+</ul>
+</section>
+<section id="variational-inference-choice-of-family" class="slide level2 smaller">
+<h2>Variational inference: choice of family</h2>
+<ul>
+<li><strong>Mean-field</strong>: independent components. Fast, and ignores posterior correlation.</li>
+<li><strong>Full-rank</strong>: a full covariance. Better calibrated, many more parameters, less stable to fit.</li>
+</ul>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\(\text{KL}(q \,\|\, p)\)</span> penalises placing mass where the posterior has none, but not the reverse. The fitted <span class="math inline">\(q\)</span> therefore sits inside the posterior, and intervals come out too narrow.</li>
+<li>Diagnostics are limited. A converged ELBO indicates that the optimiser has stopped, not that <span class="math inline">\(q\)</span> is close to <span class="math inline">\(p\)</span>. The Pareto-<span class="math inline">\(k\)</span> check from importance sampling (Yao et al., 2018) is the usual test.</li>
+<li><code>ADVI</code> in <code>Stan</code> and <code>PyMC</code>, <code>SVI</code> with autoguides in <code>numpyro</code> and <code>Pyro</code>. <code>Pathfinder</code> is a related method, used mainly to initialise a NUTS run.</li>
+<li>In epidemiology the defensible uses are a quick first fit, or initialisation of an exact method.</li>
+</ul>
+</div>
+</section>
+<section id="variational-inference-what-the-approximation-misses" class="slide level2 smaller">
+<h2>Variational inference: what the approximation misses</h2>
+
+<img data-src="software_options_files/figure-revealjs/vi-ellipse-1.png" class="quarto-figure quarto-figure-center r-stretch" width="499"><p>Each curve is the two-standard-deviation contour of its own distribution. The mean-field family cannot represent the correlation, and the direction of the divergence makes it settle on the contained circle rather than one covering the posterior.</p>
 </section>
 <section id="inla-briefly" class="slide level2">
 <h2><code>INLA</code>, briefly</h2>
@@ -637,18 +1380,56 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li>No chains, no burn-in, no rhat, and typically seconds rather than minutes.</li>
 </ul>
 </section>
+<section id="inla-inference-methods" class="slide level2 smaller">
+<h2><code>INLA</code>: inference methods</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td>Method</td>
+<td>nested Laplace approximations, with no sampling</td>
+</tr>
+<tr class="even">
+<td>Hyperparameters</td>
+<td>integrated over a grid, or over a central composite design</td>
+</tr>
+<tr class="odd">
+<td>Latent field</td>
+<td>one Laplace-type approximation per marginal, conditional on the hyperparameters</td>
+</tr>
+<tr class="even">
+<td>Marginal strategies</td>
+<td><code>gaussian</code>, <code>simplified.laplace</code> (the default), <code>laplace</code>, in increasing cost and accuracy</td>
+</tr>
+<tr class="odd">
+<td>Draws, where needed</td>
+<td><code>inla.posterior.sample()</code> samples from the fitted approximation</td>
+</tr>
+<tr class="even">
+<td>Restriction</td>
+<td>latent Gaussian models only</td>
+</tr>
+</tbody>
+</table>
+<div class="fragment">
+<p>Each of these is covered in the next session.</p>
+</div>
+</section>
 <section id="the-model-in-r-inla" class="slide level2">
 <h2>The model in <code>R-INLA</code></h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(SIGLA, <span class="at">model =</span> <span class="st">"iid"</span>)</span>
-<span id="cb7-2"><a href=""></a></span>
-<span id="cb7-3"><a href=""></a>model <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
-<span id="cb7-4"><a href=""></a>  formula,</span>
-<span id="cb7-5"><a href=""></a>  <span class="at">data =</span> data,</span>
-<span id="cb7-6"><a href=""></a>  <span class="at">E =</span> expected,</span>
-<span id="cb7-7"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
-<span id="cb7-8"><a href=""></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">link =</span> <span class="dv">1</span>),</span>
-<span id="cb7-9"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-10"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href=""></a>formula <span class="ot">&lt;-</span> deaths <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> <span class="fu">f</span>(SIGLA, <span class="at">model =</span> <span class="st">"iid"</span>)</span>
+<span id="cb8-2"><a href=""></a></span>
+<span id="cb8-3"><a href=""></a>model <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb8-4"><a href=""></a>  formula,</span>
+<span id="cb8-5"><a href=""></a>  <span class="at">data =</span> data,</span>
+<span id="cb8-6"><a href=""></a>  <span class="at">E =</span> expected,</span>
+<span id="cb8-7"><a href=""></a>  <span class="at">family =</span> <span class="st">"poisson"</span>,</span>
+<span id="cb8-8"><a href=""></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">link =</span> <span class="dv">1</span>),</span>
+<span id="cb8-9"><a href=""></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-10"><a href=""></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="fragment">
 <p>Notice what is missing: no priors written out (necessarily), no loop, no initial values, no chains. We unpack every one of those choices in the next session.</p>
 </div>
@@ -709,6 +1490,89 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li><strong>What does my field use?</strong> Reviewers are more comfortable with familiar tools, fair or not.</li>
 </ol>
 </section>
+<section id="inference-methods-by-package" class="slide level2 smaller">
+<h2>Inference methods by package</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Package</th>
+<th>Default method</th>
+<th>Also available</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>BUGS</code></td>
+<td>Gibbs</td>
+<td>adaptive rejection, slice, Metropolis</td>
+</tr>
+<tr class="even">
+<td><code>JAGS</code></td>
+<td>Gibbs</td>
+<td>adaptive rejection, slice, Metropolis, <code>glm</code> block updates</td>
+</tr>
+<tr class="odd">
+<td><code>NIMBLE</code></td>
+<td>conjugate and adaptive Metropolis</td>
+<td>slice, blocked random walk, NUTS, SMC, Laplace, reversible jump</td>
+</tr>
+<tr class="even">
+<td><code>Stan</code></td>
+<td>NUTS</td>
+<td>ADVI, Pathfinder, Laplace, L-BFGS optimisation</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="inference-methods-by-package-1" class="slide level2 smaller">
+<h2>Inference methods by package</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Package</th>
+<th>Default method</th>
+<th>Also available</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>brms</code>, <code>rstanarm</code></td>
+<td>NUTS, through <code>Stan</code></td>
+<td>the same, by argument</td>
+</tr>
+<tr class="even">
+<td><code>PyMC</code></td>
+<td>NUTS</td>
+<td>Metropolis and Gibbs variants for discrete parameters, SMC, ADVI</td>
+</tr>
+<tr class="odd">
+<td><code>numpyro</code></td>
+<td>NUTS on <code>jax</code></td>
+<td>HMCECS, discrete variants, SVI</td>
+</tr>
+<tr class="even">
+<td><code>TMB</code>, <code>RTMB</code></td>
+<td>Laplace</td>
+<td>NUTS through <code>tmbstan</code></td>
+</tr>
+<tr class="odd">
+<td><code>INLA</code></td>
+<td>nested Laplace</td>
+<td>grid or CCD integration, sampling from the approximation</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="speed-is-not-the-only-cost" class="slide level2">
 <h2>Speed is not the only cost</h2>
 <table class="caption-top">
@@ -748,6 +1612,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <ul>
 <li>The model is the important thing. The software is a choice you make afterwards.</li>
 <li>Sampling languages differ mostly in ergonomics and sampler quality, not in what they can express.</li>
+<li>Most packages default to one of two samplers, a Gibbs-family update or NUTS, with Laplace and variational methods as the main alternatives to sampling.</li>
 <li><code>INLA</code> is a genuinely different trade: a restricted model class in exchange for speed and determinism.</li>
 <li>Being able to read all of them, and translate between them, is more valuable than mastery of any one.</li>
 </ul>
@@ -974,6 +1839,44 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
         ]
       });
     </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
     <script id="quarto-html-after-body" type="application/javascript">
       window.document.addEventListener("DOMContentLoaded", function (event) {
         const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
