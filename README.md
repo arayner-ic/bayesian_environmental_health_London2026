@@ -21,7 +21,6 @@ This workshop is written partly in [`NIMBLE`](https://r-nimble.org/). There are 
 
 Below is the set of lectures and labs to follow throughout the three days:
 
-
 ### Day 1 (August 19th 2026)
 
 | Time | Activity |
@@ -54,11 +53,11 @@ Below is the set of lectures and labs to follow throughout the three days:
 | 11:45 - 12:45 | Lunch |
 | 12:45 - 1:45 | [Spatial and spatio-temporal modelling](/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Lab) |
 | 1:45 - 2:00 | Break |
-| 2:00 - 2:30 | [Software options for Bayesian modelling](/lectures/software_options/software_options.qmd) (Lecture) |
-| 2:30 - 2:45 | Break |
-| 2:45 - 3:45 | [INLA and R-INLA](/lectures/inla/inla.qmd) (Lecture) |
-| 3:45 - 4:30 | [INLA and R-INLA](/labs/inla/inla.qmd) (Lab) |
-| 4:30 - 5:00 | Questions, survey on projects, and wrap-up |
+| 2:00 - 3:00 | [Software options for Bayesian modelling](/lectures/software_options/software_options.qmd) (Lecture) |
+| 3:00 - 3:15 | Break |
+| 3:15 - 4:15 | [INLA and R-INLA](/lectures/inla/inla.qmd) (Lecture) |
+| 4:15 - 5:00 | [INLA and R-INLA](/labs/inla/inla.qmd) (Lab) |
+| 5:00 - 5:10 | Questions, survey on projects, and wrap-up |
 
 ### Day 3 (August 21st 2026)
 
@@ -72,8 +71,8 @@ Below is the set of lectures and labs to follow throughout the three days:
 | 12:15 - 12:30 | Group photo |
 | 12:30 - 1:30 | Lunch |
 | 1:30 - 2:00 | [Scaling Bayesian models](/labs/scaling_models/scaling_models.qmd) (Lab) |
-| 2:00 - 2:30 | [Tropical cyclone attribution](/lectures/attribution/tc_attribution.pptx) (Lecture) |
-| 2:30 - 3:00 | [Heat attribution](/lectures/attribution/attribution.pptx) (Lecture) |
+| 2:00 - 2:30 | [Heat attribution](/lectures/attribution/attribution.pptx) (Lecture) |
+| 2:30 - 3:00 | [Tropical cyclone attribution](/lectures/attribution/tc_attribution.pptx) (Lecture) |
 | 3:00 - 3:15 | Break |
 | 3:15 - 4:15 | Potential projects discussion |
 | 4:15 - 4:45 | Panel discussion |
