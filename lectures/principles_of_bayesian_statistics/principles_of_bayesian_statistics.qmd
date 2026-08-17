@@ -507,6 +507,7 @@ $$
 - Using `R`.
 - Packages (`BUGS`, `NIMBLE`, `STAN`,`R-INLA` etc.).
 - We will be focusing on using `NIMBLE` and `R-INLA` throughout the three days.
+- Tomorrow we'll go through the brute force methods to sample posterior.
 
 # Using `NIMBLE` for Bayesian inference
 

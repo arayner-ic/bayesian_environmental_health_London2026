@@ -171,12 +171,34 @@ First a summary of how the statistics of the samples of each parameter look
 summarise_draws(nimbleMCMC_samples_initial, default_summary_measures())
 ```
 
+Every column here is a summary of the samples themselves, so it is worth being clear about what each one is telling us:
+
+- `mean` is the average of all the retained samples for that parameter, and is the usual point estimate of the posterior.
+- `median` is the 50th percentile of the samples. Comparing it against `mean` is a quick check on skewness: if the two are close, the posterior is roughly symmetric.
+- `sd` is the standard deviation of the samples, describing how wide the posterior is. Note this is a description of the posterior itself rather than a standard error in the frequentist sense, even though the two often end up numerically similar.
+- `mad` is the median absolute deviation, calculated as `1.4826 * median(abs(x - median(x)))`. The constant rescales it so that for a Normal distribution it estimates the same quantity as `sd`. Because it is built out of medians rather than squared distances, it is not dragged around by a handful of extreme samples.
+- `q5` and `q95` are the 5th and 95th percentiles of the samples, which together give a 90% credible interval. Unlike the frequentist confidence interval above, this is a direct probability statement about the parameter.
+
+For `alpha` and the three betas the two columns agree almost exactly, which tells us those posteriors are well behaved. For `sigma` they disagree by a factor of about twenty (roughly 0.075 against roughly 0.003). That gap is important: a few extreme samples are inflating `sd` while leaving the robust measure alone. We will see below where those samples came from.
+
 Then examine how well the model has converged, which typically is identified by how close each rhat value is to 1.00.
 As in the lecture, rhat compares variation within each chain to variation between the four chains, which is why running more than one chain matters here.
 If it is much above 1.00 (>1.05) then the samples will not be very well converged and therefore either the model is not well specified or there just needs to be more iterations of the MCMC. It is a little bit of an art to figure that out, but rhat helps.
 ```{r}
 summarise_draws(nimbleMCMC_samples_initial, default_convergence_measures())
 ```
+
+The three columns here are each doing a different job:
+
+- `rhat` compares the variation within each chain against the variation between the four chains, as described above. It is a ratio of two variance estimates, so when the chains have mixed well it will sometimes come out fractionally below 1.00. Only the upper tail carries information, so 0.999 and 1.000 tell us the same thing.
+- `ess_bulk` is the effective sample size in the bulk of the posterior, calculated on rank-normalised samples. It is the number that governs how much we can trust `mean` and `median`. Because MCMC samples are correlated with one another, one sample is usually worth less than one independent draw, so this is typically smaller than the number of samples we actually collected.
+- `ess_tail` is the smaller of the effective sample sizes at the 5% and 95% quantiles, and governs how much we can trust `q5` and `q95`.
+
+We need both effective sample sizes because a chain can move around the middle of a posterior perfectly well while exploring the extremes poorly. That would give us a trustworthy `mean` alongside untrustworthy credible interval endpoints, and looking at `ess_bulk` alone would hide it. A rough working rule is that we want at least 100 effective samples per chain for these summaries to mean anything, so at least 400 here with our four chains.
+
+You may also occasionally see an effective sample size slightly larger than the number of samples collected. This is not an error. The effective sample size is estimated from the autocorrelation of the chain, and that estimate is itself a little noisy, so a small excess is nothing to read into.
+
+Looking at the table, `alpha` and the three betas are in excellent shape on all three columns. `sigma` is not: its `rhat` is above the 1.05 threshold and its effective sample sizes are in the tens rather than the thousands. This is the same problem the `sd` and `mad` disagreement was pointing at.
 
 What do the samples of the target parameters actually look like?
 Let's have a look at the parameters and their samples from running the model above.
@@ -235,6 +257,92 @@ Let's focus on the `sigma` plot
 ```{r}
 mcmc_trace(nimbleMCMC_samples_burnin, pars = c("sigma"))
 ```
+
+This trace looks different from the beta traces. Where the beta chains cross their mean on almost every iteration, `sigma` wanders: it drifts up for a stretch of samples, then drifts back down. That wandering is what the lower effective sample size in the table above is measuring, because a run of samples that all sit on the same side of the mean carries less information than the same number of independent draws would.
+
+The reason has nothing to do with the burn in, and not much to do with the model being difficult. It is about which sampler `NIMBLE` assigned to each parameter. We can look directly at the configuration we built earlier.
+```{r}
+mcmcConf$printSamplers()
+```
+
+`alpha` and the three betas have been given conjugate samplers, because a Normal prior combined with a Normal likelihood is one of the conjugate relationships `NIMBLE` detects automatically. A conjugate sampler draws directly from the full conditional distribution, so consecutive samples are essentially independent of one another. That is why their effective sample sizes come out at roughly the number of samples we collected.
+
+`sigma` has been given an adaptive random walk Metropolis sampler instead. Our prior for it was `dunif(0, 100)`, which is not conjugate to the Normal likelihood, so `NIMBLE` falls back on a general purpose sampler. A random walk proposes a small step away from wherever the chain currently sits, then accepts or rejects it. Consecutive samples are correlated by construction, and that is exactly the drifting we can see in the trace.
+
+It is worth saying clearly that this is not a broken sampler. Roughly 880 effective samples out of 4000 is about what a well tuned adaptive random walk achieves for a single parameter, and both `rhat` and the effective sample sizes are comfortably past the thresholds set out above. The model is fine. But it is a useful illustration that effective sample size tells us about the sampler at least as much as it tells us about the model.
+
+If we do want `sigma` to mix as well as the betas do, the cleanest route is to give it a conjugate prior too. For a Normal likelihood the conjugate prior for the variance is the inverse gamma, so we put the prior on the variance and then take a square root to recover the standard deviation.
+```{r}
+code_conjugate_sigma <- nimbleCode({
+  # priors for parameters
+  alpha ~ dnorm(0, sd = 100) # prior for alpha
+  beta1 ~ dnorm(0, sd = 100) # prior for beta1
+  beta2 ~ dnorm(0, sd = 100) # prior for beta2
+  beta3 ~ dnorm(0, sd = 100) # prior for beta3
+  sigma2 ~ dinvgamma(shape = 0.01, scale = 0.01) # prior on the variance this time
+  sigma <- sqrt(sigma2) # recover the standard deviation for comparability
+
+  # regression formula
+  for (i in 1:n) {
+    mu[i] <- alpha + beta1 * x1[i] + beta2 * x2[i] + beta3 * x3[i]
+    y[i] ~ dnorm(mu[i], var = sigma2) # note the var parameterisation
+  }
+})
+```
+
+Note that the likelihood is written with `var = sigma2` rather than `sd = sigma`. This matters. `NIMBLE` detects conjugacy by inspecting how nodes are connected in the model graph, and routing the variance through a deterministic square root before it reaches the likelihood would hide the relationship.
+
+Initial values again, this time squared versions of the ones we used before so the chains start in equivalent places.
+```{r}
+inits_conjugate_sigma <- list(
+  list(alpha = -1, beta1 = -1, beta2 = -1, beta3 = -1, sigma2 = 0.25),
+  list(alpha =  0, beta1 =  0, beta2 =  0, beta3 =  0, sigma2 = 1),
+  list(alpha =  1, beta1 =  1, beta2 =  1, beta3 =  1, sigma2 = 4),
+  list(alpha =  2, beta1 = -2, beta2 =  2, beta3 = -2, sigma2 = 9)
+)
+```
+
+Let's confirm the conjugacy has been picked up before running anything.
+```{r}
+model_conjugate_sigma <- nimbleModel(code_conjugate_sigma, constants = constants, data = data, inits = inits_conjugate_sigma[[1]])
+mcmcConf_conjugate_sigma <- configureMCMC(model_conjugate_sigma)
+mcmcConf_conjugate_sigma$printSamplers()
+```
+
+Now run it, monitoring the same five parameters as before so the output tables are directly comparable.
+```{r}
+tic <- Sys.time()
+nimbleMCMC_samples_conjugate_sigma <- nimbleMCMC(
+  code = code_conjugate_sigma,
+  data = data,
+  constants = constants,
+  inits = inits_conjugate_sigma,
+  monitors = c("alpha", "beta1", "beta2", "beta3", "sigma"),
+  niter = 2000,
+  nburnin = 1000,
+  nchains = 4,
+  setSeed = c(1,2,3,4),
+  samplesAsCodaMCMC = TRUE,
+  progressBar = FALSE
+)
+
+toc <- Sys.time()
+toc - tic
+```
+
+How do the convergence indicators look now?
+```{r}
+summarise_draws(nimbleMCMC_samples_conjugate_sigma, default_convergence_measures())
+```
+
+And the `sigma` trace, which should have lost its wandering.
+```{r}
+mcmc_trace(nimbleMCMC_samples_conjugate_sigma, pars = c("sigma"))
+```
+
+Two caveats are worth attaching to this. First, we changed the prior in order to get here, and choosing a prior for computational convenience rather than because it represents what we actually believe is a habit to be wary of. It does no damage in this particular case because we have many observations and the data overwhelm the prior, which you can check by comparing the estimates against the earlier run. It is a much bigger problem for variance parameters in hierarchical models, where an inverse gamma prior behaves poorly if the variance can be close to zero.
+
+Second, changing the prior is not the only option available. If we wanted to keep `dunif(0, 100)`, we could instead leave the model alone and swap the sampler using `mcmcConf$removeSamplers()` and `mcmcConf$addSampler()`, choosing a slice sampler or a random walk on the log scale. Or we could simply run more iterations, since effective sample size grows roughly in proportion to the number of samples collected.
 
 Let's try changing the priors and see if that makes any difference to how the model fits. Take some time to compare this with the code for the original model above. Notice how the real value of `beta2` (0.5) is not allowed as a value from the prior it is assigned below.
 ```{r}
