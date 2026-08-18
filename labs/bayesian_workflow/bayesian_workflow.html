@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.8.25">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -11,9 +11,6 @@
 
 <title>Bayesian workflow and influence of priors</title>
 <style>
-/* Default styles provided by pandoc.
-** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -66,17 +63,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="bayesian_workflow_files/libs/clipboard/clipboard.min.js"></script>
 <script src="bayesian_workflow_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="bayesian_workflow_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="bayesian_workflow_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="bayesian_workflow_files/libs/quarto-html/popper.min.js"></script>
 <script src="bayesian_workflow_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="bayesian_workflow_files/libs/quarto-html/anchor.min.js"></script>
 <link href="bayesian_workflow_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="bayesian_workflow_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="bayesian_workflow_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="bayesian_workflow_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="bayesian_workflow_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="bayesian_workflow_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="bayesian_workflow_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -212,7 +210,7 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 6  2.39   2.06    0.297</code></pre>
 </div>
 </div>
-<p>As in the earlier lab, we centre the exposure before modelling, which helps MCMC performance. Centring shifts the intercept but leaves the curvature unchanged, so after centring the true values are approximately (), (_1 ), (_2 = -0.8) and (= 1).</p>
+<p>As in the earlier lab, we centre the exposure before modelling, which helps MCMC performance. Centring shifts the intercept but leaves the curvature unchanged, so after centring the true values are <span class="math inline">\(\alpha \approx 2\)</span>, <span class="math inline">\(\beta_1 \approx 1.2\)</span>, <span class="math inline">\(\beta_2 = -0.8\)</span> and <span class="math inline">\(\sigma = 1\)</span>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat <span class="sc">|&gt;</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -247,9 +245,9 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <!-- **Class question:** Looking at the plot, would a simple straight-line model be enough here? -->
 </section>
 </section>
-<section id="step-1-a-first-model-that-is-probably-too-simple" class="level2">
-<h2 class="anchored" data-anchor-id="step-1-a-first-model-that-is-probably-too-simple">Step 1: A first model that is probably too simple</h2>
-<p>We will begin with a <strong>linear Normal model</strong> even though the true relationship is nonlinear.</p>
+<section id="step-1-a-first-model-that-is-too-simple" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-a-first-model-that-is-too-simple">Step 1: A first model that is too simple</h2>
+<p>We will begin with a <strong>linear Normal model</strong>, even though the true relationship is nonlinear.</p>
 <p><span class="math display">\[
 \begin{split}
 y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
@@ -263,10 +261,11 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <p>A prior predictive check asks: <em>If our priors were true, what sort of data would the model imply before seeing the observed data?</em></p>
 <p>We will look at three cases:</p>
 <ol type="1">
-<li>a <strong>bad overly wide prior</strong>;</li>
-<li>a <strong>bad overly restrictive prior</strong>; and</li>
-<li>a more <strong>reasonable weakly informative prior</strong>.</li>
+<li>a <strong>Permissive prior</strong>;</li>
+<li>a <strong>Restrictive prior</strong>; and</li>
+<li>a more <strong>Weakly informative prior</strong>.</li>
 </ol>
+<p>Note: Honestly, if there are a lot of data, only 2. will cause problems, as the data can dominate the posterior ‘negotiations’.</p>
 <section id="create-a-grid-of-exposure-values" class="level3">
 <h3 class="anchored" data-anchor-id="create-a-grid-of-exposure-values">Create a grid of exposure values</h3>
 <p>All three checks use the same grid of centred exposure values, so the three plots are directly comparable.</p>
@@ -276,8 +275,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>x_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fu">min</span>(dat<span class="sc">$</span>x_c), <span class="fu">max</span>(dat<span class="sc">$</span>x_c), <span class="at">length.out =</span> <span class="dv">100</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="a.-bad-prior-wildly-too-wide" class="level3">
-<h3 class="anchored" data-anchor-id="a.-bad-prior-wildly-too-wide">2a. Bad prior: wildly too wide</h3>
+<section id="a.-permissive-prior-very-wide" class="level3">
+<h3 class="anchored" data-anchor-id="a.-permissive-prior-very-wide">2a. Permissive prior: very wide</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>prior_bad_wide <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>n_sims, <span class="cf">function</span>(s) {</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">2</span>)</span>
@@ -296,8 +295,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(prior_bad_wide, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y_rep, <span class="at">group =</span> sim)) <span class="sc">+</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">alpha =</span> <span class="fl">0.08</span>) <span class="sc">+</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Prior predictive check: overly wide priors"</span>,</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"These priors imply many impossible or wildly implausible datasets"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">""</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">""</span>,</span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Simulated outcome"</span></span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -311,8 +310,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 </div>
 <!-- **Class question:** What looks unrealistic about these simulated datasets? -->
 </section>
-<section id="b.-bad-prior-too-restrictive" class="level3">
-<h3 class="anchored" data-anchor-id="b.-bad-prior-too-restrictive">2b. Bad prior: too restrictive</h3>
+<section id="b.-restrictive-prior-very-narrow" class="level3">
+<h3 class="anchored" data-anchor-id="b.-restrictive-prior-very-narrow">2b. Restrictive prior: very narrow</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prior_bad_tight <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>n_sims, <span class="cf">function</span>(s) {</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="fl">0.05</span>)</span>
@@ -332,8 +331,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">alpha =</span> <span class="fl">0.08</span>) <span class="sc">+</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">ylim =</span> <span class="fu">range</span>(dat<span class="sc">$</span>y)) <span class="sc">+</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Prior predictive check: overly restrictive priors"</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"These priors barely allow variation and effectively rule out meaningful effects"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">""</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">""</span>,</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Simulated outcome"</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -347,8 +346,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 </div>
 <!-- **Class question:** Why is a very tight prior also a problem, even if the lines look neat? -->
 </section>
-<section id="c.-more-reasonable-prior" class="level3">
-<h3 class="anchored" data-anchor-id="c.-more-reasonable-prior">2c. More reasonable prior</h3>
+<section id="c.-weakly-informative-prior" class="level3">
+<h3 class="anchored" data-anchor-id="c.-weakly-informative-prior">2c. Weakly informative prior</h3>
 <p>These are the priors we will actually use in the model below.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prior_reasonable <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>n_sims, <span class="cf">function</span>(s) {</span>
@@ -367,8 +366,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(prior_reasonable, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y_rep, <span class="at">group =</span> sim)) <span class="sc">+</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">alpha =</span> <span class="fl">0.08</span>) <span class="sc">+</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Prior predictive check: more reasonable priors"</span>,</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"These priors allow a wide range of plausible datasets without becoming absurd"</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">""</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">""</span>,</span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Simulated outcome"</span></span>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -383,8 +382,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <!-- **Class question:** Compare the three plots. Which one covers the range of outcomes we might plausibly see, without also covering values we know are impossible? -->
 </section>
 </section>
-<section id="step-3-write-the-first-bayesian-model-in-nimble" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-write-the-first-bayesian-model-in-nimble">Step 3: Write the first Bayesian model in <code>NIMBLE</code></h2>
+<section id="step-3-write-the-model-in-nimble" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-write-the-model-in-nimble">Step 3: Write the model in <code>NIMBLE</code></h2>
 <p>We now fit the linear model using reasonable priors.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>code_linear <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
@@ -460,7 +459,7 @@ conjugate sampler (2)
 </section>
 <section id="step-4-first-mcmc-run-intentionally-too-short" class="level2">
 <h2 class="anchored" data-anchor-id="step-4-first-mcmc-run-intentionally-too-short">Step 4: First MCMC run, intentionally too short</h2>
-<p>We will deliberately run a short MCMC first to mimic a common classroom situation where a model has been fit, but diagnostics have not really been checked yet.</p>
+<p>We will deliberately run a short MCMC first.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>samples_linear_short <span class="ot">&lt;-</span> <span class="fu">nimbleMCMC</span>(</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">code =</span> code_linear,</span>
@@ -562,7 +561,7 @@ conjugate sampler (2)
 </section>
 <section id="step-5-a-better-mcmc-run" class="level2">
 <h2 class="anchored" data-anchor-id="step-5-a-better-mcmc-run">Step 5: A better MCMC run</h2>
-<p>Now we run the same model more carefully: many more iterations, a longer burn in, and four chains rather than the two-chain minimum.</p>
+<p>Now we run the same model more carefully: many more iterations, and a longer burn in/warm up.</p>
 <p>We also introduce <code>thin</code>, which keeps only every fifth sample. Successive MCMC samples are correlated with each other, so thinning trades a little information for a much smaller object to carry around. It is not a fix for a badly mixing chain.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>samples_linear <span class="ot">&lt;-</span> <span class="fu">nimbleMCMC</span>(</span>
@@ -679,7 +678,7 @@ conjugate sampler (2)
 </section>
 <section id="step-6-posterior-predictive-checks-for-the-linear-model" class="level2">
 <h2 class="anchored" data-anchor-id="step-6-posterior-predictive-checks-for-the-linear-model">Step 6: Posterior predictive checks for the linear model</h2>
-<p>A posterior predictive check asks: <em>If the fitted model were true, could it generate data that look like what we actually observed?</em></p>
+<p>A posterior predictive check asks: If the fitted model were true, could it generate data that look like what we actually observed?</p>
 <section id="extract-posterior-draws" class="level3">
 <h3 class="anchored" data-anchor-id="extract-posterior-draws">Extract posterior draws</h3>
 <p>We use <code>as_draws_df()</code> here, the same way we did when comparing betas in the earlier <code>NIMBLE</code> lab. It stacks the four chains into one data frame of draws.</p>
@@ -721,68 +720,36 @@ conjugate sampler (2)
 </div>
 </div>
 </section>
-<section id="compare-means-and-standard-deviations" class="level3">
-<h3 class="anchored" data-anchor-id="compare-means-and-standard-deviations">Compare means and standard deviations</h3>
+<section id="compare-fitted-relationship-with-observed-data" class="level3">
+<h3 class="anchored" data-anchor-id="compare-fitted-relationship-with-observed-data">Compare fitted relationship with observed data</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ppc_stat</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_linear, <span class="at">stat =</span> <span class="st">"mean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Note: in most cases the default test statistic 'mean' is too weak to detect anything of interest.</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
-</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>pp_linears <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="cf">function</span>(j) {</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids[j]</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">draw =</span> j,</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mu =</span> draws_linear<span class="sc">$</span>alpha[d] <span class="sc">+</span> draws_linear<span class="sc">$</span>beta[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.55</span>) <span class="sc">+</span></span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> pp_linears,</span>
+<span id="cb63-14"><a href="#cb63-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> mu, <span class="at">group =</span> draw),</span>
+<span id="cb63-15"><a href="#cb63-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.08</span>,</span>
+<span id="cb63-16"><a href="#cb63-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"steelblue"</span></span>
+<span id="cb63-17"><a href="#cb63-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb63-18"><a href="#cb63-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb63-19"><a href="#cb63-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">""</span>,</span>
+<span id="cb63-20"><a href="#cb63-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">""</span>,</span>
+<span id="cb63-21"><a href="#cb63-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
+<span id="cb63-22"><a href="#cb63-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Outcome"</span></span>
+<span id="cb63-23"><a href="#cb63-23" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
 <p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ppc_stat</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_linear, <span class="at">stat =</span> <span class="st">"sd"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="compare-fitted-relationship-with-observed-data" class="level3">
-<h3 class="anchored" data-anchor-id="compare-fitted-relationship-with-observed-data">Compare fitted relationship with observed data</h3>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>pp_linears <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="cf">function</span>(j) {</span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids[j]</span>
-<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">draw =</span> j,</span>
-<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
-<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mu =</span> draws_linear<span class="sc">$</span>alpha[d] <span class="sc">+</span> draws_linear<span class="sc">$</span>beta[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c</span>
-<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y)) <span class="sc">+</span></span>
-<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.55</span>) <span class="sc">+</span></span>
-<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
-<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> pp_linears,</span>
-<span id="cb68-14"><a href="#cb68-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> mu, <span class="at">group =</span> draw),</span>
-<span id="cb68-15"><a href="#cb68-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.08</span>,</span>
-<span id="cb68-16"><a href="#cb68-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"steelblue"</span></span>
-<span id="cb68-17"><a href="#cb68-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb68-18"><a href="#cb68-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb68-19"><a href="#cb68-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Posterior mean functions from the linear model"</span>,</span>
-<span id="cb68-20"><a href="#cb68-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"The model can only fit straight lines"</span>,</span>
-<span id="cb68-21"><a href="#cb68-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
-<span id="cb68-22"><a href="#cb68-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Outcome"</span></span>
-<span id="cb68-23"><a href="#cb68-23" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -802,34 +769,34 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="prior-predictive-check-for-the-quadratic-model" class="level3">
 <h3 class="anchored" data-anchor-id="prior-predictive-check-for-the-quadratic-model">Prior predictive check for the quadratic model</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>prior_quad <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>n_sims, <span class="cf">function</span>(s) {</span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">5</span>)</span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>  beta1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">2</span>)</span>
-<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>  beta2 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
-<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>  sigma <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">1</span>, <span class="fl">0.2</span>, <span class="dv">5</span>)</span>
-<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>  x_seq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fu">min</span>(dat<span class="sc">$</span>x_c), <span class="fu">max</span>(dat<span class="sc">$</span>x_c), <span class="at">length.out =</span> <span class="dv">100</span>)</span>
-<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">sim =</span> s,</span>
-<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x_c =</span> x_seq,</span>
-<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y_rep =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>, alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x_seq <span class="sc">+</span> beta2 <span class="sc">*</span> x_seq<span class="sc">^</span><span class="dv">2</span>, sigma)</span>
-<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb69-14"><a href="#cb69-14" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>prior_quad <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>n_sims, <span class="cf">function</span>(s) {</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">5</span>)</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>  beta1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">2</span>)</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>  beta2 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>  sigma <span class="ot">&lt;-</span> <span class="fu">runif</span>(<span class="dv">1</span>, <span class="fl">0.2</span>, <span class="dv">5</span>)</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>  x_seq <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fu">min</span>(dat<span class="sc">$</span>x_c), <span class="fu">max</span>(dat<span class="sc">$</span>x_c), <span class="at">length.out =</span> <span class="dv">100</span>)</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">sim =</span> s,</span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x_c =</span> x_seq,</span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y_rep =</span> <span class="fu">rnorm</span>(<span class="dv">100</span>, alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x_seq <span class="sc">+</span> beta2 <span class="sc">*</span> x_seq<span class="sc">^</span><span class="dv">2</span>, sigma)</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(prior_quad, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y_rep, <span class="at">group =</span> sim)) <span class="sc">+</span></span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">alpha =</span> <span class="fl">0.06</span>) <span class="sc">+</span></span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Prior predictive check for the quadratic model"</span>,</span>
-<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"The model now allows both linear and curved relationships"</span>,</span>
-<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
-<span id="cb70-7"><a href="#cb70-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Simulated outcome"</span></span>
-<span id="cb70-8"><a href="#cb70-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(prior_quad, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y_rep, <span class="at">group =</span> sim)) <span class="sc">+</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">alpha =</span> <span class="fl">0.06</span>) <span class="sc">+</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">""</span>,</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">""</span>,</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Simulated outcome"</span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -838,49 +805,49 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="write-the-quadratic-nimble-model" class="level3">
 <h3 class="anchored" data-anchor-id="write-the-quadratic-nimble-model">Write the quadratic NIMBLE model</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>code_quad <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">5</span>)</span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>  beta1 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">2</span>)</span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>  beta2 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>)</span>
-<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>  sigma <span class="sc">~</span> <span class="fu">dunif</span>(<span class="dv">0</span>, <span class="dv">10</span>)</span>
-<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
-<span id="cb71-8"><a href="#cb71-8" aria-hidden="true" tabindex="-1"></a>    mu[i] <span class="ot">&lt;-</span> alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x[i] <span class="sc">+</span> beta2 <span class="sc">*</span> x2[i]</span>
-<span id="cb71-9"><a href="#cb71-9" aria-hidden="true" tabindex="-1"></a>    y[i] <span class="sc">~</span> <span class="fu">dnorm</span>(mu[i], <span class="at">sd =</span> sigma)</span>
-<span id="cb71-10"><a href="#cb71-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb71-11"><a href="#cb71-11" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>code_quad <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">5</span>)</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>  beta1 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">2</span>)</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>  beta2 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>)</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>  sigma <span class="sc">~</span> <span class="fu">dunif</span>(<span class="dv">0</span>, <span class="dv">10</span>)</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>    mu[i] <span class="ot">&lt;-</span> alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x[i] <span class="sc">+</span> beta2 <span class="sc">*</span> x2[i]</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>    y[i] <span class="sc">~</span> <span class="fu">dnorm</span>(mu[i], <span class="at">sd =</span> sigma)</span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="prepare-inputs" class="level3">
 <h3 class="anchored" data-anchor-id="prepare-inputs">Prepare inputs</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>constants_quad <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">n =</span> <span class="fu">nrow</span>(dat))</span>
-<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>data_quad <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">x =</span> dat<span class="sc">$</span>x_c, <span class="at">x2 =</span> dat<span class="sc">$</span>x2)</span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>inits_quad <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span> <span class="sc">-</span><span class="dv">5</span>, <span class="at">beta1 =</span> <span class="sc">-</span><span class="dv">3</span>, <span class="at">beta2 =</span> <span class="sc">-</span><span class="dv">2</span>, <span class="at">sigma =</span> <span class="fl">0.5</span>),</span>
-<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span>  <span class="dv">0</span>, <span class="at">beta1 =</span>  <span class="dv">0</span>, <span class="at">beta2 =</span>  <span class="dv">0</span>, <span class="at">sigma =</span> <span class="dv">1</span>),</span>
-<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span>  <span class="dv">5</span>, <span class="at">beta1 =</span>  <span class="dv">3</span>, <span class="at">beta2 =</span>  <span class="dv">2</span>, <span class="at">sigma =</span> <span class="dv">2</span>),</span>
-<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span> <span class="dv">10</span>, <span class="at">beta1 =</span> <span class="sc">-</span><span class="dv">3</span>, <span class="at">beta2 =</span>  <span class="dv">2</span>, <span class="at">sigma =</span> <span class="dv">4</span>)</span>
-<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>constants_quad <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">n =</span> <span class="fu">nrow</span>(dat))</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>data_quad <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">x =</span> dat<span class="sc">$</span>x_c, <span class="at">x2 =</span> dat<span class="sc">$</span>x2)</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>inits_quad <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span> <span class="sc">-</span><span class="dv">5</span>, <span class="at">beta1 =</span> <span class="sc">-</span><span class="dv">3</span>, <span class="at">beta2 =</span> <span class="sc">-</span><span class="dv">2</span>, <span class="at">sigma =</span> <span class="fl">0.5</span>),</span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span>  <span class="dv">0</span>, <span class="at">beta1 =</span>  <span class="dv">0</span>, <span class="at">beta2 =</span>  <span class="dv">0</span>, <span class="at">sigma =</span> <span class="dv">1</span>),</span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span>  <span class="dv">5</span>, <span class="at">beta1 =</span>  <span class="dv">3</span>, <span class="at">beta2 =</span>  <span class="dv">2</span>, <span class="at">sigma =</span> <span class="dv">2</span>),</span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">alpha =</span> <span class="dv">10</span>, <span class="at">beta1 =</span> <span class="sc">-</span><span class="dv">3</span>, <span class="at">beta2 =</span>  <span class="dv">2</span>, <span class="at">sigma =</span> <span class="dv">4</span>)</span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="fit-the-quadratic-model" class="level3">
 <h3 class="anchored" data-anchor-id="fit-the-quadratic-model">Fit the quadratic model</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>samples_quad <span class="ot">&lt;-</span> <span class="fu">nimbleMCMC</span>(</span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">code =</span> code_quad,</span>
-<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">constants =</span> constants_quad,</span>
-<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data_quad,</span>
-<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">inits =</span> inits_quad,</span>
-<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">niter =</span> <span class="dv">12000</span>,</span>
-<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">nburnin =</span> <span class="dv">2000</span>,</span>
-<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">thin =</span> <span class="dv">5</span>,</span>
-<span id="cb73-9"><a href="#cb73-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">nchains =</span> <span class="dv">4</span>,</span>
-<span id="cb73-10"><a href="#cb73-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">setSeed =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
-<span id="cb73-11"><a href="#cb73-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">samplesAsCodaMCMC =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb73-12"><a href="#cb73-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">progressBar =</span> <span class="cn">FALSE</span></span>
-<span id="cb73-13"><a href="#cb73-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>samples_quad <span class="ot">&lt;-</span> <span class="fu">nimbleMCMC</span>(</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">code =</span> code_quad,</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">constants =</span> constants_quad,</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data_quad,</span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">inits =</span> inits_quad,</span>
+<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">niter =</span> <span class="dv">12000</span>,</span>
+<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">nburnin =</span> <span class="dv">2000</span>,</span>
+<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">thin =</span> <span class="dv">5</span>,</span>
+<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">nchains =</span> <span class="dv">4</span>,</span>
+<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">setSeed =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">samplesAsCodaMCMC =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">progressBar =</span> <span class="cn">FALSE</span></span>
+<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Defining model</code></pre>
 </div>
@@ -922,10 +889,10 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="summaries-and-diagnostics" class="level3">
 <h3 class="anchored" data-anchor-id="summaries-and-diagnostics">Summaries and diagnostics</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summarise_draws</span>(</span>
-<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>  samples_quad,</span>
-<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">default_summary_measures</span>()</span>
-<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summarise_draws</span>(</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>  samples_quad,</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">default_summary_measures</span>()</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 4 × 7
   variable   mean median     sd    mad     q5    q95
@@ -937,10 +904,10 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summarise_draws</span>(</span>
-<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  samples_quad,</span>
-<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">default_convergence_measures</span>()</span>
-<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summarise_draws</span>(</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>  samples_quad,</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">default_convergence_measures</span>()</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 4 × 4
   variable  rhat ess_bulk ess_tail
@@ -952,11 +919,11 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mcmc_trace</span>(samples_quad)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mcmc_trace</span>(samples_quad)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -968,66 +935,34 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="extract-posterior-draws-1" class="level3">
 <h3 class="anchored" data-anchor-id="extract-posterior-draws-1">Extract posterior draws</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>draws_quad <span class="ot">&lt;-</span> <span class="fu">as_draws_df</span>(samples_quad)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>draws_quad <span class="ot">&lt;-</span> <span class="fu">as_draws_df</span>(samples_quad)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="simulate-replicated-outcomes" class="level3">
 <h3 class="anchored" data-anchor-id="simulate-replicated-outcomes">Simulate replicated outcomes</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>draw_ids_quad <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(draws_quad), n_draws_ppc)</span>
-<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>yrep_quad <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA_real_</span>, <span class="at">nrow =</span> n_draws_ppc, <span class="at">ncol =</span> <span class="fu">nrow</span>(dat))</span>
-<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(draw_ids_quad)) {</span>
-<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids_quad[j]</span>
-<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a>  mu_j <span class="ot">&lt;-</span> draws_quad<span class="sc">$</span>alpha[d] <span class="sc">+</span></span>
-<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta1[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c <span class="sc">+</span></span>
-<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta2[d] <span class="sc">*</span> dat<span class="sc">$</span>x2</span>
-<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a>  sigma_j <span class="ot">&lt;-</span> draws_quad<span class="sc">$</span>sigma[d]</span>
-<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a>  yrep_quad[j, ] <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="fu">nrow</span>(dat), <span class="at">mean =</span> mu_j, <span class="at">sd =</span> sigma_j)</span>
-<span id="cb91-12"><a href="#cb91-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>draw_ids_quad <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(draws_quad), n_draws_ppc)</span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>yrep_quad <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA_real_</span>, <span class="at">nrow =</span> n_draws_ppc, <span class="at">ncol =</span> <span class="fu">nrow</span>(dat))</span>
+<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(draw_ids_quad)) {</span>
+<span id="cb86-6"><a href="#cb86-6" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids_quad[j]</span>
+<span id="cb86-7"><a href="#cb86-7" aria-hidden="true" tabindex="-1"></a>  mu_j <span class="ot">&lt;-</span> draws_quad<span class="sc">$</span>alpha[d] <span class="sc">+</span></span>
+<span id="cb86-8"><a href="#cb86-8" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta1[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c <span class="sc">+</span></span>
+<span id="cb86-9"><a href="#cb86-9" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta2[d] <span class="sc">*</span> dat<span class="sc">$</span>x2</span>
+<span id="cb86-10"><a href="#cb86-10" aria-hidden="true" tabindex="-1"></a>  sigma_j <span class="ot">&lt;-</span> draws_quad<span class="sc">$</span>sigma[d]</span>
+<span id="cb86-11"><a href="#cb86-11" aria-hidden="true" tabindex="-1"></a>  yrep_quad[j, ] <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="fu">nrow</span>(dat), <span class="at">mean =</span> mu_j, <span class="at">sd =</span> sigma_j)</span>
+<span id="cb86-12"><a href="#cb86-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="compare-distributions" class="level3">
 <h3 class="anchored" data-anchor-id="compare-distributions">Compare distributions</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ppc_dens_overlay</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_quad[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ppc_dens_overlay</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_quad[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-39-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="compare-summary-statistics" class="level3">
-<h3 class="anchored" data-anchor-id="compare-summary-statistics">Compare summary statistics</h3>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ppc_stat</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_quad, <span class="at">stat =</span> <span class="st">"mean"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Note: in most cases the default test statistic 'mean' is too weak to detect anything of interest.</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-40-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ppc_stat</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_quad, <span class="at">stat =</span> <span class="st">"sd"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>`stat_bin()` using `bins = 30`. Pick better value `binwidth`.</code></pre>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-41-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-37-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1036,35 +971,35 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="compare-fitted-curves-with-observed-data" class="level3">
 <h3 class="anchored" data-anchor-id="compare-fitted-curves-with-observed-data">Compare fitted curves with observed data</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a>pp_quads <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="cf">function</span>(j) {</span>
-<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids_quad[j]</span>
-<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">draw =</span> j,</span>
-<span id="cb98-5"><a href="#cb98-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
-<span id="cb98-6"><a href="#cb98-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mu =</span> draws_quad<span class="sc">$</span>alpha[d] <span class="sc">+</span></span>
-<span id="cb98-7"><a href="#cb98-7" aria-hidden="true" tabindex="-1"></a>      draws_quad<span class="sc">$</span>beta1[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c <span class="sc">+</span></span>
-<span id="cb98-8"><a href="#cb98-8" aria-hidden="true" tabindex="-1"></a>      draws_quad<span class="sc">$</span>beta2[d] <span class="sc">*</span> dat<span class="sc">$</span>x2</span>
-<span id="cb98-9"><a href="#cb98-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb98-10"><a href="#cb98-10" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb98-11"><a href="#cb98-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb98-12"><a href="#cb98-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y)) <span class="sc">+</span></span>
-<span id="cb98-13"><a href="#cb98-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.55</span>) <span class="sc">+</span></span>
-<span id="cb98-14"><a href="#cb98-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
-<span id="cb98-15"><a href="#cb98-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> pp_quads,</span>
-<span id="cb98-16"><a href="#cb98-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> mu, <span class="at">group =</span> draw),</span>
-<span id="cb98-17"><a href="#cb98-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.08</span>,</span>
-<span id="cb98-18"><a href="#cb98-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"darkgreen"</span></span>
-<span id="cb98-19"><a href="#cb98-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb98-20"><a href="#cb98-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb98-21"><a href="#cb98-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Posterior mean functions from the quadratic model"</span>,</span>
-<span id="cb98-22"><a href="#cb98-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"The model now captures the curvature in the data much better"</span>,</span>
-<span id="cb98-23"><a href="#cb98-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
-<span id="cb98-24"><a href="#cb98-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Outcome"</span></span>
-<span id="cb98-25"><a href="#cb98-25" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>pp_quads <span class="ot">&lt;-</span> <span class="fu">map_dfr</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, <span class="cf">function</span>(j) {</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids_quad[j]</span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">draw =</span> j,</span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
+<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mu =</span> draws_quad<span class="sc">$</span>alpha[d] <span class="sc">+</span></span>
+<span id="cb88-7"><a href="#cb88-7" aria-hidden="true" tabindex="-1"></a>      draws_quad<span class="sc">$</span>beta1[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c <span class="sc">+</span></span>
+<span id="cb88-8"><a href="#cb88-8" aria-hidden="true" tabindex="-1"></a>      draws_quad<span class="sc">$</span>beta2[d] <span class="sc">*</span> dat<span class="sc">$</span>x2</span>
+<span id="cb88-9"><a href="#cb88-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb88-10"><a href="#cb88-10" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb88-11"><a href="#cb88-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb88-12"><a href="#cb88-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb88-13"><a href="#cb88-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.55</span>) <span class="sc">+</span></span>
+<span id="cb88-14"><a href="#cb88-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb88-15"><a href="#cb88-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> pp_quads,</span>
+<span id="cb88-16"><a href="#cb88-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> mu, <span class="at">group =</span> draw),</span>
+<span id="cb88-17"><a href="#cb88-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.08</span>,</span>
+<span id="cb88-18"><a href="#cb88-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"darkgreen"</span></span>
+<span id="cb88-19"><a href="#cb88-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb88-20"><a href="#cb88-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb88-21"><a href="#cb88-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">""</span>,</span>
+<span id="cb88-22"><a href="#cb88-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">""</span>,</span>
+<span id="cb88-23"><a href="#cb88-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
+<span id="cb88-24"><a href="#cb88-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Outcome"</span></span>
+<span id="cb88-25"><a href="#cb88-25" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-42-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-38-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1077,17 +1012,17 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="compare-posterior-predictive-distributions-side-by-side" class="level3">
 <h3 class="anchored" data-anchor-id="compare-posterior-predictive-distributions-side-by-side">Compare posterior predictive distributions side by side</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">ppc_dens_overlay</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_linear[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ]) <span class="sc">+</span></span>
-<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Linear model"</span>)</span>
-<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb99-4"><a href="#cb99-4" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">ppc_dens_overlay</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_quad[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ]) <span class="sc">+</span></span>
-<span id="cb99-5"><a href="#cb99-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Quadratic model"</span>)</span>
-<span id="cb99-6"><a href="#cb99-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb99-7"><a href="#cb99-7" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> p2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="fu">ppc_dens_overlay</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_linear[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ]) <span class="sc">+</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Linear model"</span>)</span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> <span class="fu">ppc_dens_overlay</span>(<span class="at">y =</span> dat<span class="sc">$</span>y, <span class="at">yrep =</span> yrep_quad[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ]) <span class="sc">+</span></span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Quadratic model"</span>)</span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>p1 <span class="sc">+</span> p2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-43-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-39-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1096,54 +1031,54 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="compare-fitted-mean-curves" class="level3">
 <h3 class="anchored" data-anchor-id="compare-fitted-mean-curves">Compare fitted mean curves</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>linear_fits <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>, <span class="cf">function</span>(j) {</span>
-<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids[j]</span>
-<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a>  draws_linear<span class="sc">$</span>alpha[d] <span class="sc">+</span> draws_linear<span class="sc">$</span>beta[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c</span>
-<span id="cb100-4"><a href="#cb100-4" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb100-5"><a href="#cb100-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb100-6"><a href="#cb100-6" aria-hidden="true" tabindex="-1"></a>quad_fits <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>, <span class="cf">function</span>(j) {</span>
-<span id="cb100-7"><a href="#cb100-7" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids_quad[j]</span>
-<span id="cb100-8"><a href="#cb100-8" aria-hidden="true" tabindex="-1"></a>  draws_quad<span class="sc">$</span>alpha[d] <span class="sc">+</span></span>
-<span id="cb100-9"><a href="#cb100-9" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta1[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c <span class="sc">+</span></span>
-<span id="cb100-10"><a href="#cb100-10" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta2[d] <span class="sc">*</span> dat<span class="sc">$</span>x2</span>
-<span id="cb100-11"><a href="#cb100-11" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb100-12"><a href="#cb100-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb100-13"><a href="#cb100-13" aria-hidden="true" tabindex="-1"></a>linear_mean_curve <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb100-14"><a href="#cb100-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
-<span id="cb100-15"><a href="#cb100-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">mu =</span> <span class="fu">rowMeans</span>(linear_fits)</span>
-<span id="cb100-16"><a href="#cb100-16" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb100-17"><a href="#cb100-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(x_c)</span>
-<span id="cb100-18"><a href="#cb100-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb100-19"><a href="#cb100-19" aria-hidden="true" tabindex="-1"></a>quad_mean_curve <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb100-20"><a href="#cb100-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
-<span id="cb100-21"><a href="#cb100-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">mu =</span> <span class="fu">rowMeans</span>(quad_fits)</span>
-<span id="cb100-22"><a href="#cb100-22" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb100-23"><a href="#cb100-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(x_c)</span>
-<span id="cb100-24"><a href="#cb100-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb100-25"><a href="#cb100-25" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y)) <span class="sc">+</span></span>
-<span id="cb100-26"><a href="#cb100-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.45</span>) <span class="sc">+</span></span>
-<span id="cb100-27"><a href="#cb100-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
-<span id="cb100-28"><a href="#cb100-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> linear_mean_curve,</span>
-<span id="cb100-29"><a href="#cb100-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> mu),</span>
-<span id="cb100-30"><a href="#cb100-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"steelblue"</span>,</span>
-<span id="cb100-31"><a href="#cb100-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="dv">1</span></span>
-<span id="cb100-32"><a href="#cb100-32" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb100-33"><a href="#cb100-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
-<span id="cb100-34"><a href="#cb100-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> quad_mean_curve,</span>
-<span id="cb100-35"><a href="#cb100-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> mu),</span>
-<span id="cb100-36"><a href="#cb100-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"darkgreen"</span>,</span>
-<span id="cb100-37"><a href="#cb100-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="dv">1</span></span>
-<span id="cb100-38"><a href="#cb100-38" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb100-39"><a href="#cb100-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb100-40"><a href="#cb100-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Posterior mean fit comparison"</span>,</span>
-<span id="cb100-41"><a href="#cb100-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Blue = linear model, green = quadratic model"</span>,</span>
-<span id="cb100-42"><a href="#cb100-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
-<span id="cb100-43"><a href="#cb100-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Outcome"</span></span>
-<span id="cb100-44"><a href="#cb100-44" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>linear_fits <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>, <span class="cf">function</span>(j) {</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids[j]</span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>  draws_linear<span class="sc">$</span>alpha[d] <span class="sc">+</span> draws_linear<span class="sc">$</span>beta[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c</span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>quad_fits <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>, <span class="cf">function</span>(j) {</span>
+<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> draw_ids_quad[j]</span>
+<span id="cb90-8"><a href="#cb90-8" aria-hidden="true" tabindex="-1"></a>  draws_quad<span class="sc">$</span>alpha[d] <span class="sc">+</span></span>
+<span id="cb90-9"><a href="#cb90-9" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta1[d] <span class="sc">*</span> dat<span class="sc">$</span>x_c <span class="sc">+</span></span>
+<span id="cb90-10"><a href="#cb90-10" aria-hidden="true" tabindex="-1"></a>    draws_quad<span class="sc">$</span>beta2[d] <span class="sc">*</span> dat<span class="sc">$</span>x2</span>
+<span id="cb90-11"><a href="#cb90-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb90-12"><a href="#cb90-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-13"><a href="#cb90-13" aria-hidden="true" tabindex="-1"></a>linear_mean_curve <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb90-14"><a href="#cb90-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
+<span id="cb90-15"><a href="#cb90-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">mu =</span> <span class="fu">rowMeans</span>(linear_fits)</span>
+<span id="cb90-16"><a href="#cb90-16" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb90-17"><a href="#cb90-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(x_c)</span>
+<span id="cb90-18"><a href="#cb90-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-19"><a href="#cb90-19" aria-hidden="true" tabindex="-1"></a>quad_mean_curve <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb90-20"><a href="#cb90-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_c =</span> dat<span class="sc">$</span>x_c,</span>
+<span id="cb90-21"><a href="#cb90-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">mu =</span> <span class="fu">rowMeans</span>(quad_fits)</span>
+<span id="cb90-22"><a href="#cb90-22" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb90-23"><a href="#cb90-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(x_c)</span>
+<span id="cb90-24"><a href="#cb90-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-25"><a href="#cb90-25" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat, <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb90-26"><a href="#cb90-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.45</span>) <span class="sc">+</span></span>
+<span id="cb90-27"><a href="#cb90-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb90-28"><a href="#cb90-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> linear_mean_curve,</span>
+<span id="cb90-29"><a href="#cb90-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> mu),</span>
+<span id="cb90-30"><a href="#cb90-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"steelblue"</span>,</span>
+<span id="cb90-31"><a href="#cb90-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="dv">1</span></span>
+<span id="cb90-32"><a href="#cb90-32" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb90-33"><a href="#cb90-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(</span>
+<span id="cb90-34"><a href="#cb90-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> quad_mean_curve,</span>
+<span id="cb90-35"><a href="#cb90-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> x_c, <span class="at">y =</span> mu),</span>
+<span id="cb90-36"><a href="#cb90-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"darkgreen"</span>,</span>
+<span id="cb90-37"><a href="#cb90-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="dv">1</span></span>
+<span id="cb90-38"><a href="#cb90-38" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb90-39"><a href="#cb90-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb90-40"><a href="#cb90-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Posterior mean fit comparison"</span>,</span>
+<span id="cb90-41"><a href="#cb90-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Blue = linear model, green = quadratic model"</span>,</span>
+<span id="cb90-42"><a href="#cb90-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Centred exposure"</span>,</span>
+<span id="cb90-43"><a href="#cb90-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Outcome"</span></span>
+<span id="cb90-44"><a href="#cb90-44" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-44-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-40-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1155,32 +1090,32 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <p>The next step in a Bayesian workflow is to ask whether our conclusions are sensitive to reasonable alternative priors.</p>
 <p>Here we keep the quadratic model but make the prior on the curvature term a little wider.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>code_quad_sens <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
-<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">5</span>)</span>
-<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>  beta1 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">2</span>)</span>
-<span id="cb101-4"><a href="#cb101-4" aria-hidden="true" tabindex="-1"></a>  beta2 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">2</span>)</span>
-<span id="cb101-5"><a href="#cb101-5" aria-hidden="true" tabindex="-1"></a>  sigma <span class="sc">~</span> <span class="fu">dunif</span>(<span class="dv">0</span>, <span class="dv">10</span>)</span>
-<span id="cb101-6"><a href="#cb101-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb101-7"><a href="#cb101-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
-<span id="cb101-8"><a href="#cb101-8" aria-hidden="true" tabindex="-1"></a>    mu[i] <span class="ot">&lt;-</span> alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x[i] <span class="sc">+</span> beta2 <span class="sc">*</span> x2[i]</span>
-<span id="cb101-9"><a href="#cb101-9" aria-hidden="true" tabindex="-1"></a>    y[i] <span class="sc">~</span> <span class="fu">dnorm</span>(mu[i], <span class="at">sd =</span> sigma)</span>
-<span id="cb101-10"><a href="#cb101-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb101-11"><a href="#cb101-11" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>code_quad_sens <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">5</span>)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>  beta1 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">2</span>)</span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a>  beta2 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">2</span>)</span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a>  sigma <span class="sc">~</span> <span class="fu">dunif</span>(<span class="dv">0</span>, <span class="dv">10</span>)</span>
+<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
+<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a>    mu[i] <span class="ot">&lt;-</span> alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x[i] <span class="sc">+</span> beta2 <span class="sc">*</span> x2[i]</span>
+<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a>    y[i] <span class="sc">~</span> <span class="fu">dnorm</span>(mu[i], <span class="at">sd =</span> sigma)</span>
+<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>samples_quad_sens <span class="ot">&lt;-</span> <span class="fu">nimbleMCMC</span>(</span>
-<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">code =</span> code_quad_sens,</span>
-<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">constants =</span> constants_quad,</span>
-<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data_quad,</span>
-<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">inits =</span> inits_quad,</span>
-<span id="cb102-6"><a href="#cb102-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">niter =</span> <span class="dv">12000</span>,</span>
-<span id="cb102-7"><a href="#cb102-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">nburnin =</span> <span class="dv">2000</span>,</span>
-<span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">thin =</span> <span class="dv">5</span>,</span>
-<span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">nchains =</span> <span class="dv">4</span>,</span>
-<span id="cb102-10"><a href="#cb102-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">setSeed =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
-<span id="cb102-11"><a href="#cb102-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">samplesAsCodaMCMC =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb102-12"><a href="#cb102-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">progressBar =</span> <span class="cn">FALSE</span></span>
-<span id="cb102-13"><a href="#cb102-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>samples_quad_sens <span class="ot">&lt;-</span> <span class="fu">nimbleMCMC</span>(</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">code =</span> code_quad_sens,</span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">constants =</span> constants_quad,</span>
+<span id="cb92-4"><a href="#cb92-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> data_quad,</span>
+<span id="cb92-5"><a href="#cb92-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">inits =</span> inits_quad,</span>
+<span id="cb92-6"><a href="#cb92-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">niter =</span> <span class="dv">12000</span>,</span>
+<span id="cb92-7"><a href="#cb92-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">nburnin =</span> <span class="dv">2000</span>,</span>
+<span id="cb92-8"><a href="#cb92-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">thin =</span> <span class="dv">5</span>,</span>
+<span id="cb92-9"><a href="#cb92-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">nchains =</span> <span class="dv">4</span>,</span>
+<span id="cb92-10"><a href="#cb92-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">setSeed =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb92-11"><a href="#cb92-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">samplesAsCodaMCMC =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb92-12"><a href="#cb92-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">progressBar =</span> <span class="cn">FALSE</span></span>
+<span id="cb92-13"><a href="#cb92-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Defining model</code></pre>
 </div>
@@ -1221,17 +1156,17 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <section id="compare-posterior-intervals-for-the-key-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="compare-posterior-intervals-for-the-key-parameters">Compare posterior intervals for the key parameters</h3>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>s1 <span class="ot">&lt;-</span> <span class="fu">mcmc_intervals</span>(samples_quad, <span class="at">pars =</span> <span class="fu">c</span>(<span class="st">"beta1"</span>, <span class="st">"beta2"</span>)) <span class="sc">+</span></span>
-<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Original prior: beta2 ~ Normal(0, sd = 1)"</span>)</span>
-<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a>s2 <span class="ot">&lt;-</span> <span class="fu">mcmc_intervals</span>(samples_quad_sens, <span class="at">pars =</span> <span class="fu">c</span>(<span class="st">"beta1"</span>, <span class="st">"beta2"</span>)) <span class="sc">+</span></span>
-<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Wider prior: beta2 ~ Normal(0, sd = 2)"</span>)</span>
-<span id="cb114-6"><a href="#cb114-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb114-7"><a href="#cb114-7" aria-hidden="true" tabindex="-1"></a>s1 <span class="sc">/</span> s2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>s1 <span class="ot">&lt;-</span> <span class="fu">mcmc_intervals</span>(samples_quad, <span class="at">pars =</span> <span class="fu">c</span>(<span class="st">"beta1"</span>, <span class="st">"beta2"</span>)) <span class="sc">+</span></span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Original prior: beta2 ~ Normal(0, sd = 1)"</span>)</span>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a>s2 <span class="ot">&lt;-</span> <span class="fu">mcmc_intervals</span>(samples_quad_sens, <span class="at">pars =</span> <span class="fu">c</span>(<span class="st">"beta1"</span>, <span class="st">"beta2"</span>)) <span class="sc">+</span></span>
+<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Wider prior: beta2 ~ Normal(0, sd = 2)"</span>)</span>
+<span id="cb104-6"><a href="#cb104-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb104-7"><a href="#cb104-7" aria-hidden="true" tabindex="-1"></a>s1 <span class="sc">/</span> s2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-47-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="bayesian_workflow_files/figure-html/unnamed-chunk-43-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1242,8 +1177,9 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 </section>
 <section id="closing-remarks" class="level2">
 <h2 class="anchored" data-anchor-id="closing-remarks">Closing remarks</h2>
-<p>In this lab session, we have worked through a full Bayesian workflow rather than a single model fit. We simulated data from a known process, chose priors and checked them <em>before</em> seeing the data, fitted a model that we knew was too simple, used posterior predictive checks to discover exactly how it failed, improved it, and finally asked whether our conclusions were sensitive to the priors.</p>
-<p>The key idea to take away is that none of the individual steps are new: the <code>NIMBLE</code> code, the four chains, and rhat are all from the earlier lab. What is new is the loop. A Bayesian analysis is rarely finished at the first fit, and the checks are what tell you where to go next.</p>
+<p>In this lab session, we have worked through a full Bayesian workflow rather than a single model fit.</p>
+<p>We simulated data from a known process, chose priors and checked them <em>before</em> seeing the data, fitted a model that we knew was too simple, used posterior predictive checks to discover exactly how it failed, improved it, and finally asked whether our conclusions were sensitive to the priors.</p>
+<p>The key idea to take away is that none of the individual steps are new: the <code>NIMBLE</code> code, the four chains, and rhat are all from the earlier lab. The Bayesian workflow is a way to think about this in an algorithmic context. A Bayesian analysis (like all analyses!) is rarely finished at the first fit, and the checks are what tell you where to go next.</p>
 <p>Two things worth remembering when you apply this to real data:</p>
 <ul>
 <li>We used simulated data here, so we always knew the right answer. In the real world you will not have <code>mu_true</code> to plot against, which makes posterior predictive checks much more important rather than less.</li>

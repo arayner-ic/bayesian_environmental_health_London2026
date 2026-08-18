@@ -430,12 +430,12 @@ Having chosen priors and fitted a model, the last question of the workflow is wh
   5. Improve the model and compare results across specifications; and
   6. Run a sensitivity analysis to see whether our conclusions depend on the priors.
 
-## The lab for this session
+<!-- ## The lab for this session -->
 
-::: nonincremental
-- The `NIMBLE` mechanics are the same as this morning: priors first, then the formula, four chains from different starting values, then rhat.
-- What is new is the loop around the fit.
-- The first model we fit will be *deliberately wrong*, and the point of the lab is to find that out from the checks rather than from being told.
-:::
+<!-- ::: nonincremental -->
+<!-- - The `NIMBLE` mechanics are the same as this morning: priors first, then the formula, four chains from different starting values, then rhat. -->
+<!-- - What is new is the loop around the fit. -->
+<!-- - The first model we fit will be *deliberately wrong*, and the point of the lab is to find that out from the checks rather than from being told. -->
+<!-- ::: -->
 
 # Questions?
