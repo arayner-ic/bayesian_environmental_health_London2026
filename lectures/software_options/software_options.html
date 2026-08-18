@@ -237,7 +237,7 @@ Robbie M. Parks, Theo Rashid
 <li>So far we have written models in <code>NIMBLE</code>, but nothing we have done is exclusive to <code>NIMBLE</code>.</li>
 <li>The Poisson likelihood, the priors, the random effects: all of that is the <strong>model</strong>.</li>
 <li>The software is the machinery that turns that model into a posterior.</li>
-<li>A good habit: write the model down in math(s) first, then decide what to fit it with.</li>
+<li>If you are comfortable: write the model down in math(s) first, then decide what to fit it with.</li>
 </ul>
 </section>
 <section id="the-model-and-the-software-are-different-things-1" class="slide level2">
@@ -290,7 +290,7 @@ Robbie M. Parks, Theo Rashid
 </tbody>
 </table>
 <div class="fragment">
-<p>The boundary between these two columns is what really differs between languages.</p>
+<p>This helps summarize what really differs between languages.</p>
 </div>
 </section>
 <section id="two-families-of-inference" class="slide level2">
@@ -314,11 +314,11 @@ Robbie M. Parks, Theo Rashid
 <section id="the-italy-provincial-mortality-model" class="slide level2">
 <h2>The Italy provincial mortality model</h2>
 <ul>
-<li>Let’s translate one model into several languages.</li>
+<li>We will translate one model into several languages.</li>
 <li>It is the partial pooling model from the hierarchical modelling lab:
 <ul>
-<li>Deaths by Italian province in September</li>
-<li>An expected count as offset</li>
+<li>Deaths by Italian province in September.</li>
+<li>An expected count as offset.</li>
 <li>A province-level random effect.</li>
 </ul></li>
 </ul>
@@ -335,7 +335,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 \end{split}
 \]</span></p>
 <div class="fragment">
-<p>Everything that follows is this model, written in different PPLs.</p>
+<p>We’ll now write it in a few PPLs.</p>
 </div>
 </section>
 <section id="the-model-in-nimble" class="slide level2">
@@ -365,7 +365,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 <li>Return the posterior for <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\sigma_p\)</span>, and all 107 <span class="math inline">\(\theta_j\)</span>.</li>
 </ul>
 <div class="fragment">
-<p>Every language below can do this. They differ in how much you have to write, and in what happens when it goes wrong.</p>
+<p>Every PPL can do this. PPLs differ in how much you have to write, and what happens when it goes wrong.</p>
 </div>
 </section></section>
 <section>
@@ -426,7 +426,7 @@ y_i &amp;\sim \text{Poisson}(\mu_i) \quad i = 1,..., N \\
 </tbody>
 </table>
 <div class="fragment">
-<p>The first five produce draws from the posterior. The last two return a fitted approximation instead, and are covered in the approximation section.</p>
+<p>The first five produce draws from the posterior. The last two return a fitted approximation instead, and are covered later.</p>
 </div>
 </section>
 <section id="a-toy-posterior-to-compare-them-on" class="slide level2 smaller">
@@ -482,7 +482,8 @@ a = \min\left(1,\; \frac{p(\theta^{*} \mid y)}{p(\theta^{(t)} \mid y)}\right),
 <li>When the posterior is correlated, only short moves are accepted.</li>
 <li>The cost per effectively independent draw increases roughly in proportion to the number of parameters.</li>
 <li>It requires nothing beyond the ability to evaluate the density, which is why it is the general fallback.</li>
-<li><code>NIMBLE</code> assigns it by default to continuous nodes with no conjugate form. <code>JAGS</code> uses it where nothing else applies.</li>
+<li><code>NIMBLE</code> assigns it by default to continuous nodes with no conjugate form.</li>
+<li><code>JAGS</code> uses it where nothing else applies.</li>
 </ul>
 </section>
 <section id="gibbs-sampling" class="slide level2">
@@ -499,7 +500,7 @@ a = \min\left(1,\; \frac{p(\theta^{*} \mid y)}{p(\theta^{(t)} \mid y)}\right),
 <section id="gibbs-sampling-one-coordinate-at-a-time" class="slide level2 smaller">
 <h2>Gibbs sampling: one coordinate at a time</h2>
 
-<img data-src="software_options_files/figure-revealjs/gibbs-stair-1.png" class="quarto-figure quarto-figure-center r-stretch" width="537"><p>Forty sweeps. Each segment is one conditional draw, so every move is horizontal or vertical, and the chain works along the ridge in small steps.</p>
+<img data-src="software_options_files/figure-revealjs/gibbs-stair-1.png" class="quarto-figure quarto-figure-center r-stretch" width="537"><p>Forty steps, where each segment is one conditional draw, so every move is horizontal or vertical, and the chain works along the ridge in small steps.</p>
 </section>
 <section id="gibbs-sampling-limitations" class="slide level2 smaller">
 <h2>Gibbs sampling: limitations</h2>
@@ -525,8 +526,7 @@ a = \min\left(1,\; \frac{p(\theta^{*} \mid y)}{p(\theta^{(t)} \mid y)}\right),
 <li>Used within Gibbs when the full conditional is log-concave but not a standard distribution.</li>
 <li>Constructs an envelope above the log density from tangent lines at a few points, samples from the envelope, and rejects against the true density.</li>
 <li>Each rejection adds a tangent, so the envelope tightens and the rejection rate falls as sampling proceeds.</li>
-<li>Exact, with nothing to tune. It requires log-concavity, which <code>JAGS</code> checks before assigning it.</li>
-<li><code>ARMS</code> extends the method to non-log-concave conditionals by adding a Metropolis correction step.</li>
+<li>Exact, with nothing to tune. It requires log-concavity, which <code>JAGS</code> checks before assigning it. <!-- - `ARMS` extends the method to non-log-concave conditionals by adding a Metropolis correction step. --></li>
 </ul>
 </section>
 <section id="adaptive-rejection-sampling-the-envelope" class="slide level2 smaller">
@@ -544,7 +544,8 @@ u \mid \theta \sim \text{Uniform}\left(0,\, f(\theta)\right), \qquad \theta \mid
 <li>To find the slice: step out from the current point in increments of width <span class="math inline">\(w\)</span> until both ends lie below the density, draw from the interval, and shrink it after each rejection.</li>
 <li>No acceptance rate and no gradient. The width <span class="math inline">\(w\)</span> is the only quantity to set, and a poor choice affects speed rather than correctness.</li>
 <li>Each update requires several density evaluations, so an iteration costs more than a Metropolis iteration, and mixing is generally better.</li>
-<li><code>JAGS</code> uses it for non-conjugate continuous nodes. <code>NIMBLE</code> uses it by default for discrete nodes.</li>
+<li><code>JAGS</code> uses it for non-conjugate continuous nodes.</li>
+<li><code>NIMBLE</code> uses it by default for discrete nodes.</li>
 </ul>
 </section>
 <section id="slice-sampling-one-update" class="slide level2 smaller">
@@ -1377,7 +1378,7 @@ H = -\left.\frac{\partial^{2}}{\partial \theta^{2}} \log p(\theta \mid y)\right|
 <li><strong>I</strong>ntegrated <strong>N</strong>ested <strong>L</strong>aplace <strong>A</strong>pproximation (Rue, Martino &amp; Chopin, 2009).</li>
 <li>Restricted to one model class: <strong>latent Gaussian models</strong>.</li>
 <li>Within that class, it computes the posterior <strong>marginals</strong> deterministically, using nested Laplace approximations.</li>
-<li>No chains, no burn-in, no rhat, and typically seconds rather than minutes.</li>
+<li>No chains, no burn-in, no rhat.</li>
 </ul>
 </section>
 <section id="inla-inference-methods" class="slide level2 smaller">
@@ -1573,8 +1574,8 @@ H = -\left.\frac{\partial^{2}}{\partial \theta^{2}} \log p(\theta \mid y)\right|
 </tbody>
 </table>
 </section>
-<section id="speed-is-not-the-only-cost" class="slide level2">
-<h2>Speed is not the only cost</h2>
+<section id="other-time-considerations" class="slide level2">
+<h2>Other time considerations</h2>
 <table class="caption-top">
 <colgroup>
 <col style="width: 50%">
@@ -1610,11 +1611,11 @@ H = -\left.\frac{\partial^{2}}{\partial \theta^{2}} \log p(\theta \mid y)\right|
 <section id="summary" class="slide level2">
 <h2>Summary</h2>
 <ul>
-<li>The model is the important thing. The software is a choice you make afterwards.</li>
+<li>The model is the first thing. The software is a choice you make afterwards.</li>
 <li>Sampling languages differ mostly in ergonomics and sampler quality, not in what they can express.</li>
 <li>Most packages default to one of two samplers, a Gibbs-family update or NUTS, with Laplace and variational methods as the main alternatives to sampling.</li>
-<li><code>INLA</code> is a genuinely different trade: a restricted model class in exchange for speed and determinism.</li>
-<li>Being able to read all of them, and translate between them, is more valuable than mastery of any one.</li>
+<li><code>INLA</code> is a different process: a restricted model class in exchange for speed and determinism.</li>
+<li>Being able to read all of them, and translate between them, is valuable.</li>
 </ul>
 </section></section>
 <section id="questions" class="title-slide slide level1 center">

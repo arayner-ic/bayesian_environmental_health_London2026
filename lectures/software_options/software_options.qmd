@@ -50,7 +50,7 @@ set.seed(2)
 - So far we have written models in `NIMBLE`, but nothing we have done is exclusive to `NIMBLE`.
 - The Poisson likelihood, the priors, the random effects: all of that is the **model**.
 - The software is the machinery that turns that model into a posterior.
-- A good habit: write the model down in math(s) first, then decide what to fit it with.
+- If you are comfortable: write the model down in math(s) first, then decide what to fit it with.
 
 ## The model and the software are different things
 
@@ -79,7 +79,7 @@ A probabilistic programming language (PPL) lets you **declare** a model and hand
 
 . . .
 
-The boundary between these two columns is what really differs between languages.
+This helps summarize what really differs between languages.
 
 ## Two families of inference
 
@@ -93,10 +93,10 @@ The boundary between these two columns is what really differs between languages.
 ## The Italy provincial mortality model
 
 ::: nonincremental
-- Let's translate one model into several languages.
+- We will translate one model into several languages.
 - It is the partial pooling model from the hierarchical modelling lab: 
-  - Deaths by Italian province in September
-  - An expected count as offset
+  - Deaths by Italian province in September.
+  - An expected count as offset.
   - A province-level random effect.
 :::
 
@@ -114,7 +114,7 @@ $$
 
 . . .
 
-Everything that follows is this model, written in different PPLs.
+We'll now write it in a few PPLs.
 
 ## The model, in `NIMBLE`
 
@@ -145,7 +145,7 @@ nimbleCode({
 
 . . .
 
-Every language below can do this. They differ in how much you have to write, and in what happens when it goes wrong.
+Every PPL can do this. PPLs differ in how much you have to write, and what happens when it goes wrong.
 
 # Inference algorithms
 
@@ -169,7 +169,7 @@ Every language below can do this. They differ in how much you have to write, and
 
 . . .
 
-The first five produce draws from the posterior. The last two return a fitted approximation instead, and are covered in the approximation section.
+The first five produce draws from the posterior. The last two return a fitted approximation instead, and are covered later.
 
 
 ## A toy posterior to compare them on {.smaller}
@@ -296,7 +296,8 @@ ggplot(mh_draws, aes(x1, x2)) +
 - When the posterior is correlated, only short moves are accepted.
 - The cost per effectively independent draw increases roughly in proportion to the number of parameters.
 - It requires nothing beyond the ability to evaluate the density, which is why it is the general fallback.
-- `NIMBLE` assigns it by default to continuous nodes with no conjugate form. `JAGS` uses it where nothing else applies.
+- `NIMBLE` assigns it by default to continuous nodes with no conjugate form. 
+- `JAGS` uses it where nothing else applies.
 
 ## Gibbs sampling
 
@@ -336,7 +337,7 @@ ggplot(tibble(x1 = stair[, 1], x2 = stair[, 2]), aes(x1, x2)) +
   geom_point(size = 0.7, colour = "#c0392b")
 ```
 
-Forty sweeps. Each segment is one conditional draw, so every move is horizontal or vertical, and the chain works along the ridge in small steps.
+Forty steps, where each segment is one conditional draw, so every move is horizontal or vertical, and the chain works along the ridge in small steps.
 
 ## Gibbs sampling: limitations {.smaller}
 
@@ -377,8 +378,7 @@ The same sampler and the same number of sweeps. Only the correlation between the
 - Constructs an envelope above the log density from tangent lines at a few points, samples from the envelope, and rejects against the true density.
 - Each rejection adds a tangent, so the envelope tightens and the rejection rate falls as sampling proceeds.
 - Exact, with nothing to tune. It requires log-concavity, which `JAGS` checks before assigning it.
-- `ARMS` extends the method to non-log-concave conditionals by adding a Metropolis correction step.
-
+<!-- - `ARMS` extends the method to non-log-concave conditionals by adding a Metropolis correction step. -->
 
 ## Adaptive rejection sampling: the envelope {.smaller}
 
@@ -425,7 +425,8 @@ $$
 - To find the slice: step out from the current point in increments of width $w$ until both ends lie below the density, draw from the interval, and shrink it after each rejection.
 - No acceptance rate and no gradient. The width $w$ is the only quantity to set, and a poor choice affects speed rather than correctness.
 - Each update requires several density evaluations, so an iteration costs more than a Metropolis iteration, and mixing is generally better.
-- `JAGS` uses it for non-conjugate continuous nodes. `NIMBLE` uses it by default for discrete nodes.
+- `JAGS` uses it for non-conjugate continuous nodes. 
+- `NIMBLE` uses it by default for discrete nodes.
 
 
 ## Slice sampling: one update {.smaller}
@@ -1074,7 +1075,7 @@ Each curve is the two-standard-deviation contour of its own distribution. The me
 - **I**ntegrated **N**ested **L**aplace **A**pproximation (Rue, Martino & Chopin, 2009).
 - Restricted to one model class: **latent Gaussian models**.
 - Within that class, it computes the posterior **marginals** deterministically, using nested Laplace approximations.
-- No chains, no burn-in, no rhat, and typically seconds rather than minutes.
+- No chains, no burn-in, no rhat.
 
 ## `INLA`: inference methods {.smaller}
 
@@ -1169,7 +1170,7 @@ Notice what is missing: no priors written out (necessarily), no loop, no initial
 | `TMB`, `RTMB` | Laplace | NUTS through `tmbstan` |
 | `INLA` | nested Laplace | grid or CCD integration, sampling from the approximation |
 
-## Speed is not the only cost
+## Other time considerations
 
 | Cost | Where it lands |
 |---|---|
@@ -1181,10 +1182,10 @@ Notice what is missing: no priors written out (necessarily), no loop, no initial
 
 ## Summary
 
-- The model is the important thing. The software is a choice you make afterwards.
+- The model is the first thing. The software is a choice you make afterwards.
 - Sampling languages differ mostly in ergonomics and sampler quality, not in what they can express.
 - Most packages default to one of two samplers, a Gibbs-family update or NUTS, with Laplace and variational methods as the main alternatives to sampling.
-- `INLA` is a genuinely different trade: a restricted model class in exchange for speed and determinism.
-- Being able to read all of them, and translate between them, is more valuable than mastery of any one.
+- `INLA` is a different process: a restricted model class in exchange for speed and determinism.
+- Being able to read all of them, and translate between them, is valuable.
 
 # Questions?
