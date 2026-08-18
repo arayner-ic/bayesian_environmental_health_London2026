@@ -1565,92 +1565,91 @@ the priors has gone.
 
 # Questions?
 
+<!-- # Appendix  -->
 
-# Appendix 
+<!-- ## The field, hyperparameters fixed {.smaller} -->
 
-## Question 1: the field, hyperparameters fixed {.smaller}
+<!-- The goal is a **joint** distribution over all 168,000 latent elements — with -->
+<!-- the three hyperparameters pinned at chosen values. -->
 
-The goal is a **joint** distribution over all 168,000 latent elements — with
-the three hyperparameters pinned at chosen values.
+<!-- ```{=html} -->
+<!-- <svg viewBox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit"> -->
+<!-- <defs><marker id="ahl" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"> -->
+<!-- <path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs> -->
 
-```{=html}
-<svg viewBox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
-<defs><marker id="ahl" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-<path d="M0,0 L9,4 L0,8 Z" fill="currentColor"/></marker></defs>
+<!-- <rect x="40" y="90" width="210" height="70" rx="8" fill="#2980b9" fill-opacity="0.16" -->
+<!--       stroke="currentColor" stroke-opacity="0.45"/> -->
+<!-- <text x="145" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the GMRF prior</text> -->
+<!-- <text x="145" y="142" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">acts on all 168,000</text> -->
 
-<rect x="40" y="90" width="210" height="70" rx="8" fill="#2980b9" fill-opacity="0.16"
-      stroke="currentColor" stroke-opacity="0.45"/>
-<text x="145" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the GMRF prior</text>
-<text x="145" y="142" font-size="15" text-anchor="middle" fill="currentColor" opacity="0.8">acts on all 168,000</text>
+<!-- <rect x="40" y="180" width="210" height="46" rx="8" fill="#16a085" fill-opacity="0.16" -->
+<!--       stroke="currentColor" stroke-opacity="0.45"/> -->
+<!-- <text x="145" y="208" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the 161,616 rows of data</text> -->
 
-<rect x="40" y="180" width="210" height="46" rx="8" fill="#16a085" fill-opacity="0.16"
-      stroke="currentColor" stroke-opacity="0.45"/>
-<text x="145" y="208" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">the 161,616 rows of data</text>
+<!-- <path d="M258,120 H340" stroke="currentColor" stroke-width="1.5" opacity="0.55" -->
+<!--       fill="none" marker-end="url(#ahl)"/> -->
+<!-- <path d="M258,200 H320 C335,200 340,180 340,150" stroke="currentColor" stroke-width="1.5" -->
+<!--       opacity="0.55" fill="none" marker-end="url(#ahl)"/> -->
 
-<path d="M258,120 H340" stroke="currentColor" stroke-width="1.5" opacity="0.55"
-      fill="none" marker-end="url(#ahl)"/>
-<path d="M258,200 H320 C335,200 340,180 340,150" stroke="currentColor" stroke-width="1.5"
-      opacity="0.55" fill="none" marker-end="url(#ahl)"/>
+<!-- <rect x="355" y="90" width="220" height="70" rx="8" fill="none" -->
+<!--       stroke="currentColor" stroke-opacity="0.5" stroke-width="1.2"/> -->
+<!-- <text x="465" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">exactly Gaussian,</text> -->
+<!-- <text x="465" y="142" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">then adjusted row by row</text> -->
 
-<rect x="355" y="90" width="220" height="70" rx="8" fill="none"
-      stroke="currentColor" stroke-opacity="0.5" stroke-width="1.2"/>
-<text x="465" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">exactly Gaussian,</text>
-<text x="465" y="142" font-size="16" font-weight="600" text-anchor="middle" fill="currentColor">then adjusted row by row</text>
+<!-- <path d="M583,125 H665" stroke="currentColor" stroke-width="1.5" opacity="0.55" -->
+<!--       fill="none" marker-end="url(#ahl)"/> -->
 
-<path d="M583,125 H665" stroke="currentColor" stroke-width="1.5" opacity="0.55"
-      fill="none" marker-end="url(#ahl)"/>
+<!-- <rect x="680" y="90" width="200" height="70" rx="8" fill="#c0392b" fill-opacity="0.12" -->
+<!--       stroke="#c0392b" stroke-opacity="0.6" stroke-width="1.2"/> -->
+<!-- <text x="780" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">approximately Gaussian</text> -->
+<!-- <text x="780" y="142" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">still mostly blanks</text> -->
 
-<rect x="680" y="90" width="200" height="70" rx="8" fill="#c0392b" fill-opacity="0.12"
-      stroke="#c0392b" stroke-opacity="0.6" stroke-width="1.2"/>
-<text x="780" y="120" font-size="16" font-weight="600" text-anchor="middle" fill="#c0392b">approximately Gaussian</text>
-<text x="780" y="142" font-size="15" text-anchor="middle" fill="#c0392b" opacity="0.9">still mostly blanks</text>
+<!-- <text x="355" y="42" font-size="15" fill="currentColor" opacity="0.75">the latent field once the three</text> -->
+<!-- <text x="355" y="62" font-size="15" fill="currentColor" opacity="0.75">hyperparameters are held fixed</text> -->
+<!-- </svg> -->
+<!-- ``` -->
 
-<text x="355" y="42" font-size="15" fill="currentColor" opacity="0.75">the latent field once the three</text>
-<text x="355" y="62" font-size="15" fill="currentColor" opacity="0.75">hyperparameters are held fixed</text>
-</svg>
-```
+<!-- Hold the three hyperparameters fixed and ask what the latent field looks -->
+<!-- like. Two things act on it, and they act very differently: -->
 
-Hold the three hyperparameters fixed and ask what the latent field looks
-like. Two things act on it, and they act very differently:
+<!-- ::: {.nonincremental} -->
+<!-- -   The **prior** is Gaussian, exactly, and it acts on all 168,000 elements -->
+<!--     at once. -->
+<!-- -   Each **row of data** acts too, but on one element only, and weakly. -->
+<!-- ::: -->
 
-::: {.nonincremental}
--   The **prior** is Gaussian, exactly, and it acts on all 168,000 elements
-    at once.
--   Each **row of data** acts too, but on one element only, and weakly.
-:::
+<!-- ## The field, hyperparameters fixed {.smaller} -->
 
-## Question 1, answered {.smaller}
+<!-- With the three hyperparameters pinned at chosen values, the latent field is -->
+<!-- handled **deterministically** — no sampling anywhere: -->
 
-With the three hyperparameters pinned at chosen values, the latent field is
-handled **deterministically** — no sampling anywhere:
+<!-- ::: {.nonincremental} -->
+<!-- -   Climb to the mode of the field's conditional posterior. A few sparse -->
+<!--     factorisations, each cheap because $\boldsymbol{Q}^{*}$ is mostly blank. -->
+<!-- -   Take the curvature there. That gives a **joint Gaussian approximation to -->
+<!--     all 168,000 elements at once** — a mean vector and a sparse -->
+<!--     $\boldsymbol{Q}^{*}$. -->
+<!-- ::: -->
 
-::: {.nonincremental}
--   Climb to the mode of the field's conditional posterior. A few sparse
-    factorisations, each cheap because $\boldsymbol{Q}^{*}$ is mostly blank.
--   Take the curvature there. That gives a **joint Gaussian approximation to
-    all 168,000 elements at once** — a mean vector and a sparse
-    $\boldsymbol{Q}^{*}$.
-:::
+<!-- Two ingredients were needed, and both were needed: the **GMRF** made every -->
+<!-- factorisation cheap, and the **Laplace approximation** made the Gaussian a -->
+<!-- good fit. -->
 
-Two ingredients were needed, and both were needed: the **GMRF** made every
-factorisation cheap, and the **Laplace approximation** made the Gaussian a
-good fit.
+<!-- . . . -->
 
-. . .
+<!-- [But we pinned the hyperparameters, and we do not know them. Stopping here — -->
+<!-- `int.strategy = "eb"` — gives intervals that come out slightly too -->
+<!-- narrow.]{style="color:#c0392b"} -->
 
-[But we pinned the hyperparameters, and we do not know them. Stopping here —
-`int.strategy = "eb"` — gives intervals that come out slightly too
-narrow.]{style="color:#c0392b"}
+<!-- ## Averaging over hyperparameter combinations {.smaller} -->
 
-## Question 2: averaging over hyperparameter combinations {.smaller}
+<!-- Step 1 uses `int.strategy`: `grid` evaluates every combination and is -->
+<!-- accurate but limited to two or three hyperparameters; `ccd` places a small -->
+<!-- designed scatter and is the default beyond that; `eb` keeps the mode alone, -->
+<!-- which is fast but sets aside uncertainty in $\boldsymbol{\theta}$. -->
 
-Step 1 uses `int.strategy`: `grid` evaluates every combination and is
-accurate but limited to two or three hyperparameters; `ccd` places a small
-designed scatter and is the default beyond that; `eb` keeps the mode alone,
-which is fast but sets aside uncertainty in $\boldsymbol{\theta}$.
-
-Step 3 is the same idea as multiple imputation: solve a tractable problem
-several times and combine, so that uncertainty carried in step 1 reaches the
-final answer. Step 2, however, was stated loosely — there is a choice inside
-it.
+<!-- Step 3 is the same idea as multiple imputation: solve a tractable problem -->
+<!-- several times and combine, so that uncertainty carried in step 1 reaches the -->
+<!-- final answer. Step 2, however, was stated loosely — there is a choice inside -->
+<!-- it. -->
 
