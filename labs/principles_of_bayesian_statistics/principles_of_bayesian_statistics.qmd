@@ -198,6 +198,13 @@ The three columns here are each doing a different job:
 - `ess_bulk` is the effective sample size in the bulk of the posterior, calculated on rank-normalised samples. It is the number that governs how much we can trust `mean` and `median`. Because MCMC samples are correlated with one another, one sample is usually worth less than one independent draw, so this is typically smaller than the number of samples we actually collected.
 - `ess_tail` is the smaller of the effective sample sizes at the 5% and 95% quantiles, and governs how much we can trust `q5` and `q95`.
 
+$$
+N_{\text{eff}} = \frac{N}{1 + 2\sum_{t=1}^{\infty} \rho_t}
+$$
+
+where $N$ is the number of retained draws and $\rho_t$ is the autocorrelation of the chain at lag $t$. The denominator
+$\tau = 1 + 2\sum_{t=1}^{\infty} \rho_t$ is the integrated autocorrelation time.
+
 We need both effective sample sizes because a chain can move around the middle of a posterior perfectly well while exploring the extremes poorly. That would give us a trustworthy `mean` alongside untrustworthy credible interval endpoints, and looking at `ess_bulk` alone would hide it. A rough working rule is that we want at least 100 effective samples per chain for these summaries to mean anything, so at least 400 here with our four chains.
 
 You may also occasionally see an effective sample size slightly larger than the number of samples collected. This is not an error. The effective sample size is estimated from the autocorrelation of the chain, and that estimate is itself a little noisy, so a small excess is nothing to read into.
