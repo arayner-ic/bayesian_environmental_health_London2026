@@ -24,6 +24,8 @@ color_scheme_set(scheme = "viridis")
 set.seed(2)
 ```
 
+# Main section
+
 ## Goal of this computing lab session
 
 The goal of this lab is to take some models and concepts from the Introduction to Bayesian Methods lecture and introduce you to the way `NIMBLE` works.
@@ -33,14 +35,14 @@ The goal of this lab is to take some models and concepts from the Introduction t
 During this lab session, we will:
 
 1. Explore how `NIMBLE` is written and works;
-2. Write some common regression models (Normal, logistic regression, Poisson);
+2. Write some common regression models (Main: Normal. Extra: Logistic regression, Poisson);
 3. Understand how basic model assessment is made; and
-4. Test out how adjustments of models are made via different priors and more samples.
+4. Start to test out how adjustments of models are made via different priors and more samples.
 
 ## Introduction
 
 `NIMBLE` code is written in a slightly unusual format if you're used to just using base `R`.
-It is written in the style of a program called BUGS, which came out a few decades ago and was developed at Imperial College London. But you don't really need to know about BUGS to be able to use `NIMBLE`.
+It is written in the style of a program called BUGS, which came out a few decades ago. But you don't really need to know about BUGS to be able to use `NIMBLE`.
 
 We will start with some straightforward examples for situations you're likely familiar with to introduce the style of writing models. These examples will feature basic regression models using linear predictors.
 
@@ -73,7 +75,8 @@ sigma <- 0.5 # standard deviation of variability around perfect agreement
 y <- rnorm(n, X %*% true_betas, sigma)
 ```
 
-We also centre the three explanatory variables now, which helps MCMC performance later.
+We also centre the three explanatory variables now, which helps MCMC performance later. It's not always done, but it can help.
+
 Centring shifts the intercept but leaves the slopes unchanged, so the frequentist and Bayesian fits below are directly comparable.
 ```{r}
 x1 <- X[, 1] - mean(X[, 1])
@@ -89,7 +92,8 @@ df <- tibble(y = y, x1 = x1, x2 = x2, x3 = x3)
 df |> head()
 ```
 
-What does equivalent frequentist model output look like for reference?
+What does equivalent frequentist model output look like for reference? 
+
 By the way, what's the interpretation of the 95% CI in this frequentist world?
 ```{r}
 model_freq <- lm(
@@ -280,6 +284,7 @@ code_conjugate_sigma <- nimbleCode({
   beta2 ~ dnorm(0, sd = 100) # prior for beta2
   beta3 ~ dnorm(0, sd = 100) # prior for beta3
   sigma2 ~ dinvgamma(shape = 0.01, scale = 0.01) # prior on the variance this time
+  
   sigma <- sqrt(sigma2) # recover the standard deviation for comparability
 
   # regression formula
@@ -290,7 +295,7 @@ code_conjugate_sigma <- nimbleCode({
 })
 ```
 
-Note that the likelihood is written with `var = sigma2` rather than `sd = sigma`. This matters. `NIMBLE` detects conjugacy by inspecting how nodes are connected in the model graph, and routing the variance through a deterministic square root before it reaches the likelihood would hide the relationship.
+Note that the likelihood is written with `var = sigma2` rather than `sd = sigma`. `NIMBLE` detects conjugacy by inspecting how nodes are connected in the model graph, and routing the variance through a deterministic square root before it reaches the likelihood would hide the relationship.
 
 Initial values again, this time squared versions of the ones we used before so the chains start in equivalent places.
 ```{r}
@@ -335,14 +340,14 @@ How do the convergence indicators look now?
 summarise_draws(nimbleMCMC_samples_conjugate_sigma, default_convergence_measures())
 ```
 
-And the `sigma` trace, which should have lost its wandering.
+And the `sigma` trace, which has lost its wandering.
 ```{r}
 mcmc_trace(nimbleMCMC_samples_conjugate_sigma, pars = c("sigma"))
 ```
 
-Two caveats are worth attaching to this. First, we changed the prior in order to get here, and choosing a prior for computational convenience rather than because it represents what we actually believe is a habit to be wary of. It does no damage in this particular case because we have many observations and the data overwhelm the prior, which you can check by comparing the estimates against the earlier run. It is a much bigger problem for variance parameters in hierarchical models, where an inverse gamma prior behaves poorly if the variance can be close to zero.
+Two caveats are worth attaching to this. First, we changed the prior in order to get here, and choosing a prior for computational convenience rather than because it represents what we actually believe is a habit to be wary of. There's no issue in this particular case because we have many observations and the data overwhelm the prior, which you can check by comparing the estimates against the earlier run.
 
-Second, changing the prior is not the only option available. If we wanted to keep `dunif(0, 100)`, we could instead leave the model alone and swap the sampler using `mcmcConf$removeSamplers()` and `mcmcConf$addSampler()`, choosing a slice sampler or a random walk on the log scale. Or we could simply run more iterations, since effective sample size grows roughly in proportion to the number of samples collected.
+Second, changing the prior is not the only option available. If we wanted to keep `dunif(0, 100)`, we could instead leave the model alone and swap the sampler using `mcmcConf$removeSamplers()` and `mcmcConf$addSampler()`, choosing a slice sampler or a random walk on the log scale (more on sampling methods tomorrow). Or we could simply run more iterations if are fairly sure that the model is well specified, since effective sample size (ESS) grows roughly in proportion to the number of samples collected.
 
 Let's try changing the priors and see if that makes any difference to how the model fits. Take some time to compare this with the code for the original model above. Notice how the real value of `beta2` (0.5) is not allowed as a value from the prior it is assigned below.
 ```{r}
@@ -468,6 +473,8 @@ draws_burnin <- as_draws_df(nimbleMCMC_samples_burnin)
 (draws_burnin$beta2 - draws_burnin$beta1) |>
   summary()
 ```
+
+# Extra section
 
 ### Logistic regression (binomial) example
 

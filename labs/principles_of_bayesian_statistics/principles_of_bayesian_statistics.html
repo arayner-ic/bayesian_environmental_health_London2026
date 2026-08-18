@@ -144,6 +144,8 @@ window.Quarto = {
 </header>
 
 
+<section id="main-section" class="level1 page-columns page-full">
+<h1>Main section</h1>
 <section id="goal-of-this-computing-lab-session" class="level2">
 <h2 class="anchored" data-anchor-id="goal-of-this-computing-lab-session">Goal of this computing lab session</h2>
 <p>The goal of this lab is to take some models and concepts from the Introduction to Bayesian Methods lecture and introduce you to the way <code>NIMBLE</code> works.</p>
@@ -153,14 +155,14 @@ window.Quarto = {
 <p>During this lab session, we will:</p>
 <ol type="1">
 <li>Explore how <code>NIMBLE</code> is written and works;</li>
-<li>Write some common regression models (Normal, logistic regression, Poisson);</li>
+<li>Write some common regression models (Main: Normal. Extra: Logistic regression, Poisson);</li>
 <li>Understand how basic model assessment is made; and</li>
-<li>Test out how adjustments of models are made via different priors and more samples.</li>
+<li>Start to test out how adjustments of models are made via different priors and more samples.</li>
 </ol>
 </section>
 <section id="introduction" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p><code>NIMBLE</code> code is written in a slightly unusual format if you’re used to just using base <code>R</code>. It is written in the style of a program called BUGS, which came out a few decades ago and was developed at Imperial College London. But you don’t really need to know about BUGS to be able to use <code>NIMBLE</code>.</p>
+<p><code>NIMBLE</code> code is written in a slightly unusual format if you’re used to just using base <code>R</code>. It is written in the style of a program called BUGS, which came out a few decades ago. But you don’t really need to know about BUGS to be able to use <code>NIMBLE</code>.</p>
 <p>We will start with some straightforward examples for situations you’re likely familiar with to introduce the style of writing models. These examples will feature basic regression models using linear predictors.</p>
 
 <div class="no-row-height column-margin column-container"><div class="margin-aside">
@@ -189,7 +191,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>sigma <span class="ot">&lt;-</span> <span class="fl">0.5</span> <span class="co"># standard deviation of variability around perfect agreement</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, X <span class="sc">%*%</span> true_betas, sigma)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We also centre the three explanatory variables now, which helps MCMC performance later. Centring shifts the intercept but leaves the slopes unchanged, so the frequentist and Bayesian fits below are directly comparable.</p>
+<p>We also centre the three explanatory variables now, which helps MCMC performance later. It’s not always done, but it can help.</p>
+<p>Centring shifts the intercept but leaves the slopes unchanged, so the frequentist and Bayesian fits below are directly comparable.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>x1 <span class="ot">&lt;-</span> X[, <span class="dv">1</span>] <span class="sc">-</span> <span class="fu">mean</span>(X[, <span class="dv">1</span>])</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>x2 <span class="ot">&lt;-</span> X[, <span class="dv">2</span>] <span class="sc">-</span> <span class="fu">mean</span>(X[, <span class="dv">2</span>])</span>
@@ -197,7 +200,7 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 </div>
 </section>
 </section>
-<section id="exploratory-data-analysis" class="level2 page-columns page-full">
+<section id="exploratory-data-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="exploratory-data-analysis">Exploratory data analysis</h2>
 <p>What does the dataset look like?</p>
 <div class="cell">
@@ -215,7 +218,8 @@ y_i &amp;\sim \text{Normal}(\mu_i, \sigma) \quad i = 1,..., N \\
 6  0.345  -0.813 -0.516 -0.288</code></pre>
 </div>
 </div>
-<p>What does equivalent frequentist model output look like for reference? By the way, what’s the interpretation of the 95% CI in this frequentist world?</p>
+<p>What does equivalent frequentist model output look like for reference?</p>
+<p>By the way, what’s the interpretation of the 95% CI in this frequentist world?</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>model_freq <span class="ot">&lt;-</span> <span class="fu">lm</span>(</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  y <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3,</span>
@@ -556,16 +560,17 @@ conjugate sampler (4)
 <span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>  beta2 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">100</span>) <span class="co"># prior for beta2</span></span>
 <span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>  beta3 <span class="sc">~</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">100</span>) <span class="co"># prior for beta3</span></span>
 <span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>  sigma2 <span class="sc">~</span> <span class="fu">dinvgamma</span>(<span class="at">shape =</span> <span class="fl">0.01</span>, <span class="at">scale =</span> <span class="fl">0.01</span>) <span class="co"># prior on the variance this time</span></span>
-<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>  sigma <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(sigma2) <span class="co"># recover the standard deviation for comparability</span></span>
-<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># regression formula</span></span>
-<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
-<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a>    mu[i] <span class="ot">&lt;-</span> alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x1[i] <span class="sc">+</span> beta2 <span class="sc">*</span> x2[i] <span class="sc">+</span> beta3 <span class="sc">*</span> x3[i]</span>
-<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>    y[i] <span class="sc">~</span> <span class="fu">dnorm</span>(mu[i], <span class="at">var =</span> sigma2) <span class="co"># note the var parameterisation</span></span>
-<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>  sigma <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(sigma2) <span class="co"># recover the standard deviation for comparability</span></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># regression formula</span></span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) {</span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>    mu[i] <span class="ot">&lt;-</span> alpha <span class="sc">+</span> beta1 <span class="sc">*</span> x1[i] <span class="sc">+</span> beta2 <span class="sc">*</span> x2[i] <span class="sc">+</span> beta3 <span class="sc">*</span> x3[i]</span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>    y[i] <span class="sc">~</span> <span class="fu">dnorm</span>(mu[i], <span class="at">var =</span> sigma2) <span class="co"># note the var parameterisation</span></span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Note that the likelihood is written with <code>var = sigma2</code> rather than <code>sd = sigma</code>. This matters. <code>NIMBLE</code> detects conjugacy by inspecting how nodes are connected in the model graph, and routing the variance through a deterministic square root before it reaches the likelihood would hide the relationship.</p>
+<p>Note that the likelihood is written with <code>var = sigma2</code> rather than <code>sd = sigma</code>. <code>NIMBLE</code> detects conjugacy by inspecting how nodes are connected in the model graph, and routing the variance through a deterministic square root before it reaches the likelihood would hide the relationship.</p>
 <p>Initial values again, this time squared versions of the ones we used before so the chains start in equivalent places.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>inits_conjugate_sigma <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
@@ -687,7 +692,7 @@ conjugate sampler (5)
 5 sigma    1.00     4274.    3541.</code></pre>
 </div>
 </div>
-<p>And the <code>sigma</code> trace, which should have lost its wandering.</p>
+<p>And the <code>sigma</code> trace, which has lost its wandering.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mcmc_trace</span>(nimbleMCMC_samples_conjugate_sigma, <span class="at">pars =</span> <span class="fu">c</span>(<span class="st">"sigma"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
@@ -698,8 +703,8 @@ conjugate sampler (5)
 </div>
 </div>
 </div>
-<p>Two caveats are worth attaching to this. First, we changed the prior in order to get here, and choosing a prior for computational convenience rather than because it represents what we actually believe is a habit to be wary of. It does no damage in this particular case because we have many observations and the data overwhelm the prior, which you can check by comparing the estimates against the earlier run. It is a much bigger problem for variance parameters in hierarchical models, where an inverse gamma prior behaves poorly if the variance can be close to zero.</p>
-<p>Second, changing the prior is not the only option available. If we wanted to keep <code>dunif(0, 100)</code>, we could instead leave the model alone and swap the sampler using <code>mcmcConf$removeSamplers()</code> and <code>mcmcConf$addSampler()</code>, choosing a slice sampler or a random walk on the log scale. Or we could simply run more iterations, since effective sample size grows roughly in proportion to the number of samples collected.</p>
+<p>Two caveats are worth attaching to this. First, we changed the prior in order to get here, and choosing a prior for computational convenience rather than because it represents what we actually believe is a habit to be wary of. There’s no issue in this particular case because we have many observations and the data overwhelm the prior, which you can check by comparing the estimates against the earlier run.</p>
+<p>Second, changing the prior is not the only option available. If we wanted to keep <code>dunif(0, 100)</code>, we could instead leave the model alone and swap the sampler using <code>mcmcConf$removeSamplers()</code> and <code>mcmcConf$addSampler()</code>, choosing a slice sampler or a random walk on the log scale (more on sampling methods tomorrow). Or we could simply run more iterations if are fairly sure that the model is well specified, since effective sample size (ESS) grows roughly in proportion to the number of samples collected.</p>
 <p>Let’s try changing the priors and see if that makes any difference to how the model fits. Take some time to compare this with the code for the original model above. Notice how the real value of <code>beta2</code> (0.5) is not allowed as a value from the prior it is assigned below.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>code_worse_priors <span class="ot">&lt;-</span> <span class="fu">nimbleCode</span>({</span>
@@ -930,6 +935,10 @@ conjugate sampler (5)
  0.2663  0.2863  0.2909  0.2911  0.2960  0.3144 </code></pre>
 </div>
 </div>
+</section>
+</section>
+<section id="extra-section" class="level1 page-columns page-full">
+<h1>Extra section</h1>
 <section id="logistic-regression-binomial-example" class="level3 page-columns page-full">
 <h3 class="anchored" data-anchor-id="logistic-regression-binomial-example">Logistic regression (binomial) example</h3>
 <p>Logistic regression is used when we want to classify observations into two groups. <span class="math display">\[
@@ -1387,12 +1396,12 @@ RW sampler (4)
 </div>
 </div>
 </section>
-</section>
 <section id="closing-remarks" class="level2">
 <h2 class="anchored" data-anchor-id="closing-remarks">Closing remarks</h2>
 <p>In this lab session, we have explored how to fit some basic models using Bayesian regression in <code>NIMBLE</code>. We looked at the three most common likelihoods: Normal, Binomial, and Poisson.</p>
 <p>Throughout we ran four chains from different starting values, which is what makes rhat a meaningful convergence check, and we also looked at the effective sample size of each parameter to make sure we have enough samples to make inferences about the posterior distributions. We will keep doing both later in the workshop when we look at more complex models.</p>
 <p>We used simulated data here, so we had complete control over the complexity in the data. However, in the real world, we would often try many different models if we do not know how the data were generated. Also, not all real life examples fit any of the three likelihoods perfectly. For example, the data might be “overdispersed”, where there is greater variability in the data than would be expected. Luckily, there are extensions to these likelihoods that can deal with overdispersion, such as the beta-binomial likelihood for overdispersed binomial data, or the negative binomial likelihood (sometimes called the gamma-Poisson) for overdispersed Poisson data. For more information on these likelihoods, see Chapter 12 of <em>Statistical Rethinking</em> by Richard McElreath.</p>
+</section>
 </section>
 
 </main>
