@@ -1,6 +1,6 @@
 ---
-title: "Software options"
-subtitle: "Choosing a probabilistic programming language and sampling methods"
+title: "Software and sampling options"
+subtitle: "Choosing a probabilistic programming language and related sampling methods"
 author:
  - name: "Robbie M. Parks, Theo Rashid"
    email: "robbie.parks@columbia.edu"
@@ -247,7 +247,7 @@ $$
 \theta_j^{(t+1)} \sim p\left(\theta_j \mid \boldsymbol{\theta}_{-j}, y\right)
 $$
 
-- Every draw is accepted, since it comes from the exact conditional. There is no acceptance rate and no proposal scale.
+<!-- - Every draw is accepted, since it comes from the exact conditional. There is no acceptance rate and no proposal scale. -->
 
 ## Gibbs sampling {.smaller}
 
@@ -308,48 +308,6 @@ ggplot(gibbs_traces, aes(iteration, theta1)) +
 ```
 
 The correlation between the two parameters has changed which impacts the independence of the samples greatly.
-
-<!-- ## Adaptive rejection sampling {.smaller} -->
-
-<!-- - Used within Gibbs when the full conditional is log-concave but not a standard distribution. -->
-<!-- - Constructs an envelope above the log density from tangent lines at a few points, samples from the envelope, and rejects against the true density. -->
-<!-- - Each rejection adds a tangent, so the envelope tightens and the rejection rate falls as sampling proceeds. -->
-<!-- - Exact, with nothing to tune. It requires log-concavity, which `JAGS` checks before assigning it. -->
-<!-- <!-- - `ARMS` extends the method to non-log-concave conditionals by adding a Metropolis correction step. --> -->
-
-<!-- ## Adaptive rejection sampling {.smaller} -->
-
-<!-- ```{r ars-envelope, echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=3.8, fig.align="center"} -->
-<!-- log_f <- function(x) 2 * log(x) - x        # a Gamma(3, 1) conditional, up to a constant -->
-<!-- dlog_f <- function(x) 2 / x - 1 -->
-
-<!-- ars_panel <- function(pts) { -->
-<!--   g <- seq(0.05, 9, length.out = 600) -->
-<!--   tangents <- sapply(pts, function(t) log_f(t) + dlog_f(t) * (g - t)) -->
-<!--   hull <- apply(tangents, 1, min) -->
-<!--   rate <- sum(exp(log_f(g))) / sum(exp(hull)) -->
-<!--   label <- sprintf("%d tangent points    %.0f%% accepted", length(pts), 100 * rate) -->
-<!--   list( -->
-<!--     curve = tibble(x = g, log_density = log_f(g), envelope = hull, panel = label), -->
-<!--     knots = tibble(x = pts, y = log_f(pts), panel = label) -->
-<!--   ) -->
-<!-- } -->
-
-<!-- ars_sets <- lapply(list(c(0.6, 2, 5), c(0.6, 1.3, 2, 3, 4, 5.5)), ars_panel) -->
-<!-- ars_curve <- bind_rows(lapply(ars_sets, `[[`, "curve")) |> mutate(panel = fct_inorder(panel)) -->
-<!-- ars_knots <- bind_rows(lapply(ars_sets, `[[`, "knots")) |> mutate(panel = factor(panel, levels = levels(ars_curve$panel))) -->
-
-<!-- ggplot(ars_curve, aes(x)) + -->
-<!--   geom_ribbon(aes(ymin = log_density, ymax = envelope), fill = "#c0392b", alpha = 0.12) + -->
-<!--   geom_line(aes(y = envelope), colour = "#c0392b", linewidth = 0.4) + -->
-<!--   geom_line(aes(y = log_density), linewidth = 0.6) + -->
-<!--   geom_point(data = ars_knots, aes(x, y), size = 1.4) + -->
-<!--   coord_cartesian(ylim = c(-5, 0.6)) + -->
-<!--   facet_wrap(~panel) + -->
-<!--   labs(x = expression(theta), y = "log density") -->
-<!-- ``` -->
-
-<!-- On the log scale a log-concave density lies below every one of its tangents, so the lowest tangent at each point is an envelope. The shaded gap is the rejection region, and each rejected draw adds a tangent point. -->
 
 ## Slice sampling {.smaller}
 
@@ -416,9 +374,12 @@ $$
 
 <!-- The height $u$ is drawn below the current density value, the interval is widened by $w$ until both ends fall below $u$, and the next value is drawn uniformly from it. -->
 
+
 ## Hamiltonian Monte Carlo {.smaller}
 
-Add a momentum $\boldsymbol{p}$, and treat the negative log posterior as a potential energy surface:
+- Hamiltonian is a mathematical tool or function that represents the total energy (kinetic energy plus potential energy) of a physical system
+
+- Add a momentum $\boldsymbol{p}$, and treat the negative log posterior as a potential energy surface:
 
 $$
 H(\boldsymbol{\theta}, \boldsymbol{p}) = -\log p(\boldsymbol{\theta} \mid y) + \tfrac{1}{2}\boldsymbol{p}^{\top}\boldsymbol{M}^{-1}\boldsymbol{p}
@@ -428,7 +389,7 @@ $$
 - Using the gradient, a proposal can move a long way across the posterior and still be accepted, so successive draws are much less correlated.
 - Three quantities to set: the step size $\varepsilon$, the trajectory length $L$, and the mass matrix $\boldsymbol{M}$, which rescales the parameters.
 - Each leapfrog step requires a gradient evaluation, so an iteration costs much more than a Metropolis iteration and returns many more effective samples.
-- Requires continuous parameters and a differentiable log density. Discrete parameters must be summed out.
+<!-- - Requires continuous parameters and a differentiable log density. Discrete parameters must be summed out. -->
 
 ## Hamiltonian Monte Carlo
 
@@ -436,77 +397,19 @@ $$
 
 ## Hamiltonian Monte Carlo {.smaller}
 
-```{r hmc-paths, echo=FALSE, warning=FALSE, message=FALSE, fig.width=5, fig.height=5, fig.align="center"}
-leapfrog <- function(x, p, eps, L) {
-  path <- matrix(NA_real_, L + 1, 2)
-  path[1, ] <- x
-  p <- p + 0.5 * eps * grad_post(x)
-  for (i in seq_len(L)) {
-    x <- x + eps * p
-    if (i < L) p <- p + eps * grad_post(x)
-    path[i + 1, ] <- x
-  }
-  list(x = x, p = p + 0.5 * eps * grad_post(x), path = path)
-}
+- Treat the parameter as a **position** on a landscape given by the negative log posterior, and invent a **momentum** to go with it.
+- Think of it a little like turning a bowl upside down and pinging a ball around.
+- Each iteration:
+  - draw a fresh momentum from a normal
+  - roll the particle for L **leapfrog** steps of size ε, following the gradient
+  - accept or reject the endpoint with a Metropolis step
+- The trajectory endpoint is far away but has almost the same posterior density. That is what gives long, low-correlation jumps and acceptance near 0.8.
+- ε is limited by the narrowest direction of the posterior, εL by the widest, so L is roughly the condition number. Badly scaled models need very long trajectories.
+- **NUTS** removes the choice of L by extending the trajectory until it doubles back on itself, and tunes ε during warmup.
 
-set.seed(40)
-x <- c(-2, -2)
-traj <- vector("list", 6)
-for (k in seq_len(6)) {
-  p0 <- rnorm(2)
-  step <- leapfrog(x, p0, 0.15, sample(12:29, 1))   # jittered trajectory length
-  dH <- (-log_post(x) + 0.5 * sum(p0^2)) - (-log_post(step$x) + 0.5 * sum(step$p^2))
-  traj[[k]] <- tibble(
-    x1 = step$path[, 1], x2 = step$path[, 2],
-    panel = sprintf("iteration %d", k)
-  )
-  if (log(runif(1)) < dH) x <- step$x
-}
-traj <- bind_rows(traj) |> mutate(panel = fct_inorder(panel))
+## The No-U-Turn Sampler (NUTS), briefly {.smaller}
 
-ggplot(traj, aes(x1, x2)) +
-  target_layers +
-  geom_path(linewidth = 0.35, colour = "#c0392b") +
-  geom_point(data = traj |> group_by(panel) |> slice_head(n = 1),
-             size = 1.3, colour = "grey30") +
-  geom_point(data = traj |> group_by(panel) |> slice_tail(n = 1),
-             size = 1.8, colour = "#c0392b") +
-  facet_wrap(~panel, nrow = 2)
-```
-
-## Hamiltonian Monte Carlo {.smaller}
-
-- Six consecutive iterations, each following the gradient for between 12 and 29 leapfrog steps. Grey marks where the trajectory started, red where it ended. 
-- Compare the distance covered against 1000 random-walk iterations on the earlier slide. 
-- The number of steps is varied because a fixed length can land on the same two points every time, as the next slide shows.
-
-## Choosing the trajectory length {.smaller}
-
-```{r hmc-length, echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=3.9, fig.align="center"}
-p_fixed <- c(0.9, -0.5)
-start <- c(-1.8, -2)
-
-traj_L <- bind_rows(lapply(c(5, 29, 58), function(L) {
-  st <- leapfrog(start, p_fixed, 0.15, L)
-  tibble(
-    x1 = st$path[, 1], x2 = st$path[, 2],
-    panel = sprintf("L = %d    ends %.1f from the start", L, sqrt(sum((st$x - start)^2)))
-  )
-})) |>
-  mutate(panel = fct_inorder(panel))
-
-ggplot(traj_L, aes(x1, x2)) +
-  target_layers +
-  geom_path(linewidth = 0.4, colour = "#c0392b") +
-  geom_point(data = traj_L |> group_by(panel) |> slice_tail(n = 1),
-             size = 1.8, colour = "#c0392b") +
-  facet_wrap(~panel)
-```
-
-The same starting point and the same momentum. Too few steps and the sampler barely moves; too many and the trajectory curves back to where it began, at full cost. This is the choice NUTS removes.
-
-## The No-U-Turn Sampler (NUTS)
-
+- No-U-Turn Sampler modifies HMC by preventing long doubling back pathways, which can end up where you start.
 - NUTS sets $L$ automatically. The trajectory is doubled forwards or backwards in time until the path begins to turn back on itself, and a draw is taken from it.
 - $\varepsilon$ is set during warm-up by dual averaging against a target acceptance statistic, 0.8 by default in `Stan`.
 - The mass matrix is estimated during warm-up from the draws, usually as a diagonal.
@@ -585,7 +488,7 @@ nimbleCode({
 
 Every PPL can do this. PPLs differ in how much you have to write, and what happens when it goes wrong.
 
-# The sampling-based options
+# Some sampling-based software options
 
 ## `BUGS`: overview
 
@@ -715,7 +618,7 @@ This is worth checking for any model that mixes badly, before changing the model
 ## `Stan`
 
 - Developed at Columbia, and named after Stanislaw Ulam.
-- Uses Hamiltonian Monte Carlo with the No-U-Turn Sampler.
+- Uses Hamiltonian Monte Carlo with the No-U-Turn (NUTS) Sampler.
 - Gradient-based, so it explores correlated posteriors far more efficiently than Gibbs.
 - The documentation and the user community are the best in this space.
 
@@ -1197,3 +1100,116 @@ bind_rows(
 ```
 
 Each curve is the two-standard-deviation contour of its own distribution. The mean-field family cannot represent the correlation, and the direction of the divergence makes it settle on the contained circle rather than one covering the posterior.
+
+## Hamiltonian Monte Carlo {.smaller}
+
+```{r hmc-paths, echo=FALSE, warning=FALSE, message=FALSE, fig.width=5, fig.height=5, fig.align="center"}
+leapfrog <- function(x, p, eps, L) {
+  path <- matrix(NA_real_, L + 1, 2)
+  path[1, ] <- x
+  p <- p + 0.5 * eps * grad_post(x)
+  for (i in seq_len(L)) {
+    x <- x + eps * p
+    if (i < L) p <- p + eps * grad_post(x)
+    path[i + 1, ] <- x
+  }
+  list(x = x, p = p + 0.5 * eps * grad_post(x), path = path)
+}
+
+set.seed(40)
+x <- c(-2, -2)
+traj <- vector("list", 6)
+for (k in seq_len(6)) {
+  p0 <- rnorm(2)
+  step <- leapfrog(x, p0, 0.15, sample(12:29, 1))   # jittered trajectory length
+  dH <- (-log_post(x) + 0.5 * sum(p0^2)) - (-log_post(step$x) + 0.5 * sum(step$p^2))
+  traj[[k]] <- tibble(
+    x1 = step$path[, 1], x2 = step$path[, 2],
+    panel = sprintf("iteration %d", k)
+  )
+  if (log(runif(1)) < dH) x <- step$x
+}
+traj <- bind_rows(traj) |> mutate(panel = fct_inorder(panel))
+
+ggplot(traj, aes(x1, x2)) +
+  target_layers +
+  geom_path(linewidth = 0.35, colour = "#c0392b") +
+  geom_point(data = traj |> group_by(panel) |> slice_head(n = 1),
+             size = 1.3, colour = "grey30") +
+  geom_point(data = traj |> group_by(panel) |> slice_tail(n = 1),
+             size = 1.8, colour = "#c0392b") +
+  facet_wrap(~panel, nrow = 2)
+```
+
+## Hamiltonian Monte Carlo {.smaller}
+
+- Six consecutive iterations, each following the gradient for between 12 and 29 leapfrog steps. Grey marks where the trajectory started, red where it ended.
+- Compare the distance covered against 1000 random-walk iterations on the earlier slide.
+- The number of steps is varied because a fixed length can land on the same two points every time, as the next slide shows.
+
+<!-- ## Choosing the trajectory length {.smaller} -->
+
+```{r hmc-length, echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=3.9, fig.align="center"}
+p_fixed <- c(0.9, -0.5)
+start <- c(-1.8, -2)
+
+traj_L <- bind_rows(lapply(c(5, 29, 58), function(L) {
+  st <- leapfrog(start, p_fixed, 0.15, L)
+  tibble(
+    x1 = st$path[, 1], x2 = st$path[, 2],
+    panel = sprintf("L = %d    ends %.1f from the start", L, sqrt(sum((st$x - start)^2)))
+  )
+})) |>
+  mutate(panel = fct_inorder(panel))
+
+ggplot(traj_L, aes(x1, x2)) +
+  target_layers +
+  geom_path(linewidth = 0.4, colour = "#c0392b") +
+  geom_point(data = traj_L |> group_by(panel) |> slice_tail(n = 1),
+             size = 1.8, colour = "#c0392b") +
+  facet_wrap(~panel)
+```
+
+The same starting point and the same momentum. Too few steps and the sampler barely moves; too many and the trajectory curves back to where it began, at full cost. This is the choice NUTS removes.
+
+<!-- ## Adaptive rejection sampling {.smaller} -->
+
+<!-- - Used within Gibbs when the full conditional is log-concave but not a standard distribution. -->
+<!-- - Constructs an envelope above the log density from tangent lines at a few points, samples from the envelope, and rejects against the true density. -->
+<!-- - Each rejection adds a tangent, so the envelope tightens and the rejection rate falls as sampling proceeds. -->
+<!-- - Exact, with nothing to tune. It requires log-concavity, which `JAGS` checks before assigning it. -->
+<!-- <!-- - `ARMS` extends the method to non-log-concave conditionals by adding a Metropolis correction step. --> -->
+
+<!-- ## Adaptive rejection sampling {.smaller} -->
+
+<!-- ```{r ars-envelope, echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=3.8, fig.align="center"} -->
+<!-- log_f <- function(x) 2 * log(x) - x        # a Gamma(3, 1) conditional, up to a constant -->
+<!-- dlog_f <- function(x) 2 / x - 1 -->
+
+<!-- ars_panel <- function(pts) { -->
+<!--   g <- seq(0.05, 9, length.out = 600) -->
+<!--   tangents <- sapply(pts, function(t) log_f(t) + dlog_f(t) * (g - t)) -->
+<!--   hull <- apply(tangents, 1, min) -->
+<!--   rate <- sum(exp(log_f(g))) / sum(exp(hull)) -->
+<!--   label <- sprintf("%d tangent points    %.0f%% accepted", length(pts), 100 * rate) -->
+<!--   list( -->
+<!--     curve = tibble(x = g, log_density = log_f(g), envelope = hull, panel = label), -->
+<!--     knots = tibble(x = pts, y = log_f(pts), panel = label) -->
+<!--   ) -->
+<!-- } -->
+
+<!-- ars_sets <- lapply(list(c(0.6, 2, 5), c(0.6, 1.3, 2, 3, 4, 5.5)), ars_panel) -->
+<!-- ars_curve <- bind_rows(lapply(ars_sets, `[[`, "curve")) |> mutate(panel = fct_inorder(panel)) -->
+<!-- ars_knots <- bind_rows(lapply(ars_sets, `[[`, "knots")) |> mutate(panel = factor(panel, levels = levels(ars_curve$panel))) -->
+
+<!-- ggplot(ars_curve, aes(x)) + -->
+<!--   geom_ribbon(aes(ymin = log_density, ymax = envelope), fill = "#c0392b", alpha = 0.12) + -->
+<!--   geom_line(aes(y = envelope), colour = "#c0392b", linewidth = 0.4) + -->
+<!--   geom_line(aes(y = log_density), linewidth = 0.6) + -->
+<!--   geom_point(data = ars_knots, aes(x, y), size = 1.4) + -->
+<!--   coord_cartesian(ylim = c(-5, 0.6)) + -->
+<!--   facet_wrap(~panel) + -->
+<!--   labs(x = expression(theta), y = "log density") -->
+<!-- ``` -->
+
+<!-- On the log scale a log-concave density lies below every one of its tangents, so the lowest tangent at each point is an envelope. The shaded gap is the rejection region, and each rejected draw adds a tangent point. -->

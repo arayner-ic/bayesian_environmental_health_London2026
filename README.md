@@ -53,7 +53,7 @@ Below is the set of lectures and labs to follow throughout the three days:
 | 11:45 - 12:45 | Lunch |
 | 12:45 - 1:45 | [Spatial and spatio-temporal modelling](/labs/spatial_and_spatiotemporal_modeling/spatial_and_spatiotemporal_modeling.qmd) (Lab) |
 | 1:45 - 2:00 | Break |
-| 2:00 - 3:00 | [Software options for Bayesian modelling](/lectures/software_options/software_options.qmd) (Lecture) |
+| 2:00 - 3:00 | [Software and sampling options](/lectures/software_options/software_options.qmd) (Lecture) |
 | 3:00 - 3:15 | Break |
 | 3:15 - 4:15 | [INLA and R-INLA](/lectures/inla/inla.qmd) (Lecture) |
 | 4:15 - 5:00 | [INLA and R-INLA](/labs/inla/inla.qmd) (Lab) |
