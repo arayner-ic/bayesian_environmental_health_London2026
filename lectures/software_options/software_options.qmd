@@ -958,6 +958,10 @@ Notice what is missing: no priors written out (necessarily), no loop, no initial
 - `INLA` is a different process: a restricted model class in exchange for speed and determinism.
 - Being able to read all of them, and translate between them, is valuable.
 
+## Useful visualizations 
+
+[https://chi-feng.github.io/mcmc-demo/app.html](https://chi-feng.github.io/mcmc-demo/app.html)
+
 # Questions?
 
 # Extra
