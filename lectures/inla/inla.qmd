@@ -267,7 +267,7 @@ code <- nimbleCode({
 </svg>
 ```
 
-Everything unobserved, stacked into one vector:
+Everything unobserved (including estimates for 'true' data fit), stacked into one vector:
 
 | Piece | Elements |
 |---|---|
@@ -314,7 +314,7 @@ predictor:
 ::: {.nonincremental}
 -   the intercept and every regression coefficient,
 -   every random effect, smooth curve, spatial field and time trend,
--   and the linear predictors themselves.
+-   and the linear predictors (i.e., fit data) themselves.
 :::
 
 It is usually **larger than the dataset**, because the linear predictors sit
@@ -355,10 +355,10 @@ The whole class comes from choosing what the $f_j$ are:
 - Same model with different $f_j$ — which is why one algorithm fits all of them.
 
 
-## The latent field as a multivariate normal
+## The latent field as a multivariate normal {.smaller}
 
 The latent field is one vector of length $m \approx 168{,}000$, with a
-multivariate normal prior:
+multivariate normal prior (stacking properties of individual Gaussians):
 
 $$
 \boldsymbol{x} \mid \boldsymbol{\theta} \;\sim\; N\big(\boldsymbol{0},\, \boldsymbol{\Sigma}(\boldsymbol{\theta})\big)
@@ -371,6 +371,8 @@ $$
 $$
 
 The precision matrix $\boldsymbol{Q}$ often has useful properties (sparse, Markov).
+
+Note: The inverse of the precision matrix (the covariance matrix) is usually not sparse when precision matrix is.
 
 ## Latent field often has a Gaussian Markov Random Field (GMRF) prior {.smaller}
 
@@ -463,7 +465,7 @@ The precision matrix $\boldsymbol{Q}$ often has useful properties (sparse, Marko
 
 ::: {.nonincremental}
 -   $\boldsymbol{Q}$ is almost entirely blank.
--   Sparsity of the $\boldsymbol{Q}$ enable large computational gains when making inference (outside scope).
+-   Sparsity of the $\boldsymbol{Q}$ enable large computational gains when making inference (outside scope but relevcant to calculate log-density of multivariate normal distribution).
 :::
 
 <!-- . . . -->
@@ -472,7 +474,7 @@ The precision matrix $\boldsymbol{Q}$ often has useful properties (sparse, Marko
 <!-- blank one, closer to $m^{3/2}$. That is the whole reason a field this large -->
 <!-- stays tractable.]{style="color:#c0392b"} -->
 
-## Summmary of GMRF {.smaller}
+## Summary of GMRF {.smaller}
 
 ```{=html}
 <svg viewBox="0 0 920 250" style="width:100%;color:inherit" font-family="inherit">
@@ -509,6 +511,7 @@ The precision matrix $\boldsymbol{Q}$ often has useful properties (sparse, Marko
 -   Distant counties are still **correlated** — they share what lies between
     them. The blanks record the absence of a *direct* link, not of a
     relationship.
+-   GMRF property crucial for `INLA`.
 :::
 
 ## Laplace approximation {.smaller}
@@ -666,8 +669,7 @@ cond <- sapply(theta, \(t) dnorm(x, 0, 1 / sqrt(t)))
 marg <- as.vector(cond %*% w)
 ```
 
-Three lines, three stages. Everything INLA does to the 168,000-element field
-has this shape.
+<!-- Everything INLA does to the 168,000-element field has this shape. -->
 
 ## Integrating nested Laplace Approximation: a worked example {.smaller}
 
@@ -704,7 +706,7 @@ legend("topright", bty = "n", lwd = c(4, 2, 2), lty = c(1, 2, 3), cex = 0.9,
        legend = c("truth", "integrated", "fixed theta"))
 ```
 
-## Integrating nested Laplace Approximation: a worked example {.smaller}
+## Integrating nested Laplace Approximation: a worked example
 
 | | at $x = 0$ | at $x = 3$ | at $x = 6$ |
 |---|---|---|---|
@@ -712,9 +714,7 @@ legend("topright", bty = "n", lwd = c(4, 2, 2), lty = c(1, 2, 3), cex = 0.9,
 | integrated, 7 points | 0.3759 | 0.01974 | 0.001167 |
 | fixed $\theta$ (`eb`) | 0.2821 | 0.02973 | 0.000035 |
 
-- Seven points recover the exact answer to three decimals. Fixing $\theta$ gets
-the peak wrong and the far tail wrong by a factor of thirty — and the tail is
-where interval endpoints live.
+<!-- - Seven points recover the exact answer to three decimals. Fixing $\theta$ gets the peak wrong and the far tail wrong by a factor of thirty — and the tail is where interval endpoints live. -->
 
 ## Integrating nested Laplace Approximation: more than one hyperparameter {.smaller}
 
@@ -896,10 +896,10 @@ three hyperparameters — and we do not know those either.
 </svg>
 ```
 
+. . . 
 
-
-
-
+- Sparseness (GMRF) property allows super fast calculation of latent field from each combination of the hyperparameters (step 1).
+- Integrated Nested Laplace Approximation (INLA) needed to estimate weighted average ofthese (step 2).
 
 ## Three strategies for the latent marginals {.smaller}
 
@@ -913,13 +913,13 @@ Set by `strategy` in `control.inla`:
 -   **Laplace** (`"laplace"`): a full nested Laplace approximation for each
     $x_i$. Most accurate, and considerably more expensive.
 
-. . .
+<!-- . . . -->
 
-The middle option exists because the Gaussian is usually close, and a cheap
-correction for asymmetry recovers most of what a full recomputation would
-give. Note where the cost sits: it scales with the number of hyperparameters
-and the sparsity of $\boldsymbol{Q}$, not with the size of the latent field —
-which is the shape that made these models slow to sample in the first place.
+<!-- The middle option exists because the Gaussian is usually close, and a cheap -->
+<!-- correction for asymmetry recovers most of what a full recomputation would -->
+<!-- give. Note where the cost sits: it scales with the number of hyperparameters -->
+<!-- and the sparsity of $\boldsymbol{Q}$, not with the size of the latent field — -->
+<!-- which is the shape that made these models slow to sample in the first place. -->
 
 
 ## Three strategies for the latent marginals {.smaller}
@@ -990,13 +990,13 @@ So the method carries **two conditions**, one from each half:
 | Space–time interactions, types I–IV | |
 | Measurement error, survival models | |
 
-. . .
+<!-- . . . -->
 
-Every entry on the right fails **condition 1** or **condition 2** — nothing
-else. And the left-hand column is most of what we fit in environmental
-epidemiology.
+<!-- Every entry on the right fails **condition 1** or **condition 2** — nothing -->
+<!-- else. And the left-hand column is most of what we fit in environmental -->
+<!-- epidemiology. -->
 
-## Summary of the entire INLA process {.smaller}
+## A summary of INLA process {.smaller}
 
 ```{=html}
 <svg viewBox="0 0 920 560" style="width:100%;color:inherit" font-family="inherit">
@@ -1058,8 +1058,8 @@ epidemiology.
 ## Why it is fast
 
 -   No sampling, so no autocorrelation and no wasted iterations.
--   Sparse matrix algebra on $\boldsymbol{Q}(\boldsymbol{\theta})$:
-    Cholesky factorisation exploiting the Markov structure.
+-   Sparse matrix algebra on $\boldsymbol{Q}(\boldsymbol{\theta})$.
+    <!-- Cholesky factorisation exploiting the Markov structure. -->
 -   The expensive work scales with $\dim(\boldsymbol{\theta})$, which is
     small — **not** with the size of the latent field, which is large.
 -   Everything at a given $\boldsymbol{\theta}^{(k)}$ is parallel (`num.threads`).
@@ -1155,9 +1155,9 @@ per dial for illustration:
 
 ## When not to use `INLA`
 
--   Beyond the two conditions already covered, three practical cases:
--   You need the **joint** posterior over many latent parameters, not
-    marginals. (Partly recoverable via `inla.posterior.sample()`.)
+-   Some practical cases:
+<!-- -   You need the **joint** posterior over many latent parameters, not -->
+    <!-- marginals. (Partly recoverable via `inla.posterior.sample()`.) -->
 -   Genuinely multimodal posteriors.
 -   (Potentially): Novel likelihoods with no `INLA` implementation — though `rgeneric`
     and `cgeneric` let you write your own.
@@ -1231,13 +1231,13 @@ f(index,
 
 ## Some latent models available {.smaller}
 
-| `model =` | Structure | Typical use |
+| `model =` | Structure | Potential use |
 |---|---|---|
 | `"iid"` | Independent Gaussian | Unstructured group effects |
 | `"rw1"`, `"rw2"` | Random walk | Smooth time trends, exposure-response |
 | `"ar1"` | Autoregressive | Serially correlated time series |
 | `"besag"` | ICAR | Spatial, neighbours only |
-| `"bym2"` | Reparameterised BYM | Disease mapping (recommended) |
+| `"bym2"` | Reparameterised BYM | Disease mapping |
 | `"spde2"` | Matérn via SPDE | Point-referenced / continuous space |
 | `"generic0"`-`"generic3"` | User-supplied $\boldsymbol{Q}$ | Custom structures |
 
@@ -1370,10 +1370,10 @@ ggplot(re, aes(x = ID, y = mean)) +
 
 -   Intercept: $N(0, 1000^2)$ — effectively flat.
 -   Other fixed effects: $N(0, 1000^2)$ by default; set via
-    `control.fixed = list(mean = 0, prec = 0.01)`.
+    `control.fixed = list(mean = 0, prec = 0.000001)`.
 -   Random effect precisions: `loggamma(1, 5e-5)` on the log-precision.
--   Always state your priors in the paper. Always run a sensitivity
-    analysis.
+-   Always state your priors in the paper. 
+-   Always run a sensitivity analysis of priors.
 
 ## PC priors
 
