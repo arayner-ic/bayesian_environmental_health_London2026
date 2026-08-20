@@ -146,15 +146,6 @@ tibble(
 The estimate is within about 2% of the exact value.
 
 ::: {.callout-tip}
-## Exercise 1
-
-`shape` is a dial. Re-run the plot with `shape <- 50` and then `shape <- 2`.
-
-- Which gives the better approximation, and why?
-- What does this tell you about models with many observations per latent
-  element versus few? (Think binary outcomes with one observation per random
-  effect.)
-:::
 
 ## Integrating over a hyperparameter
 
@@ -230,13 +221,6 @@ thirty. The tail is where interval endpoints live, and this is
 what `int.strategy = "eb"` does, and precisely what it costs.
 
 ::: {.callout-tip}
-## Exercise 2
-
-- Reduce `K` to 3 and then 2. How few points can you get away with here?
-- Replace the log-scale grid with a linear one,
-  `theta <- seq(0.03, 12, length.out = K)`, and drop the Jacobian. What
-  happens in the tails, and why does `INLA` work on the log scale?
-:::
 
 # Part 2: the Italian mortality models
 
@@ -480,8 +464,7 @@ configs <- tibble(
 configs |> select(k, precision, sigma_p, weight) |> kable(digits = 4)
 ```
 
-Note the grid is laid out on **log precision**, not precision, exactly as in
-Exercise 2. Plot it against the posterior marginal to see the correspondence:
+Plot it against the posterior marginal to see the correspondence:
 
 ```{r}
 #| fig-width: 7
@@ -745,18 +728,7 @@ ggplot(marg_df, aes(x = x, y = y, colour = strategy, linetype = strategy)) +
 ```
 
 The three curves should nearly coincide here. They separate when data per
-latent element are thin. The mechanism is the same as `shape = 2` in
-Exercise 1.
-
-::: {.callout-tip}
-## Exercise 3
-
-- Why is `mean_kld` exactly zero under `strategy = "gaussian"`? What would you
-  need to compute in order to know whether that strategy was adequate?
-- The `laplace` strategy is the most expensive. On this model the extra cost
-  is small. What feature of this dataset makes that true, and what kind of
-  outcome would change it?
-:::
+latent element are thin.
 
 ## Prior sensitivity on the variance component
 
@@ -1009,187 +981,6 @@ tibble(
 ```
 
 ::: {.callout-tip}
-## Exercise 4
-
-Re-run the `int.strategy` comparison from Part 3 on the BYM2 model, which has
-two hyperparameters rather than one.
-
-- How much wider are the `ccd` intervals than the `eb` ones now?
-- Why should the gap grow with the number of hyperparameters?
-:::
-
-<!-- ## Adding time: a third hyperparameter -->
-
-<!-- Everything so far used a single month. Take the whole of 2018 and add a smooth -->
-<!-- temporal trend, and we arrive at the lecture's running example: a Poisson -->
-<!-- likelihood, a spatial term and a temporal term. -->
-
-<!-- ```{r} -->
-<!-- data_year <- read_rds(here("data", "italy", "italy_mortality.rds")) |> -->
-<!--   mutate(provincia_id = _ |> group_by(SIGLA) |> group_indices()) |> -->
-<!--   filter(year == 2018) |> -->
-<!--   arrange(SIGLA, month) -->
-
-<!-- t_st <- system.time( -->
-<!--   m_st <- inla( -->
-<!--     deaths ~ 1 + -->
-<!--       f(provincia_id, model = "bym2", graph = g, scale.model = TRUE, -->
-<!--         hyper = list(prec = list(prior = "pc.prec", param = c(1, 0.01)), -->
-<!--                      phi  = list(prior = "pc",      param = c(0.5, 0.5)))) + -->
-<!--       f(month, model = "rw1", scale.model = TRUE, constr = TRUE, -->
-<!--         hyper = list(prec = list(prior = "pc.prec", param = c(1, 0.01)))), -->
-<!--     family = "poisson", -->
-<!--     E      = expected, -->
-<!--     data   = data_year, -->
-<!--     control.fixed   = list(mean.intercept = 0, prec.intercept = 0.04), -->
-<!--     control.compute = list(dic = TRUE, waic = TRUE, config = TRUE) -->
-<!--   ) -->
-<!-- ) -->
-
-<!-- t_st -->
-<!-- m_st$summary.hyperpar -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- tibble( -->
-<!--   model            = c("Full pooling", "Partial pooling", "BYM2", "BYM2 + RW1"), -->
-<!--   hyperparameters  = c(0, 1, 2, 3), -->
-<!--   n_configurations = c(1, m_partial$misc$configs$nconfig, -->
-<!--                        m_bym2$misc$configs$nconfig, -->
-<!--                        m_st$misc$configs$nconfig), -->
-<!--   seconds          = c(t_full_inla[["elapsed"]], t_partial_inla[["elapsed"]], -->
-<!--                        t_bym2[["elapsed"]], t_st[["elapsed"]]) -->
-<!-- ) |> kable(digits = 2) -->
-<!-- ``` -->
-
-<!-- The latent field grew twelvefold when we added the other eleven months. The -->
-<!-- runtime is driven by the third column, not the size of the field. -->
-
-<!-- The temporal trend itself: -->
-
-<!-- ```{r} -->
-<!-- ggplot(m_st$summary.random$month, -->
-<!--        aes(x = ID, y = mean)) + -->
-<!--   geom_hline(yintercept = 0, linetype = 2) + -->
-<!--   geom_ribbon(aes(ymin = `0.025quant`, ymax = `0.975quant`), -->
-<!--               alpha = 0.2, fill = "darkcyan") + -->
-<!--   geom_line(colour = "darkcyan", linewidth = 1) + -->
-<!--   scale_x_continuous(breaks = 1:12) + -->
-<!--   labs(x = "Month of 2018", y = "RW1 effect", -->
-<!--        title = "Smooth seasonal trend in mortality") -->
-<!-- ``` -->
-
-<!-- # Part 5: comparing INLA and NIMBLE -->
-
-<!-- Finally, the two approaches side by side. Below we refit the partial pooling -->
-<!-- model with `nimbleMCMC()` exactly as in the hierarchical modelling lab. -->
-
-<!-- ::: aside -->
-<!-- The `NIMBLE` fit takes a couple of minutes, most of it model compilation. Feel -->
-<!-- free to skip re-running it and use your saved output from the previous lab. -->
-<!-- ::: -->
-
-<!-- ```{r} -->
-<!-- #| cache: true -->
-<!-- constants <- list( -->
-<!--   N = nrow(data), -->
-<!--   Np = max(data$provincia_id), -->
-<!--   province = data$provincia_id -->
-<!-- ) -->
-
-<!-- nimble_data <- list( -->
-<!--   y = as.integer(data$deaths), -->
-<!--   E = data$expected -->
-<!-- ) -->
-
-<!-- inits <- list( -->
-<!--   list(alpha = 0,   theta = rep(0, constants$Np), sigma_p = 1), -->
-<!--   list(alpha = 0.1, theta = rep(0, constants$Np), sigma_p = 1) -->
-<!-- ) -->
-
-<!-- partial_pooling_model <- nimbleCode({ -->
-<!--   alpha ~ dnorm(0, 5) -->
-<!--   sigma_p ~ T(dnorm(0, 1), 0, Inf) -->
-
-<!--   for (j in 1:Np) { -->
-<!--     theta[j] ~ dnorm(0, sd = sigma_p) -->
-<!--   } -->
-
-<!--   for (i in 1:N) { -->
-<!--     y[i] ~ dpois(mu[i]) -->
-<!--     log(mu[i]) <- log(E[i]) + alpha + theta[province[i]] -->
-<!--   } -->
-<!-- }) -->
-
-<!-- t_partial_nimble <- system.time( -->
-<!--   partial_pooling_samples <- nimbleMCMC( -->
-<!--     code = partial_pooling_model, -->
-<!--     data = nimble_data, -->
-<!--     constants = constants, -->
-<!--     inits = inits, -->
-<!--     monitors = c("alpha", "sigma_p", "theta"), -->
-<!--     niter = 2000, -->
-<!--     nburnin = 1000, -->
-<!--     thin = 1, -->
-<!--     nchains = 2, -->
-<!--     samplesAsCodaMCMC = TRUE, -->
-<!--     progressBar = FALSE, -->
-<!--     WAIC = TRUE -->
-<!--   ) -->
-<!-- ) -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- tibble( -->
-<!--   engine  = c("NIMBLE (MCMC)", "INLA"), -->
-<!--   elapsed = c(t_partial_nimble["elapsed"], t_partial_inla["elapsed"]) -->
-<!-- ) |> kable(digits = 2) -->
-<!-- ``` -->
-
-<!-- Note what each engine was doing. `NIMBLE` sampled 108 latent quantities *and* -->
-<!-- the hyperparameter jointly, 2,000 times, twice. `INLA` scanned a handful of -->
-<!-- values of $\sigma_p$ and solved the latent field once at each. The second -->
-<!-- column is the whole argument of the lecture. -->
-
-<!-- And do they agree? -->
-
-<!-- ```{r} -->
-<!-- nimble_theta <- summarise_draws( -->
-<!--   partial_pooling_samples$samples, -->
-<!--   default_summary_measures() -->
-<!-- ) |> -->
-<!--   filter(str_detect(variable, "theta")) |> -->
-<!--   arrange(as.integer(str_extract(variable, "\\d+"))) -->
-
-<!-- agreement <- tibble( -->
-<!--   inla   = m_partial$summary.random$provincia_id$mean, -->
-<!--   nimble = nimble_theta$mean -->
-<!-- ) -->
-
-<!-- ggplot(agreement, aes(x = nimble, y = inla)) + -->
-<!--   geom_abline(slope = 1, intercept = 0, linetype = 2) + -->
-<!--   geom_point(alpha = 0.6, size = 0.8, colour = "darkcyan") + -->
-<!--   labs(x = expression("NIMBLE posterior mean of " * theta[j]), -->
-<!--        y = expression("INLA posterior mean of " * theta[j])) -->
-<!-- ``` -->
-
-<!-- The points should sit close to the line; any scatter is mostly Monte Carlo -->
-<!-- noise in the (short) `NIMBLE` run, plus the difference between the half-normal -->
-<!-- and PC priors on $\sigma_p$. MCMC error shrinks as the chains run longer, -->
-<!-- whereas the `INLA` approximation error is fixed but, for models like this, -->
-<!-- very small. -->
-
-<!-- ::: {.callout-tip} -->
-<!-- ## Exercise 5 -->
-
-<!-- The `NIMBLE` model above has one hyperparameter (`sigma_p`) and 108 latent -->
-<!-- quantities, and samples them together. Suppose you wanted 8,000 areas over 20 -->
-<!-- years with a BYM2 field and an RW1 trend. -->
-
-<!-- - Which engine's cost grows fastest, and with respect to what? -->
-<!-- - Which of the lecture's two conditions would you check first before reaching -->
-<!--   for `INLA`? -->
-<!-- ::: -->
 
 ## Closing remarks
 
