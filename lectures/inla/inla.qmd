@@ -1327,6 +1327,8 @@ m_partial$summary.fixed
 -   `kld` is the Kullback-Leibler divergence between the Gaussian and the
     simplified Laplace marginal. [Values much above $\sim 0.01$ suggest
     the approximation is straining.]{style="color:red"}
+-   If this KL value is very small, it proves that the faster, standard Laplace
+    approximation was already highly accurate.
 -   Exponentiate for rate ratios — but do it on the **marginal**, not on
     the summary, if you want a correct interval.
 
@@ -1484,7 +1486,7 @@ m_bym2 <- inla(
 | Model class | Anything you can write in BUGS | Latent Gaussian models |
 | Spatiotemporal model | Hours | Seconds to minutes |
 | Priors | Fully flexible | Gaussian latent field required |
-| Diagnostics | $\hat{R}$, ESS, traces | `kld`, CPO failures, PIT |
+| Diagnostics | $\hat{R}$, ESS, traces | `kld`, CPO |
 | Best for | Bespoke, non-standard models | Standard hierarchical/spatial models, model development |
 
 
@@ -1551,17 +1553,22 @@ the priors has gone.
 
 # Getting ready for the lab
 
-## The lab for this session
+## The lab for this session {.smaller}
 
 -   This lab revisits the Italian mortality data from the hierarchical
     modelling session, using `R-INLA` instead of `NIMBLE`.
 
 -   During this lab session, we will:
 
-  1.  Refit the pooled, unpooled and partially pooled models in `INLA`;
-  2.  Compare estimates and runtimes against the `NIMBLE` output;
-  3.  Explore priors on the variance components; and
-  4.  Extend the model to a spatially structured `bym2`.
+  1. Build a Laplace approximation by hand, and see where it breaks;
+  2. Build the *integrated* version by hand, and see what integrating buys;
+  3. Refit the full pooling, no pooling and partial pooling models in `INLA`;
+  4. Look inside the fitted object at the hyperparameter combinations `INLA`
+     actually used;
+  5. Vary `int.strategy` and `strategy` and watch the accuracy–speed trade-off;
+  6. Inspect the precision matrix $\boldsymbol{Q}$ and its blanks;
+  7. Extend to a spatially structured `bym2` model, then a spatiotemporal one;
+  8. Compare against `NIMBLE`.
 
 # Questions?
 

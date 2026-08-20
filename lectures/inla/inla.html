@@ -2320,6 +2320,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <ul>
 <li>Columns: <code>mean</code>, <code>sd</code>, <code>0.025quant</code>, <code>0.5quant</code>, <code>0.975quant</code>, <code>mode</code>, <code>kld</code>.</li>
 <li><code>kld</code> is the Kullback-Leibler divergence between the Gaussian and the simplified Laplace marginal. <span style="color:red">Values much above <span class="math inline">\(\sim 0.01\)</span> suggest the approximation is straining.</span></li>
+<li>If this KL value is very small, it proves that the faster, standard Laplace approximation was already highly accurate.</li>
 <li>Exponentiate for rate ratios — but do it on the <strong>marginal</strong>, not on the summary, if you want a correct interval.</li>
 </ul>
 </section>
@@ -2484,7 +2485,7 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <tr class="odd">
 <td>Diagnostics</td>
 <td><span class="math inline">\(\hat{R}\)</span>, ESS, traces</td>
-<td><code>kld</code>, CPO failures, PIT</td>
+<td><code>kld</code>, CPO</td>
 </tr>
 <tr class="even">
 <td>Best for</td>
@@ -2552,17 +2553,21 @@ y_i &amp;\sim \text{Pois}(\mu_i) \\
 <h1>Getting ready for the lab</h1>
 
 </section>
-<section id="the-lab-for-this-session" class="slide level2">
+<section id="the-lab-for-this-session" class="slide level2 smaller">
 <h2>The lab for this session</h2>
 <ul>
 <li><p>This lab revisits the Italian mortality data from the hierarchical modelling session, using <code>R-INLA</code> instead of <code>NIMBLE</code>.</p></li>
 <li><p>During this lab session, we will:</p></li>
 </ul>
 <ol type="1">
-<li>Refit the pooled, unpooled and partially pooled models in <code>INLA</code>;</li>
-<li>Compare estimates and runtimes against the <code>NIMBLE</code> output;</li>
-<li>Explore priors on the variance components; and</li>
-<li>Extend the model to a spatially structured <code>bym2</code>.</li>
+<li>Build a Laplace approximation by hand, and see where it breaks;</li>
+<li>Build the <em>integrated</em> version by hand, and see what integrating buys;</li>
+<li>Refit the full pooling, no pooling and partial pooling models in <code>INLA</code>;</li>
+<li>Look inside the fitted object at the hyperparameter combinations <code>INLA</code> actually used;</li>
+<li>Vary <code>int.strategy</code> and <code>strategy</code> and watch the accuracy–speed trade-off;</li>
+<li>Inspect the precision matrix <span class="math inline">\(\boldsymbol{Q}\)</span> and its blanks;</li>
+<li>Extend to a spatially structured <code>bym2</code> model, then a spatiotemporal one;</li>
+<li>Compare against <code>NIMBLE</code>.</li>
 </ol>
 </section></section>
 <section id="questions" class="title-slide slide level1 center">
