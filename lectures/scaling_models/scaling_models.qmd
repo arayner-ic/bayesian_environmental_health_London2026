@@ -227,7 +227,7 @@ formula_I <- deaths ~ 1 +
 - The cheapest structure to fit: no graph, no ordering, one precision
 - Useful as a catch-all for overdispersion beyond the main effects, but it borrows no strength: a sparse cell is shrunk towards zero, not towards its neighbours
 
-Latent values: $N_p \times N_t = 107 \times N_t$. Hyperparameters: 1.
+<!-- Latent values: $N_p \times N_t = 107 \times N_t$. Hyperparameters: 1. -->
 
 ## Type II: unstructured space × structured time {.smaller}
 
@@ -251,7 +251,7 @@ formula_II <- deaths ~ 1 +
 - The `group =` Kronecker construction: IID over provinces, RW1 across the grouped years
 - This is the fully flexible version of the linear slopes covered shortly
 
-Latent values: $N_p \times N_t$. Hyperparameters: 1.
+<!-- Latent values: $N_p \times N_t$. Hyperparameters: 1. -->
 
 ## Type III: structured space × unstructured time {.smaller}
 
@@ -275,7 +275,7 @@ formula_III <- deaths ~ 1 +
 
 - The same construction as Type II with the roles swapped: Besag over provinces, IID across the grouped years
 
-Latent values: $N_p \times N_t$. Hyperparameters: 1.
+<!-- Latent values: $N_p \times N_t$. Hyperparameters: 1. -->
 
 ## Type IV: structured × structured {.smaller}
 
@@ -299,7 +299,7 @@ formula_IV <- deaths ~ 1 +
 
 - Type IV needs extra sum-to-zero constraints beyond `INLA`'s defaults to be identifiable alongside the main effects (via `extraconstr`), which is worth knowing before using it
 
-Latent values: $N_p \times N_t$. Hyperparameters: 1 (plus constraint bookkeeping).
+<!-- Latent values: $N_p \times N_t$. Hyperparameters: 1. -->
 
 ## Comparing the four {.smaller}
 
@@ -739,147 +739,58 @@ tribble(
 
 ![](assets/Picture4.png){fig-align="center"}
 
-# Keeping the interactions affordable
+## The number of hyperparameters is the limiting factor {.smaller}
 
-## Space–time interactions, revisited {.smaller}
+```{=html}
+<svg viewBox="0 0 920 290" style="width:100%;color:inherit" font-family="inherit">
+<text x="60" y="30" font-size="16" font-weight="600" fill="currentColor">1 hyperparameter</text>
+<line x1="60" y1="130" x2="260" y2="130" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+<g fill="#c0392b" fill-opacity="0.8">
+<circle cx="70" cy="130" r="5"/><circle cx="108" cy="130" r="5"/><circle cx="146" cy="130" r="5"/>
+<circle cx="184" cy="130" r="5"/><circle cx="222" cy="130" r="5"/><circle cx="255" cy="130" r="5"/></g>
+<text x="60" y="196" font-size="15" fill="currentColor" opacity="0.85">points along a line</text>
 
-We built all four interaction types on the Italian data earlier, and each cost the same:
+<text x="360" y="30" font-size="16" font-weight="600" fill="currentColor">2 hyperparameters</text>
+<rect x="360" y="52" width="170" height="156" fill="none" stroke="currentColor" stroke-opacity="0.45"/>
+<g fill="#c0392b" fill-opacity="0.8">
+<circle cx="378" cy="70" r="4"/><circle cx="412" cy="70" r="4"/><circle cx="446" cy="70" r="4"/><circle cx="480" cy="70" r="4"/><circle cx="514" cy="70" r="4"/>
+<circle cx="378" cy="104" r="4"/><circle cx="412" cy="104" r="4"/><circle cx="446" cy="104" r="4"/><circle cx="480" cy="104" r="4"/><circle cx="514" cy="104" r="4"/>
+<circle cx="378" cy="138" r="4"/><circle cx="412" cy="138" r="4"/><circle cx="446" cy="138" r="4"/><circle cx="480" cy="138" r="4"/><circle cx="514" cy="138" r="4"/>
+<circle cx="378" cy="172" r="4"/><circle cx="412" cy="172" r="4"/><circle cx="446" cy="172" r="4"/><circle cx="480" cy="172" r="4"/><circle cx="514" cy="172" r="4"/></g>
+<text x="360" y="240" font-size="15" fill="currentColor" opacity="0.85">points filling a square</text>
 
-| Interaction | Structure | Latent values |
+<text x="650" y="30" font-size="16" font-weight="600" fill="currentColor">3 hyperparameters</text>
+<g fill="none" stroke="currentColor" stroke-opacity="0.45">
+<rect x="650" y="72" width="150" height="136"/>
+<path d="M650,72 L694,40 H844 V176 L800,208"/><path d="M800,72 L844,40"/><path d="M800,208 V72"/></g>
+<g fill="#c0392b" fill-opacity="0.75">
+<circle cx="668" cy="90" r="3.5"/><circle cx="702" cy="90" r="3.5"/><circle cx="736" cy="90" r="3.5"/><circle cx="770" cy="90" r="3.5"/>
+<circle cx="668" cy="124" r="3.5"/><circle cx="702" cy="124" r="3.5"/><circle cx="736" cy="124" r="3.5"/><circle cx="770" cy="124" r="3.5"/>
+<circle cx="668" cy="158" r="3.5"/><circle cx="702" cy="158" r="3.5"/><circle cx="736" cy="158" r="3.5"/><circle cx="770" cy="158" r="3.5"/>
+<circle cx="668" cy="192" r="3.5"/><circle cx="702" cy="192" r="3.5"/><circle cx="736" cy="192" r="3.5"/><circle cx="770" cy="192" r="3.5"/></g>
+<g fill="#c0392b" fill-opacity="0.35">
+<circle cx="712" cy="58" r="3.5"/><circle cx="746" cy="58" r="3.5"/><circle cx="780" cy="58" r="3.5"/><circle cx="814" cy="58" r="3.5"/>
+<circle cx="712" cy="92" r="3.5"/><circle cx="746" cy="92" r="3.5"/><circle cx="780" cy="92" r="3.5"/><circle cx="814" cy="92" r="3.5"/>
+<circle cx="712" cy="126" r="3.5"/><circle cx="746" cy="126" r="3.5"/><circle cx="780" cy="126" r="3.5"/><circle cx="814" cy="126" r="3.5"/>
+<circle cx="712" cy="160" r="3.5"/><circle cx="746" cy="160" r="3.5"/><circle cx="780" cy="160" r="3.5"/><circle cx="814" cy="160" r="3.5"/></g>
+<text x="650" y="240" font-size="15" fill="currentColor" opacity="0.85">points filling a cube</text>
+
+<text x="60" y="278" font-size="16" fill="currentColor" opacity="0.85">Every point is a full sparse solve over the entire 168,000-element field.</text>
+</svg>
+```
+
+## The number of hyperparameters is the limiting factor {.smaller}
+
+The points increasing multiplicatively. Taking five
+per dial for illustration:
+
+| Hyperparameters | Grid points | At 0.5 s each |
 |---|---|---|
-| Type I | $\theta_i \otimes \gamma_t$ (IID × IID) | $N_p \times N_t$ |
-| Type II | $\theta_i \otimes \xi_t$ (IID × RW) | $N_p \times N_t$ |
-| Type III | $\phi_i \otimes \gamma_t$ (ICAR × IID) | $N_p \times N_t$ |
-| Type IV | $\phi_i \otimes \xi_t$ (ICAR × RW) | $N_p \times N_t$ |
-
-At 107 provinces, $N_p \times N_t$ is a few thousand values and the choice between them is purely scientific.
-
-At 3,100 counties it stops being purely scientific.
-
-## Space–time interactions, revisited
-
-At national scale, a fully flexible (type IV) interaction becomes:
-
-$$
-3{,}100 \text{ counties} \times 20 \text{ years} = 62{,}000 \text{ interaction parameters}
-$$
-
-The big model instead uses **spatially smoothed linear slopes**: one parameter per county.
-
-$$
-\nu_{it} = \nu_i \cdot c_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W)
-$$
-
-3,100 parameters instead of 62,000 — at the cost of assuming county-level *departures* from the national trend are linear in time. The national trend itself (RW2) remains fully non-linear.
-
-## Space–time interactions, revisited
-
-What the linear-slope interaction looks like:
-
-```{r}
-#| echo: false
-#| eval: true
-#| fig-align: "center"
-#| fig-width: 8
-#| fig-height: 4.5
-#| message: false
-#| warning: false
-
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-
-set.seed(4)
-t <- 1:20
-national <- tibble(t = t,
-                   nat = -0.012 * (t - 1) + 0.08 * sin(2 * pi * t / 14))
-
-nu <- rnorm(15, 0, 0.012)
-
-counties <- crossing(county = 1:15, t = t) |>
-  left_join(national, by = "t") |>
-  mutate(y = nat + nu[county] * (t - mean(t)))
-
-ggplot() +
-  geom_line(data = counties,
-            aes(x = t, y = y, group = county),
-            colour = "grey60", linewidth = 0.4) +
-  geom_line(data = national, aes(x = t, y = nat),
-            colour = "darkcyan", linewidth = 1.5) +
-  labs(x = "Year", y = "Log relative rate",
-       subtitle = "National RW2 trend (bold) plus county-specific linear departures (grey)") +
-  theme_bw() +
-  theme(text = element_text(size = 15))
-```
-
-Compare the spaghetti plot of crude rates from the spatial session: each county keeps its own trajectory, but its *departure* from the national curve is a straight line.
-
-## Restricting flexibility is a modelling choice {.smaller}
-
-- The linear-slope interaction is a deliberate simplification, in the same spirit as choosing a spline basis in the non-linear regression session: spend the parameters where the data can support them
-- With ~20 annual observations per county × age × race cell, a county-specific *non-linear* trend is rarely identifiable anyway — the prior would dominate
-- If a richer interaction is needed, there is a middle ground: e.g. a spatial field grouped by a RW1 over time, which is still far cheaper than type IV
-
-At scale, every interaction term should be able to answer: *what would the data look like if this term were needed, and can the data at this resolution actually show it?*
-
-## Grouped (Kronecker) models: `group =` {.smaller}
-
-Race-specific spatial fields — four maps, one per race/ethnicity group:
-
-```{.r}
-f(id_county3, model = "besag", graph = g, scale.model = TRUE,
-  hyper = hyper_besag,
-  group = id_race3, control.group = list(model = "iid", hyper = hyper_lg))
-```
-
-- One Besag field, replicated across race groups, with an IID structure *between* groups
-- The result is a Kronecker product: the same spatial dependence within each group, and an estimated variance for how much the groups differ
-
-## Grouped (Kronecker) models: `group =`
-
-Compared with fitting four separate `f()` terms:
-
-- One shared spatial precision rather than four — fewer hyperparameters
-- The between-group variation gets its own, estimated, variance — partial pooling across groups, exactly as in the hierarchical session, but now for entire spatial fields
-- Sparse groups borrow strength from the others, so this is usually a statistical improvement as well as a computational one
-
-The reason fewer hyperparameters matters so much is on the next slide.
-
-## Hyperparameters are the expensive dimension
-
-```{r}
-#| echo: false
-#| eval: true
-#| fig-align: "center"
-#| fig-width: 8
-#| fig-height: 4.5
-#| message: false
-#| warning: false
-
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-
-tibble(k = 1:12) |>
-  mutate(`3 points per dimension` = 3^k,
-         `5 points per dimension` = 5^k) |>
-  pivot_longer(-k, names_to = "grid", values_to = "points") |>
-  ggplot(aes(x = k, y = points, colour = grid)) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  geom_hline(yintercept = 1, linetype = 2) +
-  annotate("text", x = 10.5, y = 1.8, label = "empirical Bayes: 1 point", size = 4.5) +
-  scale_y_log10(labels = scales::comma) +
-  scale_x_continuous(breaks = 1:12) +
-  scale_colour_manual(values = c("darkcyan", "#D55E00")) +
-  labs(x = expression("Number of hyperparameters, dim(" * theta * ")"),
-       y = "Grid evaluations needed (log scale)", colour = NULL) +
-  theme_bw() +
-  theme(text = element_text(size = 15), legend.position = "bottom")
-```
-
-- From the INLA session: each evaluation point in $\boldsymbol{\theta}$ means factorising the full sparse precision matrix
-- A naive grid grows exponentially in dim($\boldsymbol{\theta}$); the CCD design and empirical Bayes exist precisely to avoid this — but keeping dim($\boldsymbol{\theta}$) down helps every strategy
+| 2 | 25 | 12 seconds |
+| 4 | 625 | 5 minutes |
+| 6 | 15,625 | 2 hours |
+| 8 | 390,625 | 2 days |
+| 10 | 9,765,625 | 7 weeks |
 
 # Making `INLA` run faster
 
@@ -974,7 +885,7 @@ Every quantity requested in an `inla()` call costs time and memory, and at scale
 - `control.predictor = list(compute = FALSE)` unless you need fitted values from this particular fit
 - `dic`, `waic`, `cpo`: only in the fits where you will actually use them
 - `config = TRUE` (needed for posterior sampling) only in the final fit
-- `keep = FALSE` so the working files are not retained
+<!-- - `keep = FALSE` so the working files are not retained -->
 
 <!-- In the lab we fit the same model with and without these settings and compare the timings. -->
 
@@ -1272,3 +1183,144 @@ This is the same idea as the *spline-by-constant* DLNM from the advanced models 
 - `group =` and `copy =` are the two main ways `R-INLA` allows structure to be shared across strata instead of re-estimated
 - Both trade a modelling assumption for a reduction in cost, and both borrow strength for sparse strata
 
+<!-- # Keeping the interactions affordable -->
+
+<!-- ## Space–time interactions, revisited -->
+
+<!-- We built all four interaction types on the Italian data earlier, and each cost the same: -->
+
+<!-- | Interaction | Structure | Latent values | -->
+<!-- |---|---|---| -->
+<!-- | Type I | $\theta_i \otimes \gamma_t$ (IID × IID) | $N_p \times N_t$ | -->
+<!-- | Type II | $\theta_i \otimes \xi_t$ (IID × RW) | $N_p \times N_t$ | -->
+<!-- | Type III | $\phi_i \otimes \gamma_t$ (ICAR × IID) | $N_p \times N_t$ | -->
+<!-- | Type IV | $\phi_i \otimes \xi_t$ (ICAR × RW) | $N_p \times N_t$ | -->
+
+<!-- <!-- At 107 provinces, $N_p \times N_t$ is a few thousand values and the choice between them is purely scientific. --> -->
+
+<!-- <!-- At 3,100 counties it stops being purely scientific. --> -->
+
+<!-- ## Space–time interactions, revisited -->
+
+<!-- At national scale, a fully flexible (type IV) interaction becomes: -->
+
+<!-- $$ -->
+<!-- 3{,}100 \text{ counties} \times 20 \text{ years} = 62{,}000 \text{ interaction parameters} -->
+<!-- $$ -->
+
+<!-- The big model instead uses **spatially smoothed linear slopes**: one parameter per county. -->
+
+<!-- $$ -->
+<!-- \nu_{it} = \nu_i \cdot c_t, \qquad \boldsymbol{\nu} \sim \text{ICAR}(W) -->
+<!-- $$ -->
+
+<!-- 3,100 parameters instead of 62,000 — at the cost of assuming county-level *departures* from the national trend are linear in time. The national trend itself (RW2) remains fully non-linear. -->
+
+<!-- ## Space–time interactions, revisited -->
+
+<!-- What the linear-slope interaction looks like: -->
+
+<!-- ```{r} -->
+<!-- #| echo: false -->
+<!-- #| eval: true -->
+<!-- #| fig-align: "center" -->
+<!-- #| fig-width: 8 -->
+<!-- #| fig-height: 4.5 -->
+<!-- #| message: false -->
+<!-- #| warning: false -->
+
+<!-- library(dplyr) -->
+<!-- library(ggplot2) -->
+<!-- library(tidyr) -->
+
+<!-- set.seed(4) -->
+<!-- t <- 1:20 -->
+<!-- national <- tibble(t = t, -->
+<!--                    nat = -0.012 * (t - 1) + 0.08 * sin(2 * pi * t / 14)) -->
+
+<!-- nu <- rnorm(15, 0, 0.012) -->
+
+<!-- counties <- crossing(county = 1:15, t = t) |> -->
+<!--   left_join(national, by = "t") |> -->
+<!--   mutate(y = nat + nu[county] * (t - mean(t))) -->
+
+<!-- ggplot() + -->
+<!--   geom_line(data = counties, -->
+<!--             aes(x = t, y = y, group = county), -->
+<!--             colour = "grey60", linewidth = 0.4) + -->
+<!--   geom_line(data = national, aes(x = t, y = nat), -->
+<!--             colour = "darkcyan", linewidth = 1.5) + -->
+<!--   labs(x = "Year", y = "Log relative rate", -->
+<!--        subtitle = "National RW2 trend (bold) plus county-specific linear departures (grey)") + -->
+<!--   theme_bw() + -->
+<!--   theme(text = element_text(size = 15)) -->
+<!-- ``` -->
+
+<!-- Compare the spaghetti plot of crude rates from the spatial session: each county keeps its own trajectory, but its *departure* from the national curve is a straight line. -->
+
+<!-- ## Restricting flexibility is a modelling choice {.smaller} -->
+
+<!-- - The linear-slope interaction is a deliberate simplification, in the same spirit as choosing a spline basis in the non-linear regression session: spend the parameters where the data can support them -->
+<!-- - With ~20 annual observations per county × age × race cell, a county-specific *non-linear* trend is rarely identifiable anyway — the prior would dominate -->
+<!-- - If a richer interaction is needed, there is a middle ground: e.g. a spatial field grouped by a RW1 over time, which is still far cheaper than type IV -->
+
+<!-- At scale, every interaction term should be able to answer: *what would the data look like if this term were needed, and can the data at this resolution actually show it?* -->
+
+<!-- ## Grouped (Kronecker) models: `group =` {.smaller} -->
+
+<!-- Race-specific spatial fields — four maps, one per race/ethnicity group: -->
+
+<!-- ```{.r} -->
+<!-- f(id_county3, model = "besag", graph = g, scale.model = TRUE, -->
+<!--   hyper = hyper_besag, -->
+<!--   group = id_race3, control.group = list(model = "iid", hyper = hyper_lg)) -->
+<!-- ``` -->
+
+<!-- - One Besag field, replicated across race groups, with an IID structure *between* groups -->
+<!-- - The result is a Kronecker product: the same spatial dependence within each group, and an estimated variance for how much the groups differ -->
+
+<!-- ## Grouped (Kronecker) models: `group =` -->
+
+<!-- Compared with fitting four separate `f()` terms: -->
+
+<!-- - One shared spatial precision rather than four — fewer hyperparameters -->
+<!-- - The between-group variation gets its own, estimated, variance — partial pooling across groups, exactly as in the hierarchical session, but now for entire spatial fields -->
+<!-- - Sparse groups borrow strength from the others, so this is usually a statistical improvement as well as a computational one -->
+
+<!-- The reason fewer hyperparameters matters so much is on the next slide. -->
+
+<!-- ## Hyperparameters are the expensive dimension -->
+
+<!-- ```{r} -->
+<!-- #| echo: false -->
+<!-- #| eval: true -->
+<!-- #| fig-align: "center" -->
+<!-- #| fig-width: 8 -->
+<!-- #| fig-height: 4.5 -->
+<!-- #| message: false -->
+<!-- #| warning: false -->
+
+<!-- library(dplyr) -->
+<!-- library(ggplot2) -->
+<!-- library(tidyr) -->
+
+<!-- tibble(k = 1:12) |> -->
+<!--   mutate(`3 points per dimension` = 3^k, -->
+<!--          `5 points per dimension` = 5^k) |> -->
+<!--   pivot_longer(-k, names_to = "grid", values_to = "points") |> -->
+<!--   ggplot(aes(x = k, y = points, colour = grid)) + -->
+<!--   geom_line(linewidth = 1) + -->
+<!--   geom_point(size = 2) + -->
+<!--   geom_hline(yintercept = 1, linetype = 2) + -->
+<!--   annotate("text", x = 10.5, y = 1.8, label = "empirical Bayes: 1 point", size = 4.5) + -->
+<!--   scale_y_log10(labels = scales::comma) + -->
+<!--   scale_x_continuous(breaks = 1:12) + -->
+<!--   scale_colour_manual(values = c("darkcyan", "#D55E00")) + -->
+<!--   labs(x = expression("Number of hyperparameters, dim(" * theta * ")"), -->
+<!--        y = "Grid evaluations needed (log scale)", colour = NULL) + -->
+<!--   theme_bw() + -->
+<!--   theme(text = element_text(size = 15), legend.position = "bottom") -->
+<!-- ``` -->
+
+<!-- - From the INLA session: each evaluation point in $\boldsymbol{\theta}$ means factorising the full sparse precision matrix -->
+<!-- - A naive grid grows exponentially in dim($\boldsymbol{\theta}$); the CCD design and empirical Bayes exist precisely to avoid this — but keeping dim($\boldsymbol{\theta}$) down helps every strategy -->

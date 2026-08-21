@@ -1129,7 +1129,7 @@ So the method carries **two conditions**, one from each half:
 
 ## The number of hyperparameters is the limiting factor {.smaller}
 
-Add a dial and the points do not increase — they **multiply**. Taking five
+The points increasing multiplicatively. Taking five
 per dial for illustration:
 
 | Hyperparameters | Grid points | At 0.5 s each |
