@@ -881,77 +881,6 @@ tibble(k = 1:12) |>
 - From the INLA session: each evaluation point in $\boldsymbol{\theta}$ means factorising the full sparse precision matrix
 - A naive grid grows exponentially in dim($\boldsymbol{\theta}$); the CCD design and empirical Bayes exist precisely to avoid this — but keeping dim($\boldsymbol{\theta}$) down helps every strategy
 
-## The `copy` feature
-
-Age-specific spatial patterns, as nine maps, one per age group:
-
-```{.r}
-# Base field: the age group with the most deaths (85+)
-f(id_county_as9, model = "besag", graph = g, scale.model = TRUE,
-  hyper = hyper_besag) +
-f(id_county_as1, copy = "id_county_as9", fixed = FALSE) +  # 45-49
-f(id_county_as2, copy = "id_county_as9", fixed = FALSE) +  # 50-54
-...
-```
-
-- Only one spatial field is estimated, anchored to the age group with the most data
-- The other eight age groups get a scaled copy: the same map, multiplied by an estimated constant (`fixed = FALSE`)
-
-## The `copy` feature
-
-| Specification | Latent field | Hyperparameters |
-|---|---|---|
-| Nine independent Besag fields | 9 × 3,100 | 9 precisions |
-| One field + eight copies | 3,100 | 1 precision|
-
-- The assumption: the *shape* of the age-specific spatial pattern is shared, and only its *amplitude* varies by age
-- Use with caution
-
-## The `copy` feature
-
-```{r}
-#| echo: false
-#| eval: true
-#| fig-align: "center"
-#| fig-width: 8
-#| fig-height: 4.5
-#| message: false
-#| warning: false
-
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-
-set.seed(5)
-base <- sort(rnorm(12, 0, 0.5))
-
-crossing(county = 1:12,
-         age = factor(c("45\u201349", "55\u201359", "65\u201369",
-                        "75\u201379", "85+"),
-                      levels = c("45\u201349", "55\u201359", "65\u201369",
-                                 "75\u201379", "85+"))) |>
-  mutate(beta = c(0.2, 0.4, 0.6, 0.8, 1.0)[as.integer(age)],
-         effect = beta * base[county]) |>
-  ggplot(aes(x = county, y = effect, colour = age)) +
-  geom_hline(yintercept = 0, linetype = 2) +
-  geom_line(linewidth = 0.9) +
-  geom_point(size = 1.8) +
-  scale_x_continuous(breaks = 1:12) +
-  labs(x = "County (ordered by base field)", y = "Spatial effect",
-       colour = "Age group",
-       subtitle = "One shared spatial pattern, scaled by an estimated constant per age group") +
-  theme_bw() +
-  theme(text = element_text(size = 15))
-```
-
-This is the same idea as the *spline-by-constant* DLNM from the advanced models session: one shape, different amplitudes.
-
-## The `copy` feature
-
-- Check the shared-shape assumption before committing to it: plot the base field against crude age-specific SMRs
-- `group =` and `copy =` are the two main ways `R-INLA` allows structure to be shared across strata instead of re-estimated
-- Both trade a modelling assumption for a reduction in cost, and both borrow strength for sparse strata
-
 # Making `INLA` run faster
 
 ## Making a slow fit faster {.smaller}
@@ -1262,10 +1191,84 @@ For the models in this session, the specification to ask about is high-memory no
 
 - During this lab session, we will:
 
-  1. Build an annual space–time model up term by term (BYM2 baseline, RW2 trend, then the interaction), comparing the Knorr-Held types against Besag linear slopes;
-  2. Compare a fit with everything computed against a lean fit, and time the rough/full two-stage workflow;
-  3. Turn the model into an `Rscript` and `sbatch` pair, with a job array for the prior sensitivity analysis;
-  <!-- 4. Sample from the posterior with `inla.posterior.sample()` and save tidy summaries; and -->
-  <!-- 5. Build a small `Shiny` app to browse the province–year SMRs. -->
+1. Build an annual space–time model one `f()` term at a time;
+2. Fit all four interaction types and compare them;
+3. Fit the restricted linear-slope alternative;
+4. Make the fits cheaper using `INLA`'s approximation settings; and
+5. Turn the model into a script a cluster could run.
 
 # Questions?
+
+# Extra
+
+## The `copy` feature
+
+Age-specific spatial patterns, as nine maps, one per age group:
+
+```{.r}
+# Base field: the age group with the most deaths (85+)
+f(id_county_as9, model = "besag", graph = g, scale.model = TRUE,
+  hyper = hyper_besag) +
+f(id_county_as1, copy = "id_county_as9", fixed = FALSE) +  # 45-49
+f(id_county_as2, copy = "id_county_as9", fixed = FALSE) +  # 50-54
+...
+```
+
+- Only one spatial field is estimated, anchored to the age group with the most data
+- The other eight age groups get a scaled copy: the same map, multiplied by an estimated constant (`fixed = FALSE`)
+
+## The `copy` feature
+
+| Specification | Latent field | Hyperparameters |
+|---|---|---|
+| Nine independent Besag fields | 9 × 3,100 | 9 precisions |
+| One field + eight copies | 3,100 | 1 precision|
+
+- The assumption: the *shape* of the age-specific spatial pattern is shared, and only its *amplitude* varies by age
+- Use with caution
+
+## The `copy` feature
+
+```{r}
+#| echo: false
+#| eval: true
+#| fig-align: "center"
+#| fig-width: 8
+#| fig-height: 4.5
+#| message: false
+#| warning: false
+
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+set.seed(5)
+base <- sort(rnorm(12, 0, 0.5))
+
+crossing(county = 1:12,
+         age = factor(c("45\u201349", "55\u201359", "65\u201369",
+                        "75\u201379", "85+"),
+                      levels = c("45\u201349", "55\u201359", "65\u201369",
+                                 "75\u201379", "85+"))) |>
+  mutate(beta = c(0.2, 0.4, 0.6, 0.8, 1.0)[as.integer(age)],
+         effect = beta * base[county]) |>
+  ggplot(aes(x = county, y = effect, colour = age)) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 1.8) +
+  scale_x_continuous(breaks = 1:12) +
+  labs(x = "County (ordered by base field)", y = "Spatial effect",
+       colour = "Age group",
+       subtitle = "One shared spatial pattern, scaled by an estimated constant per age group") +
+  theme_bw() +
+  theme(text = element_text(size = 15))
+```
+
+This is the same idea as the *spline-by-constant* DLNM from the advanced models session: one shape, different amplitudes.
+
+## The `copy` feature
+
+- Check the shared-shape assumption before committing to it: plot the base field against crude age-specific SMRs
+- `group =` and `copy =` are the two main ways `R-INLA` allows structure to be shared across strata instead of re-estimated
+- Both trade a modelling assumption for a reduction in cost, and both borrow strength for sparse strata
+
